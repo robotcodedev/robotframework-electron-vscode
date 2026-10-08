@@ -54,9 +54,10 @@ Alternative considered: extracting the helper from `addBrowser`. That function r
 
 ### Fixture app for tests
 
-- Tests use a minimal Electron app in `packages/electron/atest/fixtures/app/` (`package.json`, `main.js`, `index.html`). It has a fixed title, a button that changes text, and a button that opens a second window.
-- The Electron binary is a pinned release zip from GitHub, downloaded and cached by a small Python helper in the test setup. No npm is involved.
-- Tests are Robot suites in `packages/electron/atest/`, plus pytest checks for import and libdoc.
+- Tests use a minimal Electron app in `packages/electron/atest/fixtures/app/` (`package.json`, `main.js`, `index.html`). It has a fixed title, a button that changes text, a button that opens a second window, and a `--no-window` argument for the failed-start test.
+- The Electron binary is a pinned release zip from GitHub, checked against `SHASUMS256.txt`. The test helper `atest/resources/ElectronFixture.py` downloads and caches it and offers it as `Get Electron Executable`. No npm is involved.
+- Tests are Robot suites in `packages/electron/atest/` and pytest checks for import and libdoc in `packages/electron/tests/`.
+- The fixture app and test setup come first. A spike runs `_electron.launch` against the fixture through a throwaway JavaScript module before the hook is built.
 
 ## Risks / Trade-offs
 
