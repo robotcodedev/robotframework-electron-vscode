@@ -16,3 +16,6 @@ robotframework-vscode = { workspace = true }
 # Local clone of the Browser library with our hook, prepared with `inv deps && inv build`.
 # Switch to the PyPI release once the hook is published.
 robotframework-browser = { path = "../robotframework-browser", editable = true }
+
+[dependency-groups]
+dev = ["pytest>=8"]
