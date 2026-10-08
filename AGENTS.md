@@ -44,6 +44,7 @@ After switching branches in the clone or changing its TypeScript or proto files,
 - `uv run robotcode -r . discover tests`, `uv run robotcode -r . results summary`, `uv run robotcode -r . analyze code` — list tests, inspect the last run, analyse statically.
 - `uv run pytest` — Python unit tests of all packages.
 - Personal settings, such as a local `ELECTRON_EXECUTABLE`, go into `.robot.toml`, which is gitignored.
+- `npm ci`, then `npm run dev` or `npm run build` in `docs/` — install the documentation site's dependencies, serve it locally with live reload, or build it into `docs/dist/`. Only Node.js is needed, no Python. Started by an agent, `npm run dev` runs in the background; stop it with `npx astro dev stop` in `docs/`.
 
 ## Agent Notes
 

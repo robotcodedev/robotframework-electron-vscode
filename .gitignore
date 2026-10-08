@@ -13,3 +13,8 @@ wheels/
 results/
 .cache/
 .robot.toml
+
+# Documentation site
+docs/node_modules/
+docs/dist/
+docs/.astro/

@@ -41,7 +41,7 @@ docs/
 
 ### `site` and `base` in one marked place
 
-`astro.config.mjs` defines `site` and `base` as two constants at the top, under a comment that marks them as placeholders until the repository's location is decided. The placeholder values build a site that works at the root (`base: '/'`). Changing the two constants is all it takes once the location is known.
+`astro.config.mjs` defines `site` and `base` as two constants at the top, under a comment that marks them as placeholders until the repository's location is decided. The placeholder values build a site that works at the root (`base: '/'`). The READMEs link to the site with the same placeholder URL, so once the location is known, a search for it finds every place to change.
 
 ### Content from the existing READMEs
 
@@ -52,8 +52,8 @@ docs/
 ### Code from `examples/`
 
 - A guide imports the example file with `?raw` and shows it with `<Code lang="robotframework" title="…">`. Pages that include code are therefore `.mdx`.
-- For the dev server, `vite.server.fs.allow` gets the repository root, because `examples/` lies outside `docs/`. The production build reads the files directly.
-- That Robot Framework highlighting works with Starlight's code renderer (Expressive Code with Shiki) is checked when the site skeleton is built.
+- The import works from outside `docs/` in the build and in the dev server without further configuration, because MDX pages are rendered on the server.
+- Shiki, which Starlight's code renderer Expressive Code uses, has no Robot Framework grammar. `docs/grammars/` holds a copy of RobotCode's TextMate grammar (`syntaxes/robotframework.tmLanguage.json`), registered as `robotframework` with the alias `robot`. It is copied again by hand when RobotCode's grammar changes, so the build needs no network.
 
 ### Reference pages
 

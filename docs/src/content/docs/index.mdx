@@ -1,0 +1,24 @@
+---
+title: Robot Framework Electron & VS Code
+description: Robot Framework libraries for testing Electron applications and VS Code extensions, built on the Browser library.
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Two [Robot Framework](https://robotframework.org) libraries built on the [Browser library](https://robotframework-browser.org):
+
+- **robotframework-electron** (`Electron`) starts Electron applications. Their windows are ordinary Browser pages, and every Browser keyword works on them.
+- **robotframework-vscode** (`VSCode`) downloads VS Code and starts isolated instances with the extension under test, for end-to-end tests of VS Code extensions. It contains every Electron and Browser keyword.
+
+The libraries provide the technique: starting the application and handing its windows to Browser. What to click and which locators to use belongs to your tests.
+
+## Status
+
+The libraries are in a pilot phase, at version 0.1.0, and not yet published. They need a small hook in the Browser library that is not released yet. Until it is, they are installed from their repository together with a Browser clone that has the hook.
+
+## Where to start
+
+<CardGrid>
+	<LinkCard title="Test an Electron app" href="getting-started/electron/" />
+	<LinkCard title="Test a VS Code extension" href="getting-started/vscode/" />
+</CardGrid>

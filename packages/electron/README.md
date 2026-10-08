@@ -2,31 +2,19 @@
 
 A [Robot Framework](https://robotframework.org) library for testing Electron applications. It is built on the [Browser library](https://robotframework-browser.org): `Electron` contains every Browser keyword, takes the same import arguments, and adds keywords to start and close Electron applications. The windows of an application are ordinary Browser pages.
 
+**Documentation:** https://example.github.io/
+
 ## Installation
 
-The library needs a small hook in the Browser library that is not released yet. Until it is, install it from this repository's uv workspace. That workspace takes `robotframework-browser` from a local clone with the hook, as described in the repository's `AGENTS.md`.
+The library needs a small hook in the Browser library that is not released yet. Until it is, install it from its repository's uv workspace, which takes `robotframework-browser` from a local clone with the hook, as described in the repository's `AGENTS.md`:
 
 ```sh
 uv sync
 ```
 
-## Usage
+## Example
 
-Import `Electron` instead of `Browser`:
-
-```robotframework
-*** Settings ***
-Library    Electron
-
-*** Test Cases ***
-Greeting Is Shown
-    New Electron Application    /opt/my-app/my-app
-    Click    text=Say hello
-    Get Text    id=greeting    ==    Hello!
-    Close Electron Application
-```
-
-For an app that runs on the plain Electron binary, pass the app folder as an argument. `Get Electron Executable` from the `Electron.Helper` library provides that binary:
+Import `Electron` instead of `Browser`. For an app that runs on the plain Electron binary, `Get Electron Executable` from `Electron.Helper` downloads Electron, and the app folder is passed as an argument:
 
 ```robotframework
 *** Settings ***
@@ -43,31 +31,4 @@ App From Source
     New Electron Application    ${electron}    args=${{ [$EXECDIR + "/app"] }}
 ```
 
-`Get Electron Executable` downloads the given release from GitHub on first use, checks its SHA-256 checksum and caches it in the user's cache directory, or in `cache_dir` if given. If `executable` is set, for example with `--variable ELECTRON_EXECUTABLE:/path/to/electron`, it returns that path and downloads nothing.
-
-- `New Electron Application` returns the browser id, the context id and the details of the first window's page, like `New Persistent Context`.
-- Windows that the app opens later can be selected with `Switch Page    NEW`.
-- `Close Electron Application`, `Close Browser`, `Close Context` and Browser's automatic closing all end the application.
-
-## Notes
-
-- **Linux without a desktop** needs a display server, for example `xvfb-run -a robot ...`. On a Wayland desktop, Electron apps follow `WAYLAND_DISPLAY` and `XDG_SESSION_TYPE` and open their windows on the desktop even under `xvfb-run`; to run hidden in Xvfb, use `env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a ...`.
-- **Runs started from VS Code** inherit `ELECTRON_RUN_AS_NODE=1`, which makes every Electron binary run as plain Node.js. `New Electron Application` removes that variable unless you pass `env` yourself.
-- **Apps with the Node inspector disabled** (Electron fuse `EnableNodeCliInspectArguments`) cannot be started, because Playwright needs the inspector to attach to the main process.
-- **Importing both `Browser` and `Electron`** makes every Browser keyword ambiguous. Import only `Electron`, or use the usual Robot Framework means such as `Set Library Search Order` or full keyword names.
-
-## Development
-
-```sh
-# from the repository root
-uv run pytest
-xvfb-run -a uv run robotcode -r . robot                          # acceptance tests, configured in robot.toml
-xvfb-run -a uv run robotcode -r . -p electron-previous robot     # against an older Electron major
-```
-
-The acceptance tests get Electron through `Electron.Helper` with the repository's `.cache/electron/` as cache, and use the fixture app in `atest/fixtures/app/`. The Electron version is the variable `${ELECTRON_VERSION}` in `atest/resources/fixture.resource`. The profile `electron-previous` in `robot.toml` overrides it, as does `-v ELECTRON_VERSION:<version>` on the command line. To use a local Electron without downloading, set `ELECTRON_EXECUTABLE` in a personal, gitignored `.robot.toml`:
-
-```toml
-[variables]
-ELECTRON_EXECUTABLE = "/path/to/electron"
-``` The test `Application And Web Browser` also needs Chromium for Playwright in the Browser clone: run `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` there.
+The [documentation](https://example.github.io/) covers starting and closing applications, downloads, running on CI and troubleshooting.
