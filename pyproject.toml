@@ -22,3 +22,7 @@ dev = [
     "pytest>=8",
     "robotcode[analyze,repl,runner]>=2.7.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["packages/electron/tests", "packages/vscode/tests"]
+addopts = "--import-mode=importlib"

@@ -1,0 +1,21 @@
+{
+    "name": "test-extension",
+    "displayName": "Robot Test Extension",
+    "description": "Fixture extension for the acceptance tests of the VSCode library",
+    "publisher": "robot",
+    "version": "0.0.1",
+    "private": true,
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "main": "./extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "robotTest.sayHello",
+                "title": "Say Hello",
+                "category": "Robot Test"
+            }
+        ]
+    }
+}

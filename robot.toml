@@ -1,9 +1,13 @@
 # Robot Framework configuration, used by RobotCode (https://robotcode.io).
 # Personal overrides, such as a local ELECTRON_EXECUTABLE, belong in .robot.toml, which is not committed.
 
-paths = ["packages/electron/atest"]
+paths = ["packages/electron/atest", "packages/vscode/atest"]
 output-dir = "results"
 
 [profiles.electron-previous]
 description = "Run the Electron tests against an older Electron major"
 extend-variables = { ELECTRON_VERSION = "42.11.12" }
+
+[profiles.vscode-insiders]
+description = "Run the VS Code tests against the newest VS Code Insiders build"
+extend-variables = { VSCODE_VERSION = "insiders" }
