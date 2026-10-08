@@ -35,10 +35,20 @@ def test_contains_every_electron_and_browser_keyword():
     assert set(Electron().get_keyword_names()) <= set(vscode.get_keyword_names())
 
 
-def test_adds_only_open_and_close_vs_code_to_electron():
+def test_adds_only_its_own_keywords_to_electron():
     added = set(import_library().get_keyword_names()) - set(Electron().get_keyword_names())
 
-    assert added == {"Open VS Code", "Close VS Code"}
+    assert added == {"Open VS Code", "Close VS Code", "Install VS Code Extension"}
+
+
+def test_install_into_a_browser_not_opened_by_open_vs_code_fails(monkeypatch):
+    def fail(*args, **kwargs):
+        raise AssertionError("nothing may be installed")
+
+    monkeypatch.setattr("VSCode.install_extension", fail)
+
+    with pytest.raises(ValueError, match="'browser=unknown' is not a VS Code instance"):
+        import_library().install_vs_code_extension("ms-python.python", browser="browser=unknown")
 
 
 def test_converts_browser_import_arguments():

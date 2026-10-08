@@ -46,6 +46,7 @@ The command palette filters asynchronously, so the test waits for the command's 
 - **Extensions:**
   - `extension_development_path` loads one or more extensions from source.
   - `extensions` installs Marketplace extensions or `.vsix` files into the instance before it starts.
+  - `Install VS Code Extension` installs a Marketplace extension or a `.vsix` file into the running instance. VS Code picks it up without a restart.
 - **Settings:** `settings` are written to the instance's user settings. The defaults switch off the welcome page, release notes, update checks, telemetry and workspace trust. They also switch off the screen reader mode, which VS Code otherwise turns on under Playwright, and hide the secondary side bar. Given settings override the defaults.
 - **Isolation:** every instance gets its own user-data and extensions directories under the output directory. Neither the user's own VS Code nor other instances affect it. `VSCODE_*` variables and `ELECTRON_RUN_AS_NODE` are removed from its environment.
 - **Closing:** `Close VS Code`, `Close Browser` and Browser's automatic closing end the instance.

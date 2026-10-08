@@ -5,7 +5,7 @@ from datetime import timedelta
 from importlib.metadata import version
 from inspect import cleandoc
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from Browser.utils import logger
 from Browser.utils.data_types import ElementState, NewPageDetails, SelectionType
@@ -14,6 +14,7 @@ from robotlibcore import keyword
 
 from .download import cli_path, default_cache_dir, download_vscode, executable_path, product_version
 from .instance import (
+    InstanceDirectories,
     create_instance_directories,
     install_extension,
     instance_environment,
@@ -44,6 +45,11 @@ The rest of this documentation is the Electron library's own.
 """
 
 
+class Instance(NamedTuple):
+    executable: Path
+    directories: InstanceDirectories
+
+
 class VSCode(Electron):
     ROBOT_LIBRARY_VERSION = __version__
 
@@ -55,6 +61,9 @@ class VSCode(Electron):
         if not VSCode._instance_cleanup_done:
             VSCode._instance_cleanup_done = True
             remove_instance_directories(Path(self.outputdir))
+
+    def _instances(self) -> dict[str, Instance]:
+        return self.__dict__.setdefault("_vscode_instances", {})
 
     @keyword("Open VS Code")
     def open_vs_code(
@@ -132,6 +141,7 @@ class VSCode(Electron):
         except Exception:
             self.close_browser(ids[0])
             raise
+        self._instances()[ids[0]] = Instance(Path(executable), directories)
         return ids
 
     @keyword("Close VS Code")
@@ -148,6 +158,47 @@ class VSCode(Electron):
         | `Close VS Code`    ${vscode}
         """
         self.close_electron_application(browser)
+
+    @keyword("Install VS Code Extension")
+    def install_vs_code_extension(
+        self, extension: str, browser: SelectionType | str = SelectionType.CURRENT
+    ) -> None:
+        """Installs an extension into a running VS Code instance started with `Open VS Code`.
+
+        The extension is installed the way ``extensions`` of `Open VS Code`
+        installs it before the start: with the instance's command-line script,
+        into the instance's own extensions directory, so neither the user's
+        VS Code nor other instances get it. Forks of VS Code install from
+        their own extension gallery. The keyword returns when the installation
+        has finished. VS Code picks the extension up without a restart; wait
+        for what the extension contributes, as for any other extension.
+
+        *Arguments:*
+          - ``extension``: A Marketplace identifier such as ``ms-python.python``,
+                or the path of a ``.vsix`` file.
+          - ``browser``: ``CURRENT`` for the active instance, or a browser id
+                that `Open VS Code` returned.
+
+        Example:
+        | `Open VS Code`    ${EXECDIR}/tests/workspace
+        | `Install VS Code Extension`    ms-python.python
+        | `Install VS Code Extension`    ${EXECDIR}/dist/my-extension.vsix
+        """
+        if SelectionType.create(browser) is SelectionType.CURRENT:
+            active = self.get_browser_ids(SelectionType.CURRENT)
+            browser_id = active[0] if active else "CURRENT"
+        else:
+            browser_id = str(browser)
+        instance = self._instances().get(browser_id)
+        if instance is None:
+            raise ValueError(
+                f"Browser '{browser_id}' is not a VS Code instance started by 'Open VS Code'; "
+                "only those can install extensions."
+            )
+        install_extension(
+            cli_path(instance.executable), extension, instance.directories, instance_environment(os.environ)
+        )
+        logger.info(f"Installed extension {extension} into the VS Code instance {instance.directories.root}")
 
 
 VSCode.__doc__ = cleandoc(_INTRO) + "\n\n" + cleandoc(Electron.__doc__ or "")
