@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Electron Fixture</title>
+</head>
+<body>
+    <h1>Electron Fixture</h1>
+    <button id="change">Click me</button>
+    <button id="open">Open second window</button>
+    <dl>
+        <dt>Arguments</dt><dd id="args"></dd>
+        <dt>Working directory</dt><dd id="cwd"></dd>
+        <dt>ROBOT_TEST_VAR</dt><dd id="test-var"></dd>
+        <dt>ROBOT_ONLY_IN_RUN</dt><dd id="run-only-var"></dd>
+        <dt>ELECTRON_RUN_AS_NODE</dt><dd id="run-as-node"></dd>
+    </dl>
+    <script>
+        const query = new URLSearchParams(location.search);
+        document.getElementById('args').textContent = query.get('args');
+        document.getElementById('cwd').textContent = query.get('cwd');
+        document.getElementById('test-var').textContent = query.get('testVar');
+        document.getElementById('run-only-var').textContent = query.get('runOnlyVar');
+        document.getElementById('run-as-node').textContent = query.get('runAsNode');
+        document.getElementById('change').addEventListener('click', (event) => {
+            event.target.textContent = 'Clicked';
+        });
+        document.getElementById('open').addEventListener('click', () => {
+            window.open('second.html', '_blank');
+        });
+    </script>
+</body>
+</html>
