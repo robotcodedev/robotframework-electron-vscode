@@ -32,7 +32,7 @@ The library documentation SHALL describe the Electron keywords and SHALL contain
 - **THEN** it reports the version of `robotframework-electron`, and links in the Browser keyword documentation, such as those to `Assertions`, resolve to sections of the same document
 
 ### Requirement: Start an application
-`New Electron Application` SHALL start the Electron application at a given executable path and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. If no environment variables are given, the application SHALL inherit the environment of the test run.
+`New Electron Application` SHALL start the Electron application at a given executable path and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. If no environment variables are given, the application SHALL inherit the environment of the test run without `ELECTRON_RUN_AS_NODE`.
 
 #### Scenario: Application opens a window
 - **WHEN** `New Electron Application` is called with the path of an Electron application
@@ -41,6 +41,10 @@ The library documentation SHALL describe the Electron keywords and SHALL contain
 #### Scenario: Arguments and environment
 - **WHEN** the keyword is called with command-line arguments, a working directory and environment variables
 - **THEN** the application receives these arguments, runs in that directory and sees exactly these environment variables
+
+#### Scenario: Test run started from inside VS Code
+- **WHEN** the test run has `ELECTRON_RUN_AS_NODE=1` in its environment, as runs started from VS Code do, and no environment variables are given
+- **THEN** the application starts normally and does not see `ELECTRON_RUN_AS_NODE`
 
 ### Requirement: Windows are Browser pages
 A started application SHALL be a browser in Browser's state with one context. Each of its windows SHALL be a page of that context, and its first window SHALL be the active page when `New Electron Application` returns.
