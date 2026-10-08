@@ -22,26 +22,30 @@ Provides VS Code builds for tests. It resolves a requested version or quality, d
 - **THEN** the keyword fails with an error that names the version
 
 ### Requirement: Cache builds
-A downloaded build SHALL be kept in a cache directory and reused by later calls in any run. The cache directory SHALL default to the user's cache directory and SHALL be configurable with the environment variable `ROBOTFRAMEWORK_VSCODE_CACHE`.
+A downloaded build SHALL be kept in a cache directory and reused by later calls in any run. The cache directory SHALL default to the user's cache directory and SHALL be configurable per call.
 
 #### Scenario: Second call uses the cache
 - **WHEN** the same version is requested a second time
 - **THEN** no download takes place and the same executable path is returned
 
 #### Scenario: Custom cache directory
-- **WHEN** `ROBOTFRAMEWORK_VSCODE_CACHE` points to a directory
+- **WHEN** `Download VS Code` is called with a cache directory
 - **THEN** builds are stored in and read from that directory
 
 ### Requirement: Only complete builds are used
-An interrupted, incomplete or corrupted download SHALL never be used. When the update service provides a checksum, the download SHALL be verified against it. Parallel test processes that request the same build SHALL download it only once.
+An interrupted, incomplete or corrupted download SHALL never be used. Every download SHALL be verified against the SHA-256 checksum that the update service publishes for the build. Parallel test processes that request the same uncached build SHALL all get the same executable path.
 
 #### Scenario: Interrupted download
 - **WHEN** a download was interrupted in an earlier run
 - **THEN** the next call downloads the build again instead of using the partial files
 
+#### Scenario: Checksum mismatch
+- **WHEN** the downloaded archive does not match the published checksum
+- **THEN** the keyword fails and the cache does not contain that build
+
 #### Scenario: Parallel requests
 - **WHEN** two test processes request the same uncached build at the same time
-- **THEN** the build is downloaded once and both processes get the same executable path
+- **THEN** both get the same executable path, and the cache holds one complete copy of the build
 
 ### Requirement: Supported platforms
 Downloads SHALL work on Linux (x64, arm64), Windows (x64) and macOS (x64, arm64).
