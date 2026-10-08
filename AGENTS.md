@@ -45,3 +45,4 @@ After switching branches in the clone or changing its TypeScript or proto files,
 
 - Never open issues, pull requests or comments in other repositories (including the Browser library) unless explicitly asked.
 - Make small, focused changes; plan larger work as an OpenSpec change first.
+- Write commit messages as [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<optional scope>): <description>`, for example `feat(electron): add New Electron Application` or `docs(openspec): plan vscode workbench keywords change`. Use the package (`electron`, `vscode`) or `openspec` as scope where it fits.
