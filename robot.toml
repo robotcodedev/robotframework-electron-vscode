@@ -3,6 +3,7 @@
 
 paths = ["packages/electron/atest", "packages/vscode/atest"]
 output-dir = "results"
+run-empty-suite = true
 
 [profiles.electron-previous]
 description = "Run the Electron tests against an older Electron major"
