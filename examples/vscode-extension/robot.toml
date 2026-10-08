@@ -1,0 +1,15 @@
+# Robot Framework configuration, used by RobotCode (https://robotcode.io).
+# Run the tests from this folder with `robotcode robot`.
+# Personal settings, such as a local VSCODE_EXECUTABLE, belong in .robot.toml, which is not committed.
+
+paths = ["tests"]
+output-dir = "results"
+
+# The locators are variables of the resources in tests/resources. When another VS Code version,
+# or a fork, needs other locators, add a profile for it that overrides them, usually together
+# with VSCODE_VERSION, and select it with `robotcode -p <profile> robot`. The keywords stay the same.
+#
+# This profile overrides the command palette locator with an equivalent selector, to show how.
+[profiles.locator-override]
+description = "Find command palette rows through the quick input widget instead of its list"
+extend-variables = { COMMAND_PALETTE_ROW = '.quick-input-widget .monaco-list-row[aria-label*="{title}"]' }

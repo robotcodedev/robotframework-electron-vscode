@@ -35,6 +35,12 @@ def test_contains_every_electron_and_browser_keyword():
     assert set(Electron().get_keyword_names()) <= set(vscode.get_keyword_names())
 
 
+def test_adds_only_open_and_close_vs_code_to_electron():
+    added = set(import_library().get_keyword_names()) - set(Electron().get_keyword_names())
+
+    assert added == {"Open VS Code", "Close VS Code"}
+
+
 def test_converts_browser_import_arguments():
     vscode = import_library("timeout=5s", "auto_closing_level=SUITE")
 

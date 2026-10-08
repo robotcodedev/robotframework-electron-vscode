@@ -5,7 +5,7 @@ from datetime import timedelta
 from importlib.metadata import version
 from inspect import cleandoc
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any
 
 from Browser.utils import logger
 from Browser.utils.data_types import ElementState, NewPageDetails, SelectionType
@@ -44,11 +44,6 @@ The rest of this documentation is the Electron library's own.
 """
 
 
-class VSCodeInstance(NamedTuple):
-    directory: Path
-    version: str | None
-
-
 class VSCode(Electron):
     ROBOT_LIBRARY_VERSION = __version__
 
@@ -60,9 +55,6 @@ class VSCode(Electron):
         if not VSCode._instance_cleanup_done:
             VSCode._instance_cleanup_done = True
             remove_instance_directories(Path(self.outputdir))
-
-    def _vscode_instances(self) -> dict[str, VSCodeInstance]:
-        return self.__dict__.setdefault("_vscode_instance_registry", {})
 
     @keyword("Open VS Code")
     def open_vs_code(
@@ -140,7 +132,6 @@ class VSCode(Electron):
         except Exception:
             self.close_browser(ids[0])
             raise
-        self._vscode_instances()[ids[0]] = VSCodeInstance(directories.root, product)
         return ids
 
     @keyword("Close VS Code")

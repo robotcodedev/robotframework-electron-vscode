@@ -1,0 +1,31 @@
+{
+    "name": "example-extension",
+    "displayName": "Robot Example Extension",
+    "description": "Example extension whose Robot Framework tests show how to drive the VS Code workbench",
+    "publisher": "robot",
+    "version": "0.0.1",
+    "private": true,
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "main": "./extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "robotExample.sayHello",
+                "title": "Say Hello",
+                "category": "Robot Example"
+            },
+            {
+                "command": "robotExample.pick",
+                "title": "Pick",
+                "category": "Robot Example"
+            },
+            {
+                "command": "robotExample.openWebview",
+                "title": "Open Webview",
+                "category": "Robot Example"
+            }
+        ]
+    }
+}

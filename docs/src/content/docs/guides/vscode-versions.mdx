@@ -1,0 +1,39 @@
+---
+title: VS Code versions and profiles
+description: Run your tests against several VS Code versions, with a RobotCode profile per version for the locators that differ.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import robotToml from '../../../../../examples/vscode-extension/robot.toml?raw';
+
+Your tests choose the VS Code version they run against with a variable such as `${VSCODE_VERSION}`:
+
+- A fixed version such as `1.141.0` gives reproducible runs and is downloaded only once.
+- `stable` and `insiders` always use the newest build, which shows early when a new VS Code release breaks your tests.
+
+## A profile per version
+
+The workbench's DOM can differ between VS Code versions, so a locator that works with one version may fail with another. Because the [workbench keywords](../workbench-keywords/) take their locators from variables, a version with other locators needs no other keywords: a [RobotCode](https://robotcode.io) profile in `robot.toml` sets the variables for that version.
+
+The example project's `robot.toml` has one profile, `locator-override`, which replaces the command palette locator with an equivalent selector to show the mechanism:
+
+<Code code={robotToml} lang="toml" title="robot.toml" />
+
+A real project adds a profile for each VS Code version, or fork, whose locators differ, and usually sets `VSCODE_VERSION` in the same profile. Select a profile with `-p`:
+
+```sh
+robotcode -p locator-override robot
+```
+
+Profile variables override the defaults in the resources, like variables given on the command line. To test several VS Code versions, for example on CI, run the tests once per profile.
+
+Without RobotCode, pass the variables with `--variable` or collect them in a variable file per version and pass it with `--variablefile`.
+
+## Personal settings
+
+Settings that only apply to your machine, such as an installed VS Code, go into a `.robot.toml` next to `robot.toml`. RobotCode reads it after `robot.toml`, and it is not committed:
+
+```toml
+[variables]
+VSCODE_EXECUTABLE = "/usr/share/code/code"
+```

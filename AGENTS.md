@@ -43,6 +43,7 @@ After switching branches in the clone or changing its TypeScript or proto files,
 - `uv run robotcode -r . robot` — run the Robot Framework acceptance tests. Paths, output directory and profiles come from `robot.toml`; select a profile with `-p <name>` before the subcommand, and one test or suite with `-bl "<longname>"`. On Linux without a desktop, prefix `xvfb-run -a`. On a Wayland desktop the windows open on the desktop even then; to keep them hidden in Xvfb, prefix `env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a`.
 - `uv run robotcode -r . discover tests`, `uv run robotcode -r . results summary`, `uv run robotcode -r . analyze code` — list tests, inspect the last run, analyse statically.
 - `uv run pytest` — Python unit tests of all packages.
+- `uv run robotcode -r examples/vscode-extension robot` — run the VS Code example project. It has its own `robot.toml` and is not part of the root `robot.toml` paths; the display prefixes above apply as well. Its guides in `docs/` include its files, so check them when you change the example.
 - Personal settings, such as a local `ELECTRON_EXECUTABLE`, go into `.robot.toml`, which is gitignored.
 - `npm ci`, then `npm run dev` or `npm run build` in `docs/` — install the documentation site's dependencies, serve it locally with live reload, or build it into `docs/dist/`. Only Node.js is needed, no Python. Started by an agent, `npm run dev` runs in the background; stop it with `npx astro dev stop` in `docs/`.
 
