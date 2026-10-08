@@ -18,4 +18,7 @@ robotframework-vscode = { workspace = true }
 robotframework-browser = { path = "../robotframework-browser", editable = true }
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "pytest>=8",
+    "robotcode[analyze,repl,runner]>=2.7.0",
+]

@@ -60,7 +60,13 @@ App From Source
 
 ```sh
 uv run pytest packages/electron/tests
-xvfb-run -a uv run robot --outputdir results packages/electron/atest
+xvfb-run -a uv run robotcode robot                          # acceptance tests, configured in robot.toml
+xvfb-run -a uv run robotcode -p electron-previous robot     # against an older Electron major
 ```
 
-The acceptance tests get Electron through `Electron.Helper` with the repository's `.cache/electron/` as cache, and use the fixture app in `atest/fixtures/app/`. The Electron version is the variable `${ELECTRON_VERSION}` in `atest/resources/fixture.resource`. To run against another version, override it, for example `--variable ELECTRON_VERSION:42.11.12`. To use a local Electron without downloading, pass `--variable ELECTRON_EXECUTABLE:/path/to/electron`. The test `Application And Web Browser` also needs Chromium for Playwright in the Browser clone: run `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` there.
+The acceptance tests get Electron through `Electron.Helper` with the repository's `.cache/electron/` as cache, and use the fixture app in `atest/fixtures/app/`. The Electron version is the variable `${ELECTRON_VERSION}` in `atest/resources/fixture.resource`. The profile `electron-previous` in `robot.toml` overrides it, as does `-v ELECTRON_VERSION:<version>` on the command line. To use a local Electron without downloading, set `ELECTRON_EXECUTABLE` in a personal, gitignored `.robot.toml`:
+
+```toml
+[variables]
+ELECTRON_EXECUTABLE = "/path/to/electron"
+``` The test `Application And Web Browser` also needs Chromium for Playwright in the Browser clone: run `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` there.

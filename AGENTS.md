@@ -38,8 +38,11 @@ After switching branches in the clone or changing its TypeScript or proto files,
 
 ## Common Commands
 
-- `uv sync` — install the workspace into `.venv`.
-- `uv run robot ...` — run Robot Framework tests.
+- `uv sync` — install the workspace into `.venv`, including the dev tools (pytest, RobotCode).
+- `uv run robotcode robot` — run the Robot Framework acceptance tests. Paths, output directory and profiles come from `robot.toml`; select a profile with `-p <name>` before the subcommand, and one test or suite with `-bl "<longname>"`. On Linux without a desktop, prefix `xvfb-run -a`.
+- `uv run robotcode discover tests`, `uv run robotcode results summary`, `uv run robotcode analyze code` — list tests, inspect the last run, analyse statically.
+- `uv run pytest packages/electron/tests` — Python unit tests.
+- Personal settings, such as a local `ELECTRON_EXECUTABLE`, go into `.robot.toml`, which is gitignored.
 
 ## Agent Notes
 

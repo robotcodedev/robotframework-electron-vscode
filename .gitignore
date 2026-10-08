@@ -12,3 +12,4 @@ wheels/
 # Test output and downloads
 results/
 .cache/
+.robot.toml
