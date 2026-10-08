@@ -7,14 +7,14 @@ Provides VS Code builds for tests. It resolves a requested version or quality, d
 ## Requirements
 
 ### Requirement: Select a VS Code build
-`Download VS Code` SHALL accept `stable`, `insiders` or a fixed version such as `1.95.0`, and SHALL return the path of the VS Code executable for the current platform. `stable` and `insiders` SHALL resolve to the newest build of that quality.
+`Get VS Code Executable` in the `VSCode.Helper` library SHALL accept `stable`, `insiders` or a fixed version such as `1.95.0`, and SHALL return the path of the VS Code executable for the current platform. `stable` and `insiders` SHALL resolve to the newest build of that quality.
 
 #### Scenario: Newest stable build
-- **WHEN** `Download VS Code    stable` is called
+- **WHEN** `Get VS Code Executable    stable` is called
 - **THEN** it returns the executable path of the newest stable VS Code for the current platform
 
 #### Scenario: Fixed version
-- **WHEN** `Download VS Code    1.95.0` is called
+- **WHEN** `Get VS Code Executable    1.95.0` is called
 - **THEN** it returns the executable path of VS Code 1.95.0
 
 #### Scenario: Unknown version
@@ -29,7 +29,7 @@ A downloaded build SHALL be kept in a cache directory and reused by later calls 
 - **THEN** no download takes place and the same executable path is returned
 
 #### Scenario: Custom cache directory
-- **WHEN** `Download VS Code` is called with a cache directory
+- **WHEN** `Get VS Code Executable` is called with a cache directory
 - **THEN** builds are stored in and read from that directory
 
 ### Requirement: Only complete builds are used
@@ -51,5 +51,19 @@ An interrupted, incomplete or corrupted download SHALL never be used. Every down
 Downloads SHALL work on Linux (x64, arm64), Windows (x64) and macOS (x64, arm64).
 
 #### Scenario: Linux
-- **WHEN** `Download VS Code    stable` runs on Linux x64
+- **WHEN** `Get VS Code Executable    stable` runs on Linux x64
 - **THEN** the returned path is an executable VS Code binary
+
+### Requirement: Local executable
+If an executable is given, `Get VS Code Executable` SHALL return it unchanged and SHALL NOT download anything.
+
+#### Scenario: Installed VS Code
+- **WHEN** the keyword is called with the executable of an installed VS Code
+- **THEN** it returns that path without any network access
+
+### Requirement: Independent of Browser state
+Importing `VSCode.Helper` and calling its keywords SHALL NOT start the Playwright process or require an open browser.
+
+#### Scenario: Helper without a browser
+- **WHEN** a suite imports only `VSCode.Helper` and calls `Get VS Code Executable`
+- **THEN** the keyword works and no Node.js process is started
