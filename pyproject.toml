@@ -1,0 +1,18 @@
+[project]
+name = "robotframework-vscode-testing"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["robotframework-electron", "robotframework-vscode"]
+
+[tool.uv.workspace]
+members = [
+    "packages/electron",
+    "packages/vscode",
+]
+
+[tool.uv.sources]
+robotframework-electron = { workspace = true }
+robotframework-vscode = { workspace = true }
+# Local clone of the Browser library with our hook, prepared with `inv deps && inv build`.
+# Switch to the PyPI release once the hook is published.
+robotframework-browser = { path = "../robotframework-browser", editable = true }

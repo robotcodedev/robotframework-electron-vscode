@@ -1,0 +1,17 @@
+[project]
+name = "robotframework-vscode"
+version = "0.1.0"
+description = "Robot Framework library for end-to-end testing of VS Code extensions"
+readme = "README.md"
+authors = [
+    { name = "Daniel Biehl", email = "dbiehl@live.de" }
+]
+requires-python = ">=3.10"
+dependencies = ["robotframework-electron"]
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "VSCode"

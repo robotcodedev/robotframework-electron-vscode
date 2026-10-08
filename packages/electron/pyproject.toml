@@ -1,0 +1,17 @@
+[project]
+name = "robotframework-electron"
+version = "0.1.0"
+description = "Robot Framework library for testing Electron applications, built on the Browser library"
+readme = "README.md"
+authors = [
+    { name = "Daniel Biehl", email = "dbiehl@live.de" }
+]
+requires-python = ">=3.10"
+dependencies = ["robotframework-browser>=20.6.0"]
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "Electron"
