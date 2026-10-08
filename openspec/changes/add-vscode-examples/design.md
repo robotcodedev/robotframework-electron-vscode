@@ -7,15 +7,19 @@ See proposal.md for motivation and specs/vscode-examples/spec.md for the require
 - Webviews are nested iframes.
 - RobotCode runs from the root given with `-r` and changes into it, so `${EXECDIR}` is that root.
 
+`add-documentation-site` provides the documentation site. Its guides include files from `examples/` with a Vite `?raw` import and Starlight's `<Code>` component, which always shows a whole file.
+
 ## Goals / Non-Goals
 
 **Goals:**
 - A copyable example that shows the patterns a project needs: its own keywords, locators as variables, profiles per VS Code version.
 - The example is verified by running it.
+- The guides show the example's files as they are, with no copies to keep in sync.
 
 **Non-Goals:**
 - Covering many workbench parts. The example shows the patterns on four typical tasks; editors, the explorer or debugging follow the same way in a project.
 - Keywords or resource files in the packages.
+- Showing parts of a file in a guide, for example line ranges. Files are cut so that a whole file fits a guide section.
 
 ## Decisions
 
@@ -23,14 +27,17 @@ See proposal.md for motivation and specs/vscode-examples/spec.md for the require
 
 ```
 examples/vscode-extension/
-  package.json, extension.js        extension "robot.example-extension": Say Hello, Pick, Open Webview
-  robot.toml                         paths, output dir, profiles
+  package.json, extension.js           extension "robot.example-extension": Say Hello, Pick, Open Webview
+  robot.toml                            paths, output dir, profiles
   tests/
-    resources/workbench.resource     keywords and locator variables
-    resources/variables.resource     VS Code version, executable, cache
-    commands.robot                   command palette
-    quick_pick.robot                 quick pick and notifications
-    webview.robot                    webview
+    resources/vscode.resource           VS Code version, executable, cache; Open Example VS Code
+    resources/command_palette.resource  Run Command and its locators
+    resources/quick_pick.resource       Select Quick Pick Item and its locators
+    resources/notifications.resource    Notification Should Be Shown and its locators
+    resources/webview.resource          Enter Webview, Leave Webview and their locators
+    commands.robot                      command palette
+    quick_pick.robot                    quick pick and notifications
+    webview.robot                       webview
   README.md
 ```
 
@@ -38,8 +45,9 @@ examples/vscode-extension/
   - `Say Hello` shows a notification.
   - `Pick` shows a quick pick and then a notification that names the item.
   - `Open Webview` opens a webview with a button that changes a text.
+- **One resource per workbench part:** Each resource holds the keywords and locator variables of one workbench part and imports what it uses itself. A guide section therefore shows one whole file, and a project can copy a single file. The test suites import the resources they need.
 - **Running:** The project is run with `uv run robotcode -r examples/vscode-extension robot` from the repository root. A user runs it from the copied folder with `robotcode robot`. Both use the example's own `robot.toml`, and `${EXECDIR}` is the example's root in both cases. All paths in the example are built from `${EXECDIR}`, so it refers to nothing outside its folder.
-- **VS Code version:** `${VSCODE_VERSION}` is a fixed version, initially 1.141.0. `${VSCODE_EXECUTABLE}` and `${VSCODE_CACHE}` default to `${NONE}`, so a copied project downloads into the user's cache like any user project.
+- **VS Code version:** `${VSCODE_VERSION}` is a fixed version, initially 1.141.0. `${VSCODE_EXECUTABLE}` and `${VSCODE_CACHE}` default to `${NONE}`, so a copied project downloads into the user's cache like any user project. `Open Example VS Code` opens VS Code with these values and the example extension (`extension_development_path=${EXECDIR}`).
 
 ### Keywords of the example
 
@@ -53,15 +61,26 @@ The frame selectors of the webview are checked against VS Code 1.141 while the e
 
 ### Locators and profiles
 
-- Every locator is a variable in `workbench.resource` (for example `${COMMAND_PALETTE_ROW}`, `${NOTIFICATION_MESSAGE}`, `${WEBVIEW_FRAMES}`).
+- Every locator is a variable in the resource of its workbench part (for example `${COMMAND_PALETTE_ROW}`, `${NOTIFICATION_MESSAGE}`, `${WEBVIEW_FRAMES}`).
 - The example's `robot.toml` has a profile that overrides one locator with an equivalent selector. It shows the mechanism and is used to test it.
 - Its comments explain that real projects add one profile per VS Code version whose locators differ.
+
+### Guides
+
+Two guides go into `docs/src/content/docs/guides/` as `.mdx` pages:
+- **Writing your own workbench keywords** (`workbench-keywords.mdx`):
+  - It explains the boundary: the library provides the technique, and the project owns keywords and locators.
+  - It shows `vscode.resource` and the four workbench resources, each with `<Code>` from its file.
+  - Between the files it names the important points: locators as variables, waiting for the palette row, the webview frames, and the selector prefix passed as a return value.
+- **VS Code versions and profiles** (`vscode-versions.mdx`): shows the example's `robot.toml` and explains one profile per VS Code version, how to choose it with `-p`, and personal settings in `.robot.toml`.
+
+The example's README stays short. It says what the example shows and how to run it, and links to the guides.
 
 ### Repository integration
 
 - The examples are not part of the root `robot.toml` paths: they have their own project root and configuration.
 - AGENTS.md lists the command for running them next to the library tests.
-- The README of `robotframework-vscode` gets a short section that points to the example and names the important points (own keywords, locators as variables, profiles per version, waiting in the command palette, webview frames).
+- The docs workflow from `add-documentation-site` already rebuilds the site when `examples/**` changes.
 
 ### Library cleanup
 
@@ -70,6 +89,7 @@ The frame selectors of the webview are checked against VS Code 1.141 while the e
 
 ## Risks / Trade-offs
 
-- [The example's locators break with a new VS Code release] → That is exactly what the example run shows. The fix then lands in the example, and users see how to adapt their own locators.
-- [Users copy the example and never update it] → Expected. The library promises no locators, and the README says so.
+- [The example's locators break with a new VS Code release] → That is exactly what the example run shows. The fix then lands in the example, and the guides show it with the next build.
+- [Users copy the example and never update it] → Expected. The library promises no locators, and the guide says so.
+- [A guide's text no longer fits a changed example file] → The files are small and each one belongs to one guide section, so a change to a file points to the section to check.
 - [The first example run downloads VS Code into the user's cache] → Needed once per version, as for any user project. Local runs can set `VSCODE_CACHE` or `VSCODE_EXECUTABLE` in a personal `.robot.toml` inside the example folder.

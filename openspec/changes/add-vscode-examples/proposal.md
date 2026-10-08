@@ -9,14 +9,14 @@ The libraries therefore provide only the technique: downloading VS Code, startin
 ## What Changes
 
 - The planned change `add-vscode-workbench` is dropped. There will be no workbench keywords, no locator table and no `Set VS Code Selector` in the library.
-- New example project `examples/vscode-extension/`: a small, self-contained extension with its own `robot.toml` and tests. It can be copied as a starting point. Its own resource defines keywords and locators for:
+- New example project `examples/vscode-extension/`: a small, self-contained extension with its own `robot.toml` and tests. It can be copied as a starting point. Its own resources define keywords and locators for:
   - running a command through the command palette, waiting for the command's row first,
   - selecting a quick pick item,
   - reading notifications,
   - acting inside an extension's webview.
 - In the example, the locators are variables, and a project overrides them per VS Code version with profiles in `robot.toml`.
 - The examples run with the repository's tests, so they stay working with the current libraries and VS Code.
-- The README of `robotframework-vscode` points to the example and names the important points.
+- Two guides on the documentation site explain the example: writing your own workbench keywords and locators, and profiles per VS Code version. They include the example's files instead of copying them. The example therefore keeps each workbench part in a resource file of its own, so that a guide section can show a whole file.
 - The `VSCode` library drops its unused instance registry, which was kept for the locator table.
 
 ## Capabilities
@@ -32,6 +32,7 @@ None.
 ## Impact
 
 - A new folder `examples/vscode-extension/`, which is not part of any package.
-- `packages/vscode/`: the README, and a small cleanup in `__init__.py`.
+- `packages/vscode/`: a small cleanup in `__init__.py`.
+- `docs/`: the two guides. This change builds on `add-documentation-site`, which is applied first.
 - `AGENTS.md`: the command that runs the examples.
 - The example tests download VS Code into the user's cache directory on first use, like any user project.

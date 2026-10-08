@@ -14,7 +14,7 @@ The `VSCode` library SHALL NOT provide keywords or locators for parts of the VS 
 - **THEN** the only keywords it adds to those of `Electron` are `Open VS Code` and `Close VS Code`
 
 ### Requirement: Examples for driving the workbench
-The repository SHALL provide an example project, `examples/vscode-extension`, whose own resource defines keywords for running a command through the command palette, selecting a quick pick item, reading notifications and acting inside a webview.
+The repository SHALL provide an example project, `examples/vscode-extension`, whose own resources define keywords for running a command through the command palette, selecting a quick pick item, reading notifications and acting inside a webview.
 
 #### Scenario: Command through the command palette
 - **WHEN** the example runs a command of its extension with its palette keyword
@@ -29,11 +29,22 @@ The repository SHALL provide an example project, `examples/vscode-extension`, wh
 - **THEN** Browser keywords act inside the webview in between, and on the workbench afterwards
 
 ### Requirement: Locators as variables
-The example's locators SHALL be variables of its resource, so that a project can override them per VS Code version in `robot.toml` without changing any keyword.
+The example's locators SHALL be variables of its resources, so that a project can override them per VS Code version in `robot.toml` without changing any keyword.
 
 #### Scenario: Locator overridden by a profile
 - **WHEN** the example runs with a profile that sets a locator variable
 - **THEN** the example's keywords use the locator from the profile
+
+### Requirement: Guides show the example
+The documentation site SHALL have a guide on writing your own workbench keywords and locators and a guide on profiles per VS Code version, both of which include the example's files. The example SHALL keep the keywords and locators of each workbench part in a resource file of its own, so that a guide section shows a whole file.
+
+#### Scenario: Guide on workbench keywords
+- **WHEN** the documentation site is built
+- **THEN** the guide on workbench keywords shows the example's resources for the command palette, quick picks, notifications and webviews, each from its file in `examples/vscode-extension`
+
+#### Scenario: Guide on VS Code versions
+- **WHEN** the documentation site is built
+- **THEN** the guide on profiles per VS Code version shows the example's `robot.toml` with its profile from `examples/vscode-extension`
 
 ### Requirement: Examples run with the repository's tests
 The examples SHALL run as part of the repository's tests, so that they keep working with the current libraries and VS Code.
