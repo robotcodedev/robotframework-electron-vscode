@@ -11,7 +11,7 @@ The `VSCode` library SHALL NOT provide keywords or locators for parts of the VS 
 
 #### Scenario: Keywords of the library
 - **WHEN** libdoc generates the documentation of `VSCode`
-- **THEN** the only keywords it adds to those of `Electron` are `Open VS Code` and `Close VS Code`
+- **THEN** the only keywords it adds to those of `Electron` are `Open VS Code`, `Close VS Code` and `Install VS Code Extension`
 
 ### Requirement: Examples for driving the workbench
 The repository SHALL provide an example project, `examples/vscode-extension`, whose own resources define keywords for running a command through the command palette, selecting a quick pick item, reading notifications and acting inside a webview.
