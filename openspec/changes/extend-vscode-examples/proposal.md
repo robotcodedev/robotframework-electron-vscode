@@ -30,8 +30,7 @@ The documentation has no pictures yet, and it does not show how to find locators
 - **Guides:**
   - the guide on workbench keywords covers the new resources and a section on finding locators with the RobotCode REPL;
   - a new guide shows which Browser features work in VS Code and which do not, with short snippets for those the example does not use, such as locator handlers, drag and drop and coverage;
-  - a new guide covers dependency extensions;
-  - the CI guide explains Xvfb's screen size.
+  - a new guide covers dependency extensions.
 
 ## Capabilities
 
@@ -48,5 +47,5 @@ None.
 - `examples/vscode-extension/`: workspace, resources, suites, `README.md`.
 - `docs/`: guides, a screenshot script and the screenshots in `docs/src/assets/screenshots/`.
 - `AGENTS.md`: the command that regenerates the screenshots.
-- Depends on `add-vscode-extension-install` for `Install VS Code Extension`, which is applied first.
+- Depends on `add-vscode-extension-install` for `Install VS Code Extension` and on `add-display-profiles` for the `xvfb` profile, which are applied first.
 - The Python tests need network access for the Marketplace and a Python interpreter on the `PATH`.

@@ -10,7 +10,7 @@ See proposal.md for motivation and the spec delta for the requirements. The exam
 - **Terminal:** its rows are in `.xterm-rows`, also with the default renderer. The prompt comes from the user's shell configuration.
 - **Python:** `extensions=["ms-python.python"]` installs the Python extension with its dependencies (Pylance, Python Environments, debugpy). *Python: Run Python File in Terminal* runs `hello.py` with the system Python and prints `Hello World` in the terminal.
 - **Windows:** a new window is a new page. `Switch Page    NEW` and `Close Page` work.
-- **Screen size:** `xvfb-run` uses a 640×480 screen by default. With `-s "-screen 0 1600x1000x24"`, the VS Code window is 1440×900, which suits screenshots.
+- **Screen size:** `xvfb-run` uses a 640×480 screen by default. The screenshots use a Full HD screen, `-s "-screen 0 1920x1080x24"`. VS Code does not fill the screen by itself: on a 1600×1000 screen its window was 1440×900, and in a plain Playwright launch on Full HD it was about 1200×800.
 - **Locator handlers** fire for notifications, but every wait for a notification triggers them as well, so a test of the handler itself cannot first check that the notification was there.
 
 ## Goals / Non-Goals
@@ -62,7 +62,7 @@ Each new resource covers one workbench part, has its locators as template variab
 ### Screenshots
 
 - **In the example:** the tests call `Take Screenshot    filename=<name>` at their important steps, so every run has the pictures in its log. The names are stable, for example `command-palette`, `quick-pick`, `webview`, `editor`, `terminal` and `python-run`.
-- **Script:** `docs/scripts/update_screenshots.py` runs the example from the repository root. It uses `xvfb-run -a -s "-screen 0 1600x1000x24"` and removes `WAYLAND_DISPLAY`, so the run is hidden and the size is fixed. It then copies the selected screenshots from the run's `browser/screenshot` folder to `docs/src/assets/screenshots/`.
+- **Script:** `docs/scripts/update_screenshots.py` runs the example from the repository root. It uses the example's `xvfb` profile from `add-display-profiles`, so the run is hidden on a Full HD screen. VS Code's window does not fill an Xvfb screen, and `window.newWindowDimensions` does not change that without a window manager. The script therefore passes a variable `VSCODE_VIEWPORT` of 1920×1080, and `Open Example VS Code` applies it with `Set Viewport Size` when it is set. Ordinary runs leave the window as it is. It then copies the selected screenshots from the run's `browser/screenshot` folder to `docs/src/assets/screenshots/`.
 - **Committed:** the screenshots are committed, like the reference pages. The guides show them as Markdown images, which Astro optimises at build time.
 - **AGENTS.md** says when to run the script: after changes to the example or to the VS Code version.
 
@@ -75,7 +75,6 @@ Each new resource covers one workbench part, has its locators as template variab
   - move what works into the resource.
 - `extensions.mdx` (new): dependency extensions with `extensions` and `Install VS Code Extension`. It includes `python.robot` and the `python-run` screenshot.
 - `browser-features.md` (new): a table of the spike's results with the categories *works*, *needs a setting* and *does not work*, plus short snippets for features without an example test. It is a Markdown table rather than generated content.
-- `ci-and-display.md`: Xvfb's default screen size and the `-s` option.
 - `getting-started/vscode.md`: the `command-palette` screenshot.
 
 ## Risks / Trade-offs
