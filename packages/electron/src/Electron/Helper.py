@@ -37,15 +37,18 @@ def executable_path(folder: Path, system: str = sys.platform) -> Path:
     return folder / "electron"
 
 
+def user_cache_dir() -> Path:
+    """Return the platform's cache directory for the current user."""
+    if sys.platform == "win32":
+        return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Caches"
+    return Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+
+
 def default_cache_dir() -> Path:
     """Return the user's cache directory for Electron releases."""
-    if sys.platform == "win32":
-        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    elif sys.platform == "darwin":
-        base = Path.home() / "Library" / "Caches"
-    else:
-        base = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
-    return base / "robotframework-electron" / "electron"
+    return user_cache_dir() / "robotframework-electron" / "electron"
 
 
 def _open(url: str):
@@ -65,7 +68,7 @@ def _expected_sha256(release_url: str, asset: str, version: str) -> str:
     raise ValueError(f"Electron release '{version}' has no download '{asset}'.")
 
 
-def _extract(archive: Path, target: Path) -> None:
+def extract_zip(archive: Path, target: Path) -> None:
     """Extract a zip and keep file modes and symlinks, which zipfile drops."""
     with zipfile.ZipFile(archive) as zf:
         for info in zf.infolist():
@@ -103,7 +106,7 @@ def download_electron(version: str, cache_dir: Path) -> Path:
         if actual != expected:
             raise ValueError(f"Checksum mismatch for {asset}: got {actual}, expected {expected}.")
         extracted = Path(tmp, "extracted")
-        _extract(archive, extracted)
+        extract_zip(archive, extracted)
         try:
             os.replace(extracted, folder)
         except OSError:
@@ -129,7 +132,7 @@ class Helper:
     | ***** Test Cases *****
     | App From Source
     |     ${electron} =    `Get Electron Executable`    44.7.0
-    |     New Electron Application    ${electron}    args=${{ ["path/to/app"] }}
+    |     New Electron Application    ${electron}    args=${{ [$EXECDIR + "/app"] }}
     """
 
     @keyword
