@@ -37,7 +37,7 @@ Two Instances
     VS Code Instance Has Exited    ${second_instance}
     VS Code Instance Is Running    ${first_instance}
     Switch Browser    ${first}
-    Get Title    *=    Visual Studio Code
+    Get Element States    .monaco-workbench    contains    visible
 
 User's VS Code Is Unaffected
     Open Test VS Code
@@ -47,6 +47,7 @@ User's VS Code Is Unaffected
     Should Be Empty    ${extensions}
 
 Logs After A Failed Test
+    [Tags]    vscode-only
     Open Test VS Code
     ${instance} =    Newest Instance
     Close VS Code

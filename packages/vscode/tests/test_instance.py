@@ -8,6 +8,7 @@ from VSCode.instance import (
     create_instance_directories,
     instance_environment,
     launch_arguments,
+    remove_instance_directories,
     write_settings,
 )
 
@@ -67,3 +68,20 @@ def test_launch_arguments_without_path_and_outside_linux(tmp_path):
 
     assert "--disable-dev-shm-usage" not in arguments
     assert arguments[-1] == QUIET_START_ARGUMENTS[-1]
+
+
+def test_removes_only_the_instance_directories(tmp_path):
+    create_instance_directories(tmp_path)
+    create_instance_directories(tmp_path)
+    (tmp_path / "output.xml").write_text("<robot/>")
+    (tmp_path / "browser").mkdir()
+
+    remove_instance_directories(tmp_path)
+
+    assert sorted(entry.name for entry in tmp_path.iterdir()) == ["browser", "output.xml"]
+
+
+def test_removing_without_instance_directories_is_fine(tmp_path):
+    remove_instance_directories(tmp_path)
+
+    assert list(tmp_path.iterdir()) == []

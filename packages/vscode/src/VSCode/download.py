@@ -163,17 +163,23 @@ def _app_folder(executable: Path, system: str) -> Path:
     return executable.parent / "resources" / "app"
 
 
+def _application_name(executable: Path, system: str) -> str | None:
+    """Return the ``applicationName`` from the build's ``product.json``, such as ``codium`` for VSCodium."""
+    product = _app_folder(executable, system) / "product.json"
+    try:
+        return json.loads(product.read_text(encoding="utf-8"))["applicationName"]
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def cli_path(executable: Path, system: str = sys.platform) -> Path:
-    """Return the VS Code command-line script that belongs to ``executable``."""
-    if system == "darwin":
-        bin_dir = _app_folder(executable, system) / "bin"
-        names = ["code", "code-insiders"]
-    else:
-        bin_dir = executable.parent / "bin"
-        names = ["code.cmd", "code-insiders.cmd"] if system == "win32" else ["code", "code-insiders"]
+    """Return the command-line script that belongs to ``executable``, also for forks of VS Code."""
+    bin_dir = _app_folder(executable, system) / "bin" if system == "darwin" else executable.parent / "bin"
+    suffix = ".cmd" if system == "win32" else ""
+    names = dict.fromkeys(name for name in (_application_name(executable, system), "code", "code-insiders") if name)
     for name in names:
-        if (bin_dir / name).is_file():
-            return bin_dir / name
+        if (bin_dir / f"{name}{suffix}").is_file():
+            return bin_dir / f"{name}{suffix}"
     raise ValueError(f"No VS Code command-line script found in {bin_dir}.")
 
 

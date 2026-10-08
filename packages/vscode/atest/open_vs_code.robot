@@ -10,12 +10,11 @@ Test Teardown       Close Browser    ALL
 Workbench Is Ready
     Open Test VS Code
     Get Element States    .monaco-workbench    contains    visible
-    Get Title    *=    Visual Studio Code
 
 Local Installation
-    ${code} =    Download VS Code    ${VSCODE_VERSION}    cache_dir=${VSCODE_CACHE}
+    ${code} =    Get VS Code Executable    ${VSCODE_VERSION}    cache_dir=${VSCODE_CACHE}
     Open VS Code    executable=${code}    cache_dir=${TEMPDIR}/vscode-never-downloaded
-    Get Title    *=    Visual Studio Code
+    Get Element States    .monaco-workbench    contains    visible
     Directory Should Not Exist    ${TEMPDIR}/vscode-never-downloaded
 
 Development Extension Is Active

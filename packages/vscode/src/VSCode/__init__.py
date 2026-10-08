@@ -18,6 +18,7 @@ from .instance import (
     install_extension,
     instance_environment,
     launch_arguments,
+    remove_instance_directories,
     write_settings,
 )
 
@@ -33,8 +34,9 @@ Electron and Browser keyword and takes Browser's import arguments. Import
 
 `Open VS Code` downloads VS Code if needed and starts an isolated instance
 with the extension under test, `Close VS Code` ends it. The workbench
-window is an ordinary Browser page. `Download VS Code` provides a VS Code
-executable on its own, for example in a CI setup step.
+window is an ordinary Browser page. To get a VS Code executable without
+starting it, for example in a CI setup step, use ``Get VS Code Executable``
+from the ``VSCode.Helper`` library.
 
 = Electron library documentation =
 
@@ -50,33 +52,17 @@ class VSCodeInstance(NamedTuple):
 class VSCode(Electron):
     ROBOT_LIBRARY_VERSION = __version__
 
+    _instance_cleanup_done = False
+
+    def _start_suite(self, name, attrs):
+        super()._start_suite(name, attrs)
+        # Like Browser's output folders: once per process, before the run opens its first instance.
+        if not VSCode._instance_cleanup_done:
+            VSCode._instance_cleanup_done = True
+            remove_instance_directories(Path(self.outputdir))
+
     def _vscode_instances(self) -> dict[str, VSCodeInstance]:
         return self.__dict__.setdefault("_vscode_instance_registry", {})
-
-    @keyword("Download VS Code")
-    def download_vs_code(self, version: str = "stable", cache_dir: Path | None = None) -> str:
-        """Downloads VS Code and returns the path of its executable.
-
-        The build for the current platform comes from the VS Code update
-        service, is verified against its published SHA-256 checksum and is
-        kept in the cache. Later calls, also in later runs, use the cached
-        copy. A fixed version that is already cached needs no network access;
-        ``stable`` and ``insiders`` always ask the update service for the
-        newest build.
-
-        *Arguments:*
-          - ``version``: ``stable``, ``insiders`` or a version such as ``1.141.0``.
-          - ``cache_dir``: Directory for downloaded builds. Defaults to
-                ``robotframework-vscode/vscode`` in the user's cache directory
-                (``~/.cache`` on Linux, ``~/Library/Caches`` on macOS,
-                ``%LOCALAPPDATA%`` on Windows).
-
-        Example:
-        | ${code} =    `Download VS Code`
-        | ${code} =    `Download VS Code`    1.141.0    cache_dir=${EXECDIR}/.cache
-        """
-        cached = download_vscode(version, cache_dir or default_cache_dir())
-        return str(executable_path(cached.folder, cached.quality))
 
     @keyword("Open VS Code")
     def open_vs_code(
@@ -108,8 +94,9 @@ class VSCode(Electron):
 
         *Arguments:*
           - ``path``: A folder to open as workspace, or a file to open in an editor.
-          - ``version``: VS Code to download and start, as for `Download VS Code`:
-                ``stable``, ``insiders`` or a version such as ``1.141.0``.
+          - ``version``: VS Code to download and start: ``stable``, ``insiders``
+                or a version such as ``1.141.0``. Builds are verified and cached
+                as by ``Get VS Code Executable`` from ``VSCode.Helper``.
           - ``executable``: An installed VS Code executable to start instead.
                 Nothing is downloaded then.
           - ``extension_development_path``: Folder of the extension under test,
@@ -121,7 +108,8 @@ class VSCode(Electron):
                 telemetry, workspace trust, the screen reader mode and the
                 secondary side bar.
           - ``args``: Additional command-line arguments for VS Code.
-          - ``cache_dir``: Cache directory for downloads, see `Download VS Code`.
+          - ``cache_dir``: Directory for downloaded builds. Defaults to
+                ``robotframework-vscode/vscode`` in the user's cache directory.
           - ``timeout``: How long to wait for the window and for the workbench.
 
         Returns a tuple of browser id, context id and page details of the

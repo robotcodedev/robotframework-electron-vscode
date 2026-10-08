@@ -233,3 +233,31 @@ def test_extracted_files_keep_their_mode(service, tmp_path):
     folder = download_vscode("stable", tmp_path).folder
 
     assert stat.S_IMODE((folder / "bin" / "code").stat().st_mode) & 0o111
+
+
+@pytest.mark.parametrize(
+    ("system", "executable", "application_name", "cli"),
+    [
+        ("linux", "code", "code", "bin/code"),
+        ("linux", "code-insiders", "code-insiders", "bin/code-insiders"),
+        ("linux", "codium", "codium", "bin/codium"),
+        ("linux", "cursor", "cursor", "bin/cursor"),
+        ("win32", "VSCodium.exe", "codium", "bin/codium.cmd"),
+        ("darwin", "VSCodium.app/Contents/MacOS/Electron", "codium", "VSCodium.app/Contents/Resources/app/bin/codium"),
+    ],
+)
+def test_finds_command_line_script_by_product_application_name(tmp_path, system, executable, application_name, cli):
+    app_folder = (
+        tmp_path / "VSCodium.app" / "Contents" / "Resources" / "app" if system == "darwin" else tmp_path / "resources" / "app"
+    )
+    app_folder.mkdir(parents=True)
+    (app_folder / "product.json").write_text(json.dumps({"applicationName": application_name}))
+    (tmp_path / cli).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / cli).touch()
+
+    assert cli_path(tmp_path / executable, system) == tmp_path / cli
+
+
+def test_reports_missing_command_line_script(tmp_path):
+    with pytest.raises(ValueError, match="No VS Code command-line script found"):
+        cli_path(tmp_path / "codium", "linux")

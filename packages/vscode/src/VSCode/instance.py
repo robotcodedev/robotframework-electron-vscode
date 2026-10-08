@@ -1,6 +1,7 @@
 """Directories, settings, environment and arguments of isolated VS Code instances."""
 
 import json
+import shutil
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
@@ -50,6 +51,11 @@ def create_instance_directories(output_dir: Path) -> InstanceDirectories:
     (directories.user_data / "User").mkdir(parents=True)
     directories.extensions.mkdir()
     return directories
+
+
+def remove_instance_directories(output_dir: Path) -> None:
+    """Remove ``<output_dir>/vscode``, the instance folders of earlier runs."""
+    shutil.rmtree(output_dir / "vscode", ignore_errors=True)
 
 
 def write_settings(user_data: Path, settings: Mapping[str, Any] | None) -> dict[str, Any]:
