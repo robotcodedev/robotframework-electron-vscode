@@ -13,6 +13,7 @@ wheels/
 results/
 .cache/
 .robot.toml
+.robotcode_cache/
 
 # Documentation site
 docs/node_modules/
