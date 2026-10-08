@@ -61,7 +61,6 @@ Every VS Code build and fork has this field (`code`, `code-insiders`, `codium`, 
 
 ## Risks / Trade-offs
 
-- [`Download VS Code` disappears] → Nothing is published yet. README and keyword docs name the replacement.
 - [Removing `vscode/` deletes the logs of the previous run] → The current run's logs stay. Anyone who needs older logs uses a separate output directory per run, as with Browser's screenshots and traces.
 - [Forks change their layout or CLI] → `applicationName` is the source, with the old names as fallback. A failed lookup ends in an error that names the folder searched.
 

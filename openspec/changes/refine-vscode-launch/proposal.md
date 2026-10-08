@@ -10,7 +10,7 @@ Using the VSCode library after `add-vscode-launch` showed three gaps:
 ## What Changes
 
 - New library `VSCode.Helper` with `Get VS Code Executable    version=stable    executable=${NONE}    cache_dir=${NONE}`, shaped like `Get Electron Executable`. It downloads and caches VS Code as before. A given `executable` is returned unchanged.
-- **BREAKING**: `Download VS Code` is removed from the `VSCode` library; use `Get VS Code Executable` from `VSCode.Helper`. `Open VS Code` keeps its `version`, `executable` and `cache_dir` arguments.
+- `Download VS Code` is removed from the `VSCode` library; `Get VS Code Executable` from `VSCode.Helper` replaces it. The project is still in its pilot phase (version 0.1.0, nothing published), so this breaks nobody. `Open VS Code` keeps its `version`, `executable` and `cache_dir` arguments.
 - At the start of a run, the library removes the instance directories that earlier runs left in the output directory, the way Browser cleans its own output folders. Instance directories of the current run are kept.
 - VS Code forks work with `executable=`: the command-line script for installing extensions is found by the `applicationName` from the build's `product.json` (for example `codium` or `cursor`). The acceptance tests no longer assume the product name "Visual Studio Code", and the README explains what differs for forks.
 
