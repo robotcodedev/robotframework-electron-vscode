@@ -40,7 +40,7 @@ ${ELECTRON_EXECUTABLE}    ${NONE}
 *** Test Cases ***
 App From Source
     ${electron} =    Get Electron Executable    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}
-    New Electron Application    ${electron}    args=${{ ["path/to/app"] }}
+    New Electron Application    ${electron}    args=${{ [$EXECDIR + "/app"] }}
 ```
 
 `Get Electron Executable` downloads the given release from GitHub on first use, checks its SHA-256 checksum and caches it in the user's cache directory, or in `cache_dir` if given. If `executable` is set, for example with `--variable ELECTRON_EXECUTABLE:/path/to/electron`, it returns that path and downloads nothing.
@@ -51,7 +51,7 @@ App From Source
 
 ## Notes
 
-- **Linux without a desktop** needs a display server, for example `xvfb-run -a robot ...`.
+- **Linux without a desktop** needs a display server, for example `xvfb-run -a robot ...`. On a Wayland desktop, Electron apps follow `WAYLAND_DISPLAY` and `XDG_SESSION_TYPE` and open their windows on the desktop even under `xvfb-run`; to run hidden in Xvfb, use `env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a ...`.
 - **Runs started from VS Code** inherit `ELECTRON_RUN_AS_NODE=1`, which makes every Electron binary run as plain Node.js. `New Electron Application` removes that variable unless you pass `env` yourself.
 - **Apps with the Node inspector disabled** (Electron fuse `EnableNodeCliInspectArguments`) cannot be started, because Playwright needs the inspector to attach to the main process.
 - **Importing both `Browser` and `Electron`** makes every Browser keyword ambiguous. Import only `Electron`, or use the usual Robot Framework means such as `Set Library Search Order` or full keyword names.
@@ -59,9 +59,10 @@ App From Source
 ## Development
 
 ```sh
-uv run pytest packages/electron/tests
-xvfb-run -a uv run robotcode robot                          # acceptance tests, configured in robot.toml
-xvfb-run -a uv run robotcode -p electron-previous robot     # against an older Electron major
+# from the repository root
+uv run pytest
+xvfb-run -a uv run robotcode -r . robot                          # acceptance tests, configured in robot.toml
+xvfb-run -a uv run robotcode -r . -p electron-previous robot     # against an older Electron major
 ```
 
 The acceptance tests get Electron through `Electron.Helper` with the repository's `.cache/electron/` as cache, and use the fixture app in `atest/fixtures/app/`. The Electron version is the variable `${ELECTRON_VERSION}` in `atest/resources/fixture.resource`. The profile `electron-previous` in `robot.toml` overrides it, as does `-v ELECTRON_VERSION:<version>` on the command line. To use a local Electron without downloading, set `ELECTRON_EXECUTABLE` in a personal, gitignored `.robot.toml`:

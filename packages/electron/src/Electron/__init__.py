@@ -73,7 +73,7 @@ class Electron(Browser):
         Example:
         | ${app} =    `New Electron Application`    /opt/my-app/my-app
         | `Get Title`    ==    My App
-        | `New Electron Application`    ${ELECTRON}    args=${{ ["path/to/app"] }}
+        | `New Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
         """
         executable = shutil.which(str(executable_path))
         if executable is None:
