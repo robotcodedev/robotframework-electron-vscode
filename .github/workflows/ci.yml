@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: robotframework-electron-vscode
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          path: robotframework-electron-vscode
+
+      # Until the adoptContext hook is in a Browser release, the workspace takes
+      # robotframework-browser from a clone next to the repository.
+      - name: Check out the Browser library with the adoptContext hook
+        uses: actions/checkout@v7
+        with:
+          repository: d-biehl/robotframework-browser
+          ref: adopt-context-hook
+          path: robotframework-browser
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: astral-sh/setup-uv@v10
+
+      - name: Install Xvfb and Openbox
+        run: sudo apt-get update && sudo apt-get install -y xvfb openbox
+
+      # Ubuntu restricts unprivileged user namespaces, which the Chromium sandbox
+      # of Electron and VS Code needs.
+      - name: Allow the Chromium sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Build the Browser library
+        working-directory: robotframework-browser
+        run: |
+          uv venv .venv
+          uv pip install --python .venv/bin/python pip -r Browser/dev-requirements.txt
+          . .venv/bin/activate
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build
+          PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install --with-deps chromium
+
+      # Not --locked: the lock file records the Browser clone's dependencies,
+      # which change with the branch.
+      - name: Install the workspace
+        run: uv sync
+
+      - name: Unit tests
+        run: uv run pytest
+
+      - name: Static analysis
+        run: uv run robotcode -r . analyze code
+
+      - name: Acceptance tests
+        run: uv run robotcode -r . -p xvfb robot
+
+      - name: Upload the test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: robotframework-electron-vscode/results/
+          if-no-files-found: ignore
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10
+
+      - name: Build the packages
+        run: uv build --all-packages -o dist
+
+      - name: Upload the packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: dist/
+          if-no-files-found: error
