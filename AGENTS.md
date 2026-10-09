@@ -22,7 +22,7 @@ Background, research and the initial design ideas are in [dev-docs/background.md
 Until our hook is merged and released upstream, `robotframework-browser` comes from a local clone at `../robotframework-browser` (editable path source in the root `pyproject.toml`).
 
 - The hook is developed in the clone on the branch `adopt-context-hook`.
-- The clone's `origin` is `MarketSquare/robotframework-browser`; there is no GitHub fork yet.
+- The clone's `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`. The hook is proposed upstream in MarketSquare/robotframework-browser#5318. Push to the fork over SSH (`git@github.com:d-biehl/robotframework-browser.git`); the HTTPS `origin` has no credentials.
 
 The clone needs its generated gRPC stubs and the built Node wrapper, which are not in git:
 
@@ -54,4 +54,5 @@ After switching branches in the clone or changing its TypeScript or proto files,
 
 - Never open issues, pull requests or comments in other repositories (including the Browser library) unless explicitly asked.
 - Make small, focused changes; plan larger work as an OpenSpec change first.
+- Follow [CONTRIBUTING.md](CONTRIBUTING.md) and the [AI_POLICY.md](AI_POLICY.md): issues and pull requests end with an "AI / tooling disclosure", and commits must be cryptographically signed.
 - Write commit messages as [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<optional scope>): <description>`, for example `feat(electron): add New Electron Application` or `docs(openspec): plan vscode workbench keywords change`. Use the package (`electron`, `vscode`) or `openspec` as scope where it fits.

@@ -43,3 +43,11 @@ uv run robotcode -r . -p xvfb -p vscode-insiders robot       # against the newes
   ```sh
   uv run robotcode -r . -p xvfb robot -v VSCODE_EXECUTABLE:/opt/vscodium/codium -e vscode-only -bl "Electron & VSCode.VSCode"
   ```
+
+## Contributing
+
+Contributions are welcome. Read the [Contribution Guide](CONTRIBUTING.md), the [AI and Automated Contribution Policy](AI_POLICY.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) first, and report security problems as described in the [Security Policy](SECURITY.md).
+
+## License
+
+[Mozilla Public License 2.0](LICENSE)
