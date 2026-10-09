@@ -35,7 +35,7 @@ The log embeds the video, and the page details that the keyword returns contain 
 
 A window keeps its own size in the video: a larger window is scaled down to fit, and a smaller one is shown at its own size with a grey margin. For a full frame, open VS Code maximised and record in the size of the screen. Maximising needs a window manager, which the display profiles `xvfb` and `xephyr` start, see [CI and the Linux display](../ci-and-display/).
 
-The example project's `video.robot` does this. Its keyword reads the screen size from `SCREEN_SIZE`, which the display profiles use as well, and opens VS Code, which the example opens maximised, with `record_video` in that size and with the action overlay. Presenter mode slows the test down, so the video is easy to follow. After `Close VS Code`, the test checks that the video is there:
+The example project's `video.robot` does this. Its keyword reads the screen size from `SCREEN_SIZE`, which the display profiles use as well, and opens VS Code, which the example opens maximised, with `record_video` in that size and with the action overlay. Presenter mode, switched on for the whole suite, slows the tests down, so the videos are easy to follow. The second test creates a Python script, saves it through VS Code's own dialog and runs it with the run button above the editor. The tests do not close VS Code themselves: Browser closes it at the end of each test, which finishes the video, and in presenter mode it waits five seconds before, so the video shows the result.
 
 <Code code={videoTest} lang="robotframework" title="tests/video.robot" />
 

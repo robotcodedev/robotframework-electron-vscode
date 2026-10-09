@@ -6,9 +6,11 @@
 
 ## What Changes
 
-- **New suite:** `video.robot` in the example. Its test records a video while it demonstrates the extension: a command with its notification, the quick pick and the webview. It switches on Browser's presenter mode, so the steps are slow enough to follow, and Playwright's action overlay.
+- **New suite:** `video.robot` in the example, with two tests that record a video. They switch on Browser's presenter mode, so the steps are slow enough to follow, and Playwright's action overlay.
+  - One demonstrates the extension: a command with its notification, the quick pick and the webview.
+  - The other installs the Python extension, creates `greeting.py` in the explorer, types `print("Hello Robot Framework")`, saves it, and runs it with the run button above the editor. It needs network access like `python.robot`.
+- **New keywords:** a new `explorer.resource` with `Create File In Explorer`, and a `python.resource` with `Run Python File`, which clicks the run button above the editor once the Python extension is ready. `python.robot` uses it as well.
 - **Video size:** the size comes from `SCREEN_SIZE`, default `1920x1080`, which the display profiles use for the screen. VS Code opens maximised, so it fills the frame, also with `small-screen`.
-- **`Open Example VS Code`:** returns the ids and page details of `Open VS Code`, so that tests can read the video's path.
 - **Guide:** *Videos and slow motion* includes the example's suite instead of its own snippet.
 - **README:** the example's README names the suite.
 

@@ -6,17 +6,12 @@ Documentation       Runs a Python script with the Python extension, an extension
 ...                 Leave them out with `--exclude network`.
 
 Resource            resources/vscode.resource
-Resource            resources/command_palette.resource
 Resource            resources/editor.resource
+Resource            resources/python.resource
 Resource            resources/terminal.resource
 
 Test Tags           network
 Test Teardown       Close VS Code
-
-
-*** Variables ***
-# The interpreter in the status bar, which the Python extension shows once it is ready.
-${PYTHON_INTERPRETER}       [id="ms-python.vscode-python-envs.python.interpreterDisplay"]
 
 
 *** Test Cases ***
@@ -34,6 +29,5 @@ Installed While Running
 *** Keywords ***
 Run Hello World
     Open File    hello.py
-    Wait For Elements State    ${PYTHON_INTERPRETER}    visible    timeout=60s
-    Run Command    Python: Run Python File in Terminal
+    Run Python File
     Terminal Should Show    Hello World

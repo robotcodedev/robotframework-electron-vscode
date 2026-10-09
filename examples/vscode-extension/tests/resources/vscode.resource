@@ -24,7 +24,7 @@ Open Example VS Code
     ...    start. Its own file dialog replaces the native one, which Browser cannot reach,
     ...    and its terminal runs `sh`, independent of personal shell configuration.
     ...    Named arguments of `Open VS Code`, such as `extensions` or `record_video`, are
-    ...    passed on, and its return value is returned.
+    ...    passed on.
     [Arguments]    &{options}
     ${workspace} =    Example Workspace
     Remove Directory    ${workspace}    recursive=True
@@ -38,14 +38,13 @@ Open Example VS Code
     ...    terminal.integrated.profiles.osx=${terminal_profiles}
     ...    terminal.integrated.defaultProfile.linux=sh
     ...    terminal.integrated.defaultProfile.osx=sh
-    ${ids} =    Open VS Code    ${workspace}
+    Open VS Code    ${workspace}
     ...    version=${VSCODE_VERSION}
     ...    executable=${VSCODE_EXECUTABLE}
     ...    cache_dir=${VSCODE_CACHE}
     ...    extension_development_path=${EXECDIR}
     ...    settings=${settings}
     ...    &{options}
-    RETURN    ${ids}
 
 Example Workspace
     [Documentation]    Returns the folder of the workspace copy that `Open Example VS Code` opens in this suite.

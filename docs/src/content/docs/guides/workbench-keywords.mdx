@@ -75,7 +75,7 @@ A test uses the resources it needs:
 
 ## Editor
 
-`Open File` opens a file of the workspace through Quick Open, waits for its row, and then for the file's tab to be active. `Save File` saves the active editor. The shortcuts use Playwright's `ControlOrMeta`, which is Ctrl on Linux and Windows and Cmd on macOS. To check what a test typed, read the saved file from the workspace copy, as `editor.robot` does.
+`Open File` opens a file of the workspace through Quick Open, waits for its row, and then for the file's tab to be active. `New File` opens a new, untitled file, and `Save File` saves the active editor. The shortcuts use Playwright's `ControlOrMeta`, which is Ctrl on Linux and Windows and Cmd on macOS. To check what a test typed, read the saved file from the workspace copy, as `editor.robot` does.
 
 <Code code={editor} lang="robotframework" title="tests/resources/editor.resource" />
 
@@ -83,7 +83,7 @@ A test uses the resources it needs:
 
 ## File dialog
 
-VS Code normally shows the operating system's file dialogs, which are outside the page and out of Browser's reach. With the setting `files.simpleDialog.enable`, it shows its own dialog in the quick input instead. The dialog lists its folder asynchronously and then sets its input to that folder, so `Open File With Dialog` waits for the listing before it fills in the path, and checks the path before it presses Enter.
+VS Code normally shows the operating system's file dialogs, which are outside the page and out of Browser's reach. With the setting `files.simpleDialog.enable`, it shows its own dialog in the quick input instead. The dialog lists its folder asynchronously and then sets its input to that folder, so `Open File With Dialog` waits for the listing before it fills in the path, and checks the path before it presses Enter. `Save File With Dialog` saves the active editor under a path the same way, through *File: Save As...*.
 
 <Code code={fileDialog} lang="robotframework" title="tests/resources/file_dialog.resource" />
 

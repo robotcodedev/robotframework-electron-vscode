@@ -5,6 +5,7 @@ description: Install the extensions that your extension depends on, before VS Co
 
 import { Code } from '@astrojs/starlight/components';
 import pythonTest from '../../../../../examples/vscode-extension/tests/python.robot?raw';
+import pythonResource from '../../../../../examples/vscode-extension/tests/resources/python.resource?raw';
 
 Many extensions build on others, for example on the Python extension. The extension under test is loaded from source with `extension_development_path`. The extensions it depends on are installed into the isolated VS Code in one of two ways:
 
@@ -15,15 +16,19 @@ Both install into the instance's own extensions directory, with VS Code's comman
 
 ## The example
 
-The example's `python.robot` runs the workspace's `hello.py` with the Python extension, once with the extension installed when VS Code starts and once installed into the running VS Code:
+The example's `python.robot` runs the workspace's `hello.py` with the run button that the Python extension shows above a Python file, once with the extension installed when VS Code starts and once installed into the running VS Code:
 
 <Code code={pythonTest} lang="robotframework" title="tests/python.robot" />
+
+`Run Python File` comes from a resource of its own, which the example's video test uses as well:
+
+<Code code={pythonResource} lang="robotframework" title="tests/resources/python.resource" />
 
 ![hello.py run by the Python extension](../../../assets/screenshots/python-run.png)
 
 ## Things to know
 
-- **Wait until the extension is ready.** An extension needs a moment to start. Run right after `hello.py` was opened, the Python extension's command failed with "Unable to find workspace for given file". The test therefore waits until the extension shows the chosen interpreter in the status bar. Look for such a sign of readiness in the extensions you depend on.
+- **Wait until the extension is ready.** An extension needs a moment to start. Run too early, the Python extension reported an invalid interpreter or failed with "Unable to find workspace for given file", and did not run the file. `Run Python File` therefore waits until the extension shows the chosen interpreter in the status bar and has finished discovering interpreters. Look for such signs of readiness in the extensions you depend on.
 - **Commands appear a little later.** After `Install VS Code Extension`, the new extension's commands are registered shortly after the install, and a command palette that is already open does not show them. The example's `Run Command` opens a fresh palette until the command is there, see [Writing your own workbench keywords](../workbench-keywords/).
 - **Network and time.** Marketplace extensions are downloaded for every VS Code instance; the Python extension with its dependencies is about 100 MB. The example's Python tests are tagged `network`, so `-e network` leaves them out where there is no network access.
 - **Interpreters and tools.** The Python extension runs the scripts with an interpreter it finds on the machine. Extensions that need tools, such as a language runtime, need them on the machines where the tests run, including CI.
