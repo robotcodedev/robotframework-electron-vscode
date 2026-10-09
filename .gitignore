@@ -15,6 +15,7 @@ results/
 .robot.toml
 .robotcode_cache/
 .vscode/
+*.code-workspace
 
 # Documentation site
 docs/node_modules/

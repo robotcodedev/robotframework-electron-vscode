@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../robotframework-browser"
+		},
+		{
+			"path": "../robotframework-browser.org"
 		}
 	],
 	"settings": {}
