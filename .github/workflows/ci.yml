@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: 24
 
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.0
 
       - name: Install Xvfb and Openbox
         run: sudo apt-get update && sudo apt-get install -y xvfb openbox
@@ -87,7 +87,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v7
 
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.0
 
       - name: Build the packages
         run: uv build --all-packages -o dist
