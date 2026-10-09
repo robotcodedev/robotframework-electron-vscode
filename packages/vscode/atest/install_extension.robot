@@ -30,12 +30,3 @@ Only The Given Instance Gets The Extension
     ${installed} =    List Directories In Directory    ${second_instance}/extensions    robot.test-extension-*
     Length Should Be    ${installed}    0
 
-
-*** Keywords ***
-Run Command From A Fresh Palette
-    [Arguments]    ${title}
-    Keyboard Key    press    Escape
-    Keyboard Key    press    F1
-    Keyboard Input    type    ${title}
-    Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="${title}"]    visible    timeout=2s
-    Keyboard Key    press    Enter

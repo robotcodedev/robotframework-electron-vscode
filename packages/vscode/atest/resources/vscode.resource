@@ -25,3 +25,11 @@ VS Code Instance Has Exited
     [Arguments]    ${instance}
     ${processes} =    Count Processes With    --user-data-dir=${instance}/user-data
     Should Be Equal As Integers    ${processes}    0
+
+Run Command From A Fresh Palette
+    [Arguments]    ${title}
+    Keyboard Key    press    Escape
+    Keyboard Key    press    F1
+    Keyboard Input    type    ${title}
+    Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="${title}"]    visible    timeout=2s
+    Keyboard Key    press    Enter

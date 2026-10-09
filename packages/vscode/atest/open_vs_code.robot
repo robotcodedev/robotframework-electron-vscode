@@ -19,10 +19,8 @@ Local Installation
 
 Development Extension Is Active
     Open Test VS Code    extension_development_path=${TEST_EXTENSION}
-    Keyboard Key    press    F1
-    Keyboard Input    type    Robot Test: Say Hello
-    Get Text    .quick-input-list .monaco-list-row[aria-label*="Robot Test: Say Hello"]    *=    Say Hello
-    Keyboard Key    press    Enter
+    # VS Code registers the commands of the development extension shortly after the start, and an open palette does not refresh.
+    Wait Until Keyword Succeeds    30s    1s    Run Command From A Fresh Palette    Robot Test: Say Hello
     Get Text    .notifications-toasts .notification-list-item-message    ==    Hello Robot
 
 Folder
@@ -34,10 +32,8 @@ Video Of The Workbench
     ...    extension_development_path=${TEST_EXTENSION}    record_video=${{ {"size": {"width": 1280, "height": 800}} }}
     Should Start With    ${page}[video_path]    ${OUTPUT_DIR}${/}browser${/}video${/}
     Set Viewport Size    1280    800
-    Keyboard Key    press    F1
-    Keyboard Input    type    Robot Test: Say Hello
-    Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="Robot Test: Say Hello"]    visible
-    Keyboard Key    press    Enter
+    # VS Code registers the commands of the development extension shortly after the start, and an open palette does not refresh.
+    Wait Until Keyword Succeeds    30s    1s    Run Command From A Fresh Palette    Robot Test: Say Hello
     Get Text    .notifications-toasts .notification-list-item-message    ==    Hello Robot
     Close VS Code
     File Should Not Be Empty    ${page}[video_path]
