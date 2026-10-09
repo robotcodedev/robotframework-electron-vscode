@@ -25,6 +25,8 @@ jobs:
           path: docs
 
   deploy:
+    # GitHub Pages needs a public repository on the organisation's plan.
+    if: ${{ !github.event.repository.private }}
     needs: build
     runs-on: ubuntu-latest
     environment:
