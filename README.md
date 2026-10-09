@@ -22,12 +22,12 @@ The repository is a uv workspace with both libraries in `packages/`, the documen
 ```sh
 uv sync                                            # install the workspace with the dev tools
 uv run pytest                                      # unit tests
-uv run robotcode -r . robot                        # acceptance tests, configured in robot.toml
-uv run robotcode -r . -p electron-previous robot   # against an older Electron major
-uv run robotcode -r . -p vscode-insiders robot     # against the newest VS Code Insiders
+uv run robotcode -r . robot                                  # acceptance tests on the desktop, configured in robot.toml
+uv run robotcode -r . -p xvfb robot                          # hidden on a Full HD Xvfb screen (Linux)
+uv run robotcode -r . -p xephyr robot                        # in a separate Xephyr window (Linux)
+uv run robotcode -r . -p xvfb -p electron-previous robot     # against an older Electron major
+uv run robotcode -r . -p xvfb -p vscode-insiders robot       # against the newest VS Code Insiders
 ```
-
-On Linux without a desktop, put `xvfb-run -a` in front of the acceptance tests; on a Wayland desktop, `env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a` keeps the windows hidden.
 
 - The acceptance tests download Electron and VS Code into the repository's `.cache/`. To use local executables instead, set `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` in a personal, gitignored `.robot.toml`:
 
@@ -40,5 +40,5 @@ On Linux without a desktop, put `xvfb-run -a` in front of the acceptance tests; 
 - To run the VS Code tests against a fork, point `VSCODE_EXECUTABLE` at it and leave out the tests that check VS Code's own behaviour:
 
   ```sh
-  uv run robotcode -r . robot -v VSCODE_EXECUTABLE:/opt/vscodium/codium -e vscode-only -bl "Electron & VSCode.VSCode"
+  uv run robotcode -r . -p xvfb robot -v VSCODE_EXECUTABLE:/opt/vscodium/codium -e vscode-only -bl "Electron & VSCode.VSCode"
   ```

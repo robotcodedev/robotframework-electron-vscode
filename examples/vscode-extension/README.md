@@ -18,7 +18,7 @@ From the root of the `robotframework-vscode-testing` repository:
 uv run robotcode -r examples/vscode-extension robot
 ```
 
-On Linux without a desktop, put `xvfb-run -a` in front. The first run downloads VS Code 1.141.0 into the user's cache directory. To use an installed VS Code instead, set `VSCODE_EXECUTABLE` in a personal `.robot.toml` next to `robot.toml`:
+On Linux, `robotcode -p xvfb robot` runs the tests hidden on a Full HD Xvfb screen, also on a Wayland desktop, and `robotcode -p xephyr robot` in a separate Xephyr window. Add `-p small-screen` for a 1280×800 screen instead. The first run downloads VS Code 1.141.0 into the user's cache directory. To use an installed VS Code instead, set `VSCODE_EXECUTABLE` in a personal `.robot.toml` next to `robot.toml`:
 
 ```toml
 [variables]

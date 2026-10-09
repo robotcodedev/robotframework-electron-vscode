@@ -12,3 +12,29 @@ extend-variables = { ELECTRON_VERSION = "42.11.12" }
 [profiles.vscode-insiders]
 description = "Run the VS Code tests against the newest VS Code Insiders build"
 extend-variables = { VSCODE_VERSION = "insiders" }
+
+# Where the tests run. Without a display profile they run on the normal desktop.
+# The wrappers run as shell scripts; RobotCode appends its command line, which they run as "$@".
+# SCREEN_SIZE sets the screen size of xvfb and xephyr, default 1920x1080, from the shell or a profile's extend-env.
+[profiles.xvfb]
+description = "Run hidden on a Full HD Xvfb screen (Linux)"
+enabled.if = "platform.system() == 'Linux'"
+wrapper = ["sh", "-c", '''
+env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a -s "-screen 0 ${SCREEN_SIZE:-1920x1080}x24" "$@"
+''', "xvfb-run"]
+
+[profiles.xephyr]
+description = "Run in a separate Full HD Xephyr window on the desktop (Linux)"
+enabled.if = "platform.system() == 'Linux'"
+# Starts Xephyr on a free display, runs the tests on it, and ends it afterwards.
+wrapper = ["sh", "-c", '''
+fifo=$(mktemp -u) && mkfifo "$fifo" || exit 1
+Xephyr -displayfd 3 -screen "${SCREEN_SIZE:-1920x1080}" -title "Robot Framework" -noreset 3>"$fifo" &
+xephyr=$!
+trap 'kill "$xephyr" 2>/dev/null; rm -f "$fifo"' EXIT
+read -r display <"$fifo" || exit 1
+env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 DISPLAY=":$display" "$@"
+''', "xephyr-run"]
+
+[profiles.local]
+description = "Run on the normal desktop"

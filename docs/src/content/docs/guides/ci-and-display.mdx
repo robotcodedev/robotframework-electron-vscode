@@ -1,0 +1,55 @@
+---
+title: CI and the Linux display
+description: Choose where tests run on Linux, hidden on Xvfb, in a separate Xephyr window or on the desktop, with RobotCode profiles or plain commands.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import robotToml from '../../../../../examples/vscode-extension/robot.toml?raw';
+
+Electron applications and VS Code open real windows, so the tests need a display. On Windows and macOS they run on the desktop. On Linux, you choose:
+
+- **Hidden** on a virtual X server, Xvfb: for CI, and for local runs that should leave your desktop alone.
+- **Visible** in a separate Xephyr window, which shows the run apart from your other windows.
+- **On your normal desktop.**
+
+## Display profiles
+
+RobotCode's `robot.toml` can run the tests through a `wrapper` command, and each profile can have its own. The example project defines three display profiles, which this repository uses as well, and a profile `small-screen` that changes their screen size:
+
+<Code code={robotToml} lang="toml" title="robot.toml" />
+
+Choose one with `-p`, and combine it with other profiles:
+
+```sh
+robotcode -p xvfb robot                          # hidden on a Full HD Xvfb screen
+robotcode -p xephyr robot                        # in a separate Full HD Xephyr window
+robotcode -p local robot                         # on the normal desktop
+robotcode -p xvfb -p small-screen robot          # hidden, on a 1280×800 screen
+robotcode -p xvfb -p locator-override robot      # hidden, with another profile
+```
+
+- **Linux only:** `xvfb` and `xephyr` are switched on only on Linux, through `enabled.if`. Without a display profile, the tests run on the desktop.
+- **Wayland:** on a Wayland desktop, Electron applications and VS Code follow `WAYLAND_DISPLAY` and `XDG_SESSION_TYPE`, and would open their windows on the desktop even under Xvfb. Both wrappers therefore remove `WAYLAND_DISPLAY` and set the session type to X11. `env` in `robot.toml` cannot remove a variable, which is why `env -u` sits in the wrapper.
+- **Screen size:** `SCREEN_SIZE` sets the screen of both profiles, default `1920x1080`. Set it in a profile with `extend-env`, as `small-screen` does, or in the shell, for example `SCREEN_SIZE=1280x800 robotcode -p xvfb robot`. `extend-env` keeps the variables that other selected profiles set, where `env` would replace them.
+- **Xephyr:** the `xephyr` profile needs Xephyr, from the package `xserver-xephyr` on Debian and Ubuntu or `xorg-server-xephyr` on Arch Linux.
+
+## Without RobotCode
+
+With plain `robot`, put `xvfb-run` in front. On a Wayland desktop, also remove `WAYLAND_DISPLAY` and set the session type to X11:
+
+```sh
+xvfb-run -a -s "-screen 0 1920x1080x24" robot tests
+env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a -s "-screen 0 1920x1080x24" robot tests
+```
+
+`-a` picks a free display number, so several runs can use Xvfb at the same time.
+
+## Screen size
+
+Without `-s`, `xvfb-run` starts a screen of only 640×480, which is too small for useful screenshots. The display profiles use Full HD.
+
+VS Code does not fill the screen by itself: its window keeps its default size, and without a window manager it cannot be maximised. For screenshots and videos of the whole workbench, set the page to the wanted size with `Set Viewport Size`, as in [Videos and slow motion](../videos/).
+
+## Downloads on CI
+
+`Open VS Code` and `Get Electron Executable` download VS Code and Electron on first use and cache them in the user's cache directory. To keep the downloads between CI runs, cache that directory, or give the keywords a `cache_dir` that the CI caches. [Downloads and cache](../downloads-and-cache/) shows how to pass it as a variable.
