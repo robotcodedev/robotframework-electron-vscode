@@ -12,10 +12,8 @@ Extension In A Running Instance
     ${before} =    List User Extensions
     Open Test VS Code
     Install VS Code Extension    ${vsix}
-    Keyboard Key    press    F1
-    Keyboard Input    type    Robot Test: Say Hello
-    Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="Robot Test: Say Hello"]    visible
-    Keyboard Key    press    Enter
+    # VS Code registers the extension shortly after the install, and an open palette does not refresh.
+    Wait Until Keyword Succeeds    20s    1s    Run Command From A Fresh Palette    Robot Test: Say Hello
     Get Text    .notifications-toasts .notification-list-item-message    ==    Hello Robot
     ${after} =    List User Extensions
     Should Be Equal    ${before}    ${after}
@@ -31,3 +29,13 @@ Only The Given Instance Gets The Extension
     Length Should Be    ${installed}    1
     ${installed} =    List Directories In Directory    ${second_instance}/extensions    robot.test-extension-*
     Length Should Be    ${installed}    0
+
+
+*** Keywords ***
+Run Command From A Fresh Palette
+    [Arguments]    ${title}
+    Keyboard Key    press    Escape
+    Keyboard Key    press    F1
+    Keyboard Input    type    ${title}
+    Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="${title}"]    visible    timeout=2s
+    Keyboard Key    press    Enter

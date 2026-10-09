@@ -170,8 +170,10 @@ class VSCode(Electron):
         into the instance's own extensions directory, so neither the user's
         VS Code nor other instances get it. Forks of VS Code install from
         their own extension gallery. The keyword returns when the installation
-        has finished. VS Code picks the extension up without a restart; wait
-        for what the extension contributes, as for any other extension.
+        has finished. VS Code picks the extension up shortly afterwards,
+        without a restart. A command palette that is already open does not
+        list the new extension's commands, so tests that run one retry with
+        a freshly opened palette, for example with ``Wait Until Keyword Succeeds``.
 
         *Arguments:*
           - ``extension``: A Marketplace identifier such as ``ms-python.python``,
