@@ -10,6 +10,8 @@ Library             VSCode
 ${QUICK_OPEN_ROW}       .quick-input-list .monaco-list-row[aria-label^="{name}, "]
 # The active editor tab of a file; {name} is replaced by the file name.
 ${ACTIVE_TAB}           .tabs-container .tab.active[aria-label="{name}"]
+# The active editor tab of a new, untitled file.
+${UNTITLED_TAB}         .tabs-container .tab.active[aria-label*="Untitled-"]
 
 
 *** Keywords ***
@@ -28,6 +30,11 @@ Active Editor Should Be
     [Arguments]    ${name}
     ${tab} =    Format String    ${ACTIVE_TAB}    name=${name}
     Wait For Elements State    ${tab}    visible
+
+New File
+    [Documentation]    Opens a new, untitled file in the editor.
+    Keyboard Key    press    ControlOrMeta+n
+    Wait For Elements State    ${UNTITLED_TAB}    visible
 
 Save File
     [Documentation]    Saves the file in the active editor.

@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Video of a test
-The example SHALL have a test that records a video of VS Code while it demonstrates the extension, and one that records a video while it creates a Python script and runs it with the Python extension, both with the video's size taken from the screen size of the display profiles. The video guide SHALL include these tests from the example.
+The example SHALL have a test that records a video of VS Code while it demonstrates the extension, and one that records a video while it creates a Python script and runs it with the Python extension, both with the video's size taken from the screen size of the display profiles. A third test SHALL record the Python script without presenter mode, creating the file in the explorer. The video guide SHALL include these tests from the example.
 
 #### Scenario: Video of the demonstration
 - **WHEN** the example's video test runs with `-p xvfb`
@@ -15,6 +15,10 @@ The example SHALL have a test that records a video of VS Code while it demonstra
 
 #### Scenario: Video of a Python script
 - **WHEN** the example's second video test runs with `-p xvfb`
+- **THEN** it creates `greeting.py` through VS Code's own Save As dialog, runs it with the run button above the editor, the terminal shows `Hello Robot Framework`, and the video shows it
+
+#### Scenario: Video without presenter mode
+- **WHEN** the example's video test without presenter mode runs with `-p xvfb`
 - **THEN** it creates `greeting.py` in the explorer, runs it with the run button above the editor, the terminal shows `Hello Robot Framework`, and the video shows it
 
 #### Scenario: Guide on videos

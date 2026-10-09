@@ -3,11 +3,11 @@
 A small VS Code extension with Robot Framework tests that drive the VS Code workbench. Copy the folder as a starting point for your own extension's tests. The tests:
 
 - run a command through the command palette, select a quick pick item, check notifications and act inside a webview (`commands.robot`, `quick_pick.robot`, `webview.robot`);
-- open, edit and save files of a workspace, also through VS Code's own file dialog (`editor.robot`);
+- open, edit and save files of a workspace, create a file in the explorer, and open one through VS Code's own file dialog (`editor.robot`);
 - run a command in the integrated terminal and read its output (`terminal.robot`);
 - open a second window (`windows.robot`);
 - run a Python script with the Python extension, installed when VS Code starts and into the running VS Code (`python.robot`);
-- record videos in the size of the screen and with presenter mode: of a demonstration of the extension, and of a Python script that the test creates, saves through VS Code's own dialog and runs (`video.robot`).
+- record videos in the size of the screen: with presenter mode, of a demonstration of the extension and of a Python script that the test creates, saves through VS Code's own dialog and runs; without presenter mode, of a Python script created in the explorer (`video.robot`).
 
 Each VS Code opens a fresh copy of `tests/workspace` in the output directory, so the tests can change files.
 

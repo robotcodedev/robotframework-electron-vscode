@@ -4,6 +4,7 @@ Documentation       Opens files of the workspace, edits one and saves it.
 Library             OperatingSystem
 Resource            resources/vscode.resource
 Resource            resources/editor.resource
+Resource            resources/explorer.resource
 Resource            resources/file_dialog.resource
 
 Suite Setup         Open Example VS Code
@@ -19,6 +20,14 @@ Edit And Save A File
     Take Screenshot    filename=editor
     ${workspace} =    Example Workspace
     Wait Until Keyword Succeeds    5s    200ms    File Should Contain    ${workspace}/notes.txt    Edited by Robot Framework
+
+Create A File In The Explorer
+    Create File In Explorer    todo.txt
+    Active Editor Should Be    todo.txt
+    Keyboard Input    type    Created by Robot Framework
+    Save File
+    ${workspace} =    Example Workspace
+    Wait Until Keyword Succeeds    5s    200ms    File Should Contain    ${workspace}/todo.txt    Created by Robot Framework
 
 Open A File With The Dialog
     ${workspace} =    Example Workspace

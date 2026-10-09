@@ -8,8 +8,10 @@
 
 - **New suite:** `video.robot` in the example, with two tests that record a video. They switch on Browser's presenter mode, so the steps are slow enough to follow, and Playwright's action overlay.
   - One demonstrates the extension: a command with its notification, the quick pick and the webview.
-  - The other installs the Python extension, creates `greeting.py` in the explorer, types `print("Hello Robot Framework")`, saves it, and runs it with the run button above the editor. It needs network access like `python.robot`.
-- **New keywords:** a new `explorer.resource` with `Create File In Explorer`, and a `python.resource` with `Run Python File`, which clicks the run button above the editor once the Python extension is ready. `python.robot` uses it as well.
+  - The other installs the Python extension, creates a new file with `print("Hello Robot Framework")`, saves it as `greeting.py` through VS Code's own Save As dialog, and runs it with the run button above the editor. It needs network access like `python.robot`.
+- **New keywords:** `New File` in `editor.resource`, `Save File With Dialog` in `file_dialog.resource`, and a `python.resource` with `Run Python File`, which clicks the run button above the editor once the Python extension is ready. `python.robot` uses it as well.
+- **Explorer:** a new `explorer.resource` with `Create File In Explorer`, which `editor.robot` uses in a test of its own.
+- **Video without presenter mode:** a third test in `video.robot` records the Python script without presenter mode and creates the file in the explorer.
 - **Video size:** the size comes from `SCREEN_SIZE`, default `1920x1080`, which the display profiles use for the screen. VS Code opens maximised, so it fills the frame, also with `small-screen`.
 - **Guide:** *Videos and slow motion* includes the example's suite instead of its own snippet.
 - **README:** the example's README names the suite.

@@ -10,6 +10,7 @@ import quickPick from '../../../../../examples/vscode-extension/tests/resources/
 import notifications from '../../../../../examples/vscode-extension/tests/resources/notifications.resource?raw';
 import webview from '../../../../../examples/vscode-extension/tests/resources/webview.resource?raw';
 import editor from '../../../../../examples/vscode-extension/tests/resources/editor.resource?raw';
+import explorer from '../../../../../examples/vscode-extension/tests/resources/explorer.resource?raw';
 import fileDialog from '../../../../../examples/vscode-extension/tests/resources/file_dialog.resource?raw';
 import terminal from '../../../../../examples/vscode-extension/tests/resources/terminal.resource?raw';
 import webviewTest from '../../../../../examples/vscode-extension/tests/webview.robot?raw';
@@ -80,6 +81,12 @@ A test uses the resources it needs:
 <Code code={editor} lang="robotframework" title="tests/resources/editor.resource" />
 
 ![The edited text file](../../../assets/screenshots/editor.png)
+
+## Explorer
+
+The explorer shows its actions, such as *New File...*, only while the mouse is over it. `Create File In Explorer` therefore hovers over the explorer before it clicks the action, fills the name into the input that appears in the tree, and presses Enter. VS Code creates the file and opens it in the editor.
+
+<Code code={explorer} lang="robotframework" title="tests/resources/explorer.resource" />
 
 ## File dialog
 

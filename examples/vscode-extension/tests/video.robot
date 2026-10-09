@@ -1,15 +1,17 @@
 *** Settings ***
 Documentation       Records videos of VS Code while the tests demonstrate the extension
-...                 and create a Python script in the explorer and run it.
+...                 and create and run a Python script.
 ...
 ...                 The videos have the size of the screen, which the display profiles set with
-...                 SCREEN_SIZE, so that the maximised VS Code fills them. Presenter mode slows the
-...                 steps down and highlights what they act on, Playwright shows each action in the
-...                 video, and the log embeds the videos. Browser closes VS Code at the end of each
-...                 test, which finishes the video; in presenter mode it waits five seconds before,
-...                 so that the video shows the result.
+...                 SCREEN_SIZE, so that the maximised VS Code fills them, and Playwright shows each
+...                 action in the video. The log embeds the videos. Browser closes VS Code at the end
+...                 of each test, which finishes the video.
 ...
-...                 The Python test needs network access for the Marketplace; leave it out with
+...                 The first two tests use presenter mode, which slows the steps down and highlights
+...                 what they act on; Browser then also waits five seconds before it closes VS Code,
+...                 so that the video shows the result. The last test records without presenter mode.
+...
+...                 The Python tests need network access for the Marketplace; leave them out with
 ...                 `--exclude network`.
 
 Library             String
@@ -20,15 +22,17 @@ Resource            resources/notifications.resource
 Resource            resources/webview.resource
 Resource            resources/editor.resource
 Resource            resources/explorer.resource
+Resource            resources/file_dialog.resource
 Resource            resources/python.resource
 Resource            resources/terminal.resource
 
-Suite Setup         Set Presenter Mode    ${{ {"duration": "1s"} }}
+# Presenter mode stays on after a test, so the suite switches it off when it ends.
 Suite Teardown      Set Presenter Mode    False
 
 
 *** Test Cases ***
 Demonstration Of The Extension
+    Set Presenter Mode    ${{ {"duration": "1s"} }}
     Open Example VS Code With Video
     Run Command    Robot Example: Say Hello
     Notification Should Be Shown    Hello Robot
@@ -43,6 +47,22 @@ Demonstration Of The Extension
 
 Python Script Created And Run
     [Tags]    network
+    Set Presenter Mode    ${{ {"duration": "1s"} }}
+    Open Example VS Code With Video    extensions=${{ ["ms-python.python"] }}
+    New File
+    Keyboard Input    type    print("Hello Robot Framework")
+    ${workspace} =    Example Workspace
+    Save File With Dialog    ${workspace}/greeting.py
+    Active Editor Should Be    greeting.py
+    Run Python File
+    Terminal Should Show    Hello Robot Framework
+
+Python Script Created In The Explorer Without Presenter Mode
+    [Documentation]    Without presenter mode, the steps run at full speed, and the explorer's
+    ...    actions, which VS Code redraws while the mouse moves over the explorer, work reliably.
+    ...    Browser does not wait before it closes VS Code, so the test pauses at the end.
+    [Tags]    network
+    Set Presenter Mode    False
     Open Example VS Code With Video    extensions=${{ ["ms-python.python"] }}
     Create File In Explorer    greeting.py
     Active Editor Should Be    greeting.py
@@ -50,6 +70,7 @@ Python Script Created And Run
     Save File
     Run Python File
     Terminal Should Show    Hello Robot Framework
+    Sleep    2s    Let the video show the result before Browser closes VS Code.
 
 
 *** Keywords ***

@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation       Opens files through VS Code's own file dialog.
+Documentation       Opens and saves files through VS Code's own file dialog.
 ...
 ...                 VS Code shows native file dialogs, which Browser cannot reach. With the
 ...                 setting `files.simpleDialog.enable`, which `Open Example VS Code` sets, it shows
@@ -23,6 +23,15 @@ Open File With Dialog
     Run Command    File: Open File...
     # The dialog loads its folder asynchronously and then sets the input to it, so the
     # path is filled in only after the folder is listed, and checked before Enter.
+    Wait For Elements State    ${FILE_DIALOG_ENTRY}    visible
+    Fill Text    ${FILE_DIALOG_INPUT}    ${path}
+    Get Property    ${FILE_DIALOG_INPUT}    value    ==    ${path}
+    Keyboard Key    press    Enter
+
+Save File With Dialog
+    [Documentation]    Saves the active editor under the given path through *File: Save As...*.
+    [Arguments]    ${path}
+    Run Command    File: Save As...
     Wait For Elements State    ${FILE_DIALOG_ENTRY}    visible
     Fill Text    ${FILE_DIALOG_INPUT}    ${path}
     Get Property    ${FILE_DIALOG_INPUT}    value    ==    ${path}
