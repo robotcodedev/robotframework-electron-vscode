@@ -6,7 +6,8 @@ A small VS Code extension with Robot Framework tests that drive the VS Code work
 - open, edit and save files of a workspace, also through VS Code's own file dialog (`editor.robot`);
 - run a command in the integrated terminal and read its output (`terminal.robot`);
 - open a second window (`windows.robot`);
-- run a Python script with the Python extension, installed when VS Code starts and into the running VS Code (`python.robot`).
+- run a Python script with the Python extension, installed when VS Code starts and into the running VS Code (`python.robot`);
+- record a video of a demonstration of the extension, in the size of the screen and with presenter mode (`video.robot`).
 
 Each VS Code opens a fresh copy of `tests/workspace` in the output directory, so the tests can change files.
 
@@ -48,7 +49,7 @@ The tests in `python.robot` are tagged `network`. Leave them out with `-e networ
 robotcode -p xvfb robot -e network
 ```
 
-The tests take screenshots at their important steps, which the log shows and which are kept in `results/browser/screenshot/`.
+The tests take screenshots at their important steps, which the log shows and which are kept in `results/browser/screenshot/`. The video of `video.robot` is in `results/browser/video/`, and the log embeds it as well.
 
 The profile `locator-override` in `robot.toml` shows how a project overrides locators, for example per VS Code version:
 

@@ -23,7 +23,8 @@ Open Example VS Code
     ...    on Xvfb and Xephyr this needs a window manager, which the display profiles
     ...    start. Its own file dialog replaces the native one, which Browser cannot reach,
     ...    and its terminal runs `sh`, independent of personal shell configuration.
-    ...    Named arguments of `Open VS Code`, such as `extensions`, are passed on.
+    ...    Named arguments of `Open VS Code`, such as `extensions` or `record_video`, are
+    ...    passed on, and its return value is returned.
     [Arguments]    &{options}
     ${workspace} =    Example Workspace
     Remove Directory    ${workspace}    recursive=True
@@ -37,13 +38,14 @@ Open Example VS Code
     ...    terminal.integrated.profiles.osx=${terminal_profiles}
     ...    terminal.integrated.defaultProfile.linux=sh
     ...    terminal.integrated.defaultProfile.osx=sh
-    Open VS Code    ${workspace}
+    ${ids} =    Open VS Code    ${workspace}
     ...    version=${VSCODE_VERSION}
     ...    executable=${VSCODE_EXECUTABLE}
     ...    cache_dir=${VSCODE_CACHE}
     ...    extension_development_path=${EXECDIR}
     ...    settings=${settings}
     ...    &{options}
+    RETURN    ${ids}
 
 Example Workspace
     [Documentation]    Returns the folder of the workspace copy that `Open Example VS Code` opens in this suite.

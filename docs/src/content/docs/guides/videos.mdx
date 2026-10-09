@@ -3,6 +3,9 @@ title: Videos and slow motion
 description: Record videos of Electron applications and VS Code, and slow tests down with Browser's presenter mode.
 ---
 
+import { Code } from '@astrojs/starlight/components';
+import videoTest from '../../../../../examples/vscode-extension/tests/video.robot?raw';
+
 A video shows what a test did, which helps when a test fails on CI, and it is a good way to demonstrate an extension.
 
 ## Recording a video
@@ -30,24 +33,11 @@ The log embeds the video, and the page details that the keyword returns contain 
 
 ## A full frame of VS Code
 
-A window keeps its own size in the video: a larger window is scaled down to fit, and a smaller one is shown at its own size with a grey margin. For a full frame, open VS Code maximised and record in the size of the screen. Maximising needs a window manager, which the display profiles `xvfb` and `xephyr` start, see [CI and the Linux display](../ci-and-display/):
+A window keeps its own size in the video: a larger window is scaled down to fit, and a smaller one is shown at its own size with a grey margin. For a full frame, open VS Code maximised and record in the size of the screen. Maximising needs a window manager, which the display profiles `xvfb` and `xephyr` start, see [CI and the Linux display](../ci-and-display/).
 
-```robotframework
-*** Settings ***
-Library    VSCode
+The example project's `video.robot` does this. Its keyword reads the screen size from `SCREEN_SIZE`, which the display profiles use as well, and opens VS Code, which the example opens maximised, with `record_video` in that size and with the action overlay. Presenter mode slows the test down, so the video is easy to follow. After `Close VS Code`, the test checks that the video is there:
 
-*** Test Cases ***
-Extension Demo
-    Open VS Code    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
-    ...    settings={'window.newWindowDimensions': 'maximized'}
-    ...    record_video={'size': {'width': 1920, 'height': 1080}, 'showActions': {'duration': 800, 'position': 'top-right'}}
-    Keyboard Key    press    F1
-    Keyboard Input    type    Robot Test: Say Hello
-    Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="Robot Test: Say Hello"]    visible
-    Keyboard Key    press    Enter
-    Get Text    .notifications-toasts .notification-list-item-message    ==    Hello Robot
-    Close VS Code
-```
+<Code code={videoTest} lang="robotframework" title="tests/video.robot" />
 
 Without a window manager, `Set Viewport Size    1920    1080` after `Open VS Code` makes the workbench fill the frame instead. It emulates the size inside the page and leaves the window as it is.
 
