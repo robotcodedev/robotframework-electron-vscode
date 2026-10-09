@@ -2,7 +2,7 @@
 
 A [Robot Framework](https://robotframework.org) library for testing Electron applications. It is built on the [Browser library](https://robotframework-browser.org): `Electron` contains every Browser keyword, takes the same import arguments, and adds keywords to start and close Electron applications. The windows of an application are ordinary Browser pages.
 
-**Documentation:** https://example.github.io/
+**Documentation:** https://robotcodedev.github.io/robotframework-electron-vscode/
 
 ## Installation
 
@@ -31,4 +31,4 @@ App From Source
     New Electron Application    ${electron}    args=${{ [$EXECDIR + "/app"] }}
 ```
 
-The [documentation](https://example.github.io/) covers starting and closing applications, downloads, running on CI and troubleshooting.
+The [documentation](https://robotcodedev.github.io/robotframework-electron-vscode/) covers starting and closing applications, downloads, running on CI and troubleshooting.

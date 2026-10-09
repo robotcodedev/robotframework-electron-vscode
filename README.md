@@ -7,7 +7,7 @@
 
 The libraries provide the technique: starting the application and handing its windows to Browser. What to click and which locators to use belongs to your tests.
 
-**Documentation:** https://example.github.io/
+**Documentation:** https://robotcodedev.github.io/robotframework-electron-vscode/
 
 ## Status
 

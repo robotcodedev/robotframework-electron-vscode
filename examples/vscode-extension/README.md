@@ -30,7 +30,7 @@ From this folder, with `robotframework-vscode` installed:
 robotcode robot
 ```
 
-From the root of the `robotframework-vscode-testing` repository:
+From the root of the `robotframework-electron-vscode` repository:
 
 ```sh
 uv run robotcode -r examples/vscode-extension robot
@@ -59,6 +59,6 @@ robotcode -p locator-override robot
 
 ## Learn more
 
-- [Writing your own workbench keywords](https://example.github.io/guides/workbench-keywords/) explains the resources.
-- [VS Code versions and profiles](https://example.github.io/guides/vscode-versions/) explains the profiles in `robot.toml`.
-- [Dependency extensions](https://example.github.io/guides/extensions/) explains `python.robot`.
+- [Writing your own workbench keywords](https://robotcodedev.github.io/robotframework-electron-vscode/guides/workbench-keywords/) explains the resources.
+- [VS Code versions and profiles](https://robotcodedev.github.io/robotframework-electron-vscode/guides/vscode-versions/) explains the profiles in `robot.toml`.
+- [Dependency extensions](https://robotcodedev.github.io/robotframework-electron-vscode/guides/extensions/) explains `python.robot`.

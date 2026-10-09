@@ -5,11 +5,10 @@ import starlight from '@astrojs/starlight';
 // Shiki has none. Copy it again when RobotCode's grammar changes.
 import robotframework from './grammars/robotframework.tmLanguage.json' with { type: 'json' };
 
-// Placeholders until the repository's location is decided. On GitHub Pages,
-// SITE becomes https://<owner>.github.io and BASE becomes /<repository>/.
-// The READMEs link to the site with the same placeholder URL.
-const SITE = 'https://example.github.io';
-const BASE = '/';
+// The site is published on GitHub Pages of robotcodedev/robotframework-electron-vscode.
+// The READMEs link to the same URL.
+const SITE = 'https://robotcodedev.github.io';
+const BASE = '/robotframework-electron-vscode/';
 
 export default defineConfig({
 	site: SITE,
