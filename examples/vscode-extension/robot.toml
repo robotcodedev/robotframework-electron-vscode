@@ -17,11 +17,13 @@ extend-variables = { COMMAND_PALETTE_ROW = '.quick-input-widget .monaco-list-row
 # Where the tests run. Without a display profile they run on the normal desktop.
 # The wrappers run as shell scripts; RobotCode appends its command line, which they run as "$@".
 # SCREEN_SIZE sets the screen size of xvfb and xephyr, default 1920x1080, from the shell or a profile's extend-env.
+# Both start the window manager Openbox, if it is installed, so that windows can be maximised.
 [profiles.xvfb]
 description = "Run hidden on a Full HD Xvfb screen (Linux)"
 enabled.if = "platform.system() == 'Linux'"
 wrapper = ["sh", "-c", '''
-env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a -s "-screen 0 ${SCREEN_SIZE:-1920x1080}x24" "$@"
+env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a -s "-screen 0 ${SCREEN_SIZE:-1920x1080}x24" \
+    sh -c 'command -v openbox >/dev/null && openbox >/dev/null 2>&1 & exec "$@"' wm "$@"
 ''', "xvfb-run"]
 
 [profiles.xephyr]
@@ -34,6 +36,7 @@ Xephyr -displayfd 3 -screen "${SCREEN_SIZE:-1920x1080}" -title "Robot Framework"
 xephyr=$!
 trap 'kill "$xephyr" 2>/dev/null; rm -f "$fifo"' EXIT
 read -r display <"$fifo" || exit 1
+command -v openbox >/dev/null && DISPLAY=":$display" openbox >/dev/null 2>&1 &
 env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 DISPLAY=":$display" "$@"
 ''', "xephyr-run"]
 

@@ -30,7 +30,7 @@ The log embeds the video, and the page details that the keyword returns contain 
 
 ## A full frame of VS Code
 
-A window keeps its own size in the video: a larger window is scaled down to fit, and a smaller one is shown at its own size with a grey margin. VS Code's window does not fill an Xvfb screen, and under Xvfb there is no window manager that could maximise it. `Set Viewport Size` with the size of the video makes the workbench fill the frame:
+A window keeps its own size in the video: a larger window is scaled down to fit, and a smaller one is shown at its own size with a grey margin. For a full frame, open VS Code maximised and record in the size of the screen. Maximising needs a window manager, which the display profiles `xvfb` and `xephyr` start, see [CI and the Linux display](../ci-and-display/):
 
 ```robotframework
 *** Settings ***
@@ -39,8 +39,8 @@ Library    VSCode
 *** Test Cases ***
 Extension Demo
     Open VS Code    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+    ...    settings={'window.newWindowDimensions': 'maximized'}
     ...    record_video={'size': {'width': 1920, 'height': 1080}, 'showActions': {'duration': 800, 'position': 'top-right'}}
-    Set Viewport Size    1920    1080
     Keyboard Key    press    F1
     Keyboard Input    type    Robot Test: Say Hello
     Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="Robot Test: Say Hello"]    visible
@@ -48,6 +48,8 @@ Extension Demo
     Get Text    .notifications-toasts .notification-list-item-message    ==    Hello Robot
     Close VS Code
 ```
+
+Without a window manager, `Set Viewport Size    1920    1080` after `Open VS Code` makes the workbench fill the frame instead. It emulates the size inside the page and leaves the window as it is.
 
 ## ffmpeg
 

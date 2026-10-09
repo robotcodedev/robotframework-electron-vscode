@@ -16,8 +16,12 @@ ${VSCODE_CACHE}         ${NONE}
 *** Keywords ***
 Open Example VS Code
     [Documentation]    Opens an isolated VS Code with the extension of this folder loaded from source.
+    ...
+    ...    VS Code opens maximised, so that it fills the screen. On Xvfb and Xephyr this
+    ...    needs a window manager, which the display profiles start.
     Open VS Code
     ...    version=${VSCODE_VERSION}
     ...    executable=${VSCODE_EXECUTABLE}
     ...    cache_dir=${VSCODE_CACHE}
     ...    extension_development_path=${EXECDIR}
+    ...    settings=${{ {"window.newWindowDimensions": "maximized"} }}

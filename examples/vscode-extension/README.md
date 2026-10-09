@@ -4,6 +4,14 @@ A small VS Code extension with Robot Framework tests that drive the VS Code work
 
 The `VSCode` library only downloads and starts VS Code. The keywords and locators for the workbench are part of this example, in `tests/resources/`, one resource per workbench part. Your project owns them and adapts them when VS Code changes.
 
+## Prerequisites
+
+- Python with `robotframework-vscode` and RobotCode.
+- On Linux, for the display profiles in `robot.toml`:
+  - Xvfb for `xvfb`: the package `xvfb` on Debian and Ubuntu, `xorg-server-xvfb` on Arch Linux;
+  - Xephyr for `xephyr`: `xserver-xephyr` or `xorg-server-xephyr`;
+  - the window manager Openbox, package `openbox`, so that VS Code opens maximised there. Without it, the tests still pass, with a smaller window.
+
 ## Running
 
 From this folder, with `robotframework-vscode` installed:

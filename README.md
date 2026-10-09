@@ -29,6 +29,7 @@ uv run robotcode -r . -p xvfb -p electron-previous robot     # against an older 
 uv run robotcode -r . -p xvfb -p vscode-insiders robot       # against the newest VS Code Insiders
 ```
 
+- The display profiles need Xvfb (`xvfb` or `xorg-server-xvfb`) and, for `xephyr`, Xephyr (`xserver-xephyr` or `xorg-server-xephyr`); with Openbox (`openbox`) installed, windows can be maximised there.
 - The acceptance tests download Electron and VS Code into the repository's `.cache/`. To use local executables instead, set `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` in a personal, gitignored `.robot.toml`:
 
   ```toml
