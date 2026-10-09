@@ -10,7 +10,7 @@ See proposal.md for motivation and the spec delta for the requirements. The exam
 - **Terminal:** its rows are in `.xterm-rows`, also with the default renderer. The prompt comes from the user's shell configuration.
 - **Python:** `extensions=["ms-python.python"]` installs the Python extension with its dependencies (Pylance, Python Environments, debugpy). *Python: Run Python File in Terminal* runs `hello.py` with the system Python and prints `Hello World` in the terminal.
 - **Windows:** a new window is a new page. `Switch Page    NEW` and `Close Page` work.
-- **Screen size:** `xvfb-run` uses a 640×480 screen by default. The screenshots use a Full HD screen, `-s "-screen 0 1920x1080x24"`. VS Code does not fill the screen by itself: on a 1600×1000 screen its window was 1440×900, and in a plain Playwright launch on Full HD it was about 1200×800.
+- **Screen size:** `xvfb-run` uses a 640×480 screen by default, and without a window manager VS Code keeps a 1200×800 window. The display profiles from `add-display-profiles` and `add-window-manager` give a Full HD screen with Openbox, and VS Code opened maximised fills it.
 - **Locator handlers** fire for notifications, but every wait for a notification triggers them as well, so a test of the handler itself cannot first check that the notification was there.
 
 ## Goals / Non-Goals
@@ -36,7 +36,7 @@ See proposal.md for motivation and the spec delta for the requirements. The exam
 ### `Open Example VS Code`
 
 - It passes on any named arguments of `Open VS Code`, such as `extensions`, as `&{options}`.
-- Its settings switch on `files.simpleDialog.enable`, and set `terminal.integrated.defaultProfile.linux` and `.osx` to `sh`. That keeps the terminal independent of personal shell configuration, in tests and in screenshots. The exact profile name is checked against VS Code 1.141.
+- Besides `window.newWindowDimensions: maximized` from `add-window-manager`, its settings switch on `files.simpleDialog.enable`, and set `terminal.integrated.defaultProfile.linux` and `.osx` to `sh`. That keeps the terminal independent of personal shell configuration, in tests and in screenshots. The exact profile name is checked against VS Code 1.141.
 
 ### New resources
 
@@ -62,7 +62,7 @@ Each new resource covers one workbench part, has its locators as template variab
 ### Screenshots
 
 - **In the example:** the tests call `Take Screenshot    filename=<name>` at their important steps, so every run has the pictures in its log. The names are stable, for example `command-palette`, `quick-pick`, `webview`, `editor`, `terminal` and `python-run`.
-- **Script:** `docs/scripts/update_screenshots.py` runs the example from the repository root. It uses the example's `xvfb` profile from `add-display-profiles`, so the run is hidden on a Full HD screen. VS Code's window does not fill an Xvfb screen, and `window.newWindowDimensions` does not change that without a window manager. The script therefore passes a variable `VSCODE_VIEWPORT` of 1920×1080, and `Open Example VS Code` applies it with `Set Viewport Size` when it is set. Ordinary runs leave the window as it is. It then copies the selected screenshots from the run's `browser/screenshot` folder to `docs/src/assets/screenshots/`.
+- **Script:** `docs/scripts/update_screenshots.py` runs the example from the repository root. It uses the example's `xvfb` profile, so the run is hidden on a Full HD screen with Openbox, where the maximised VS Code fills the screen. It then copies the selected screenshots from the run's `browser/screenshot` folder to `docs/src/assets/screenshots/`.
 - **Committed:** the screenshots are committed, like the reference pages. The guides show them as Markdown images, which Astro optimises at build time.
 - **AGENTS.md** says when to run the script: after changes to the example or to the VS Code version.
 
@@ -79,7 +79,8 @@ Each new resource covers one workbench part, has its locators as template variab
 
 ## Risks / Trade-offs
 
-- [`Install VS Code Extension` with `ms-python.python` needs a reload because of its dependencies] → The spike tried a running install only with a small extension. The Python test checks it. If a reload is needed, the test reloads the window with *Developer: Reload Window*, and the extensions guide says so.
+- [VS Code registers an extension installed into a running instance shortly after the install, and an open command palette does not refresh] → As in the library's acceptance test, the Python test runs the extension's command with a freshly opened palette until it appears.
+- [`Install VS Code Extension` with `ms-python.python` needs a reload because of its dependencies] → The library's tests installed only a small extension into a running instance. The Python test checks it. If a reload is needed, the test reloads the window with *Developer: Reload Window*, and the extensions guide says so.
 - [The Python tests download about 100 MB from the Marketplace per instance] → Accepted for the example. The guide mentions it, and the tests are tagged `network` so that offline runs can exclude them.
 - [Screenshots in the repository go stale] → The script makes regenerating one command, and AGENTS.md names when to run it. Stale pictures do not break anything.
 - [The terminal shows personal shell output despite `sh`, for example through `ENV`] → It is checked when the screenshots are generated; the setting can name `/bin/sh` with arguments if needed.

@@ -47,5 +47,5 @@ None.
 - `examples/vscode-extension/`: workspace, resources, suites, `README.md`.
 - `docs/`: guides, a screenshot script and the screenshots in `docs/src/assets/screenshots/`.
 - `AGENTS.md`: the command that regenerates the screenshots.
-- Depends on `add-vscode-extension-install` for `Install VS Code Extension` and on `add-display-profiles` for the `xvfb` profile, which are applied first.
+- Depends on `add-vscode-extension-install` for `Install VS Code Extension` on `add-display-profiles` for the `xvfb` profile, and on `add-window-manager` for maximised windows, which are applied first.
 - The Python tests need network access for the Marketplace and a Python interpreter on the `PATH`.
