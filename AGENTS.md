@@ -34,6 +34,8 @@ uv pip install -r Browser/dev-requirements.txt
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build # runs deps, protobuf, node-build
 ```
 
+The browser download is skipped there, but some acceptance tests need Chromium and the video tests need Playwright's ffmpeg: run `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` in the clone once, which installs both.
+
 After switching branches in the clone or changing its TypeScript or proto files, run `inv node-build` there again; it regenerates the gRPC code too. Do not install `robotframework-browser-batteries`: it brings its own gRPC server and would bypass the patched Node code of the clone.
 
 ## Common Commands

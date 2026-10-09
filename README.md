@@ -36,7 +36,7 @@ On Linux without a desktop, put `xvfb-run -a` in front of the acceptance tests; 
   VSCODE_EXECUTABLE = "/path/to/code"
   ```
 
-- The test `Application And Web Browser` also needs Chromium for Playwright in the Browser clone: run `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` there.
+- The test `Application And Web Browser` needs Chromium for Playwright in the Browser clone, and the video tests need Playwright's ffmpeg: `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` there installs both.
 - To run the VS Code tests against a fork, point `VSCODE_EXECUTABLE` at it and leave out the tests that check VS Code's own behaviour:
 
   ```sh

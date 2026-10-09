@@ -9,7 +9,7 @@ from typing import Any, NamedTuple
 
 from Browser.utils import logger
 from Browser.utils.data_types import ElementState, NewPageDetails, SelectionType
-from Electron import Electron
+from Electron import Electron, RecordVideo
 from robotlibcore import keyword
 
 from .download import cli_path, default_cache_dir, download_vscode, executable_path, product_version
@@ -78,6 +78,7 @@ class VSCode(Electron):
         args: list[str] | None = None,
         cache_dir: Path | None = None,
         timeout: timedelta = timedelta(seconds=60),
+        record_video: RecordVideo | None = None,
     ) -> tuple[str, str, NewPageDetails]:
         """Starts an isolated VS Code instance and returns once its workbench is ready.
 
@@ -112,6 +113,10 @@ class VSCode(Electron):
           - ``cache_dir``: Directory for downloaded builds. Defaults to
                 ``robotframework-vscode/vscode`` in the user's cache directory.
           - ``timeout``: How long to wait for the window and for the workbench.
+          - ``record_video``: Records a video of the instance's windows, as for
+                `New Electron Application`. VS Code's window keeps its own size,
+                so for a full frame give the video a ``size`` and call
+                `Set Viewport Size` with the same size after the start.
 
         Returns a tuple of browser id, context id and page details of the
         workbench window, like `New Electron Application`.
@@ -135,7 +140,9 @@ class VSCode(Electron):
             extension_development_path = [extension_development_path]
         arguments = launch_arguments(directories, extension_development_path or [], args or [], path)
         logger.info(f"Starting VS Code {product or executable} with instance directory {directories.root}")
-        ids = self.new_electron_application(executable, args=arguments, env=env, timeout=timeout)
+        ids = self.new_electron_application(
+            executable, args=arguments, env=env, timeout=timeout, record_video=record_video
+        )
         try:
             self.wait_for_elements_state(".monaco-workbench", ElementState.visible, timeout)
         except Exception:
