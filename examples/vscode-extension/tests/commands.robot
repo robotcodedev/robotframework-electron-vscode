@@ -13,3 +13,4 @@ Suite Teardown      Close VS Code
 Command Shows A Notification
     Run Command    Robot Example: Say Hello
     Notification Should Be Shown    Hello Robot
+    Take Screenshot    filename=notification

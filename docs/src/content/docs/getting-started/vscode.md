@@ -38,6 +38,10 @@ Extension Command Shows A Message
 
 The command palette filters asynchronously, so the test waits for the command's row before pressing Enter.
 
+![A notification shown by an extension's command](../../../assets/screenshots/notification.png)
+
+The example project in the repository goes further, with its own keywords for the command palette, quick picks, notifications, webviews, the editor and the terminal; see [Writing your own workbench keywords](../../guides/workbench-keywords/).
+
 ## Opening VS Code
 
 `Open VS Code` starts VS Code and returns once the workbench is ready. It returns the browser id, the context id and the page details of the workbench window, like `New Electron Application`.

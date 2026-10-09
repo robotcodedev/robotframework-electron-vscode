@@ -46,6 +46,7 @@ After switching branches in the clone or changing its TypeScript or proto files,
 - `uv run robotcode -r . discover tests`, `uv run robotcode -r . results summary`, `uv run robotcode -r . analyze code` — list tests, inspect the last run, analyse statically.
 - `uv run pytest` — Python unit tests of all packages.
 - `uv run robotcode -r examples/vscode-extension robot` — run the VS Code example project. It has its own `robot.toml` with the same display profiles and is not part of the root `robot.toml` paths. Its guides in `docs/` include its files, so check them when you change the example.
+- `uv run python docs/scripts/update_screenshots.py` — run the example with `-p xvfb` and copy its screenshots to `docs/src/assets/screenshots/`. Run it after changing the example or its VS Code version, and commit the images. It needs Xvfb, Openbox and network access for the Python tests.
 - Personal settings, such as a local `ELECTRON_EXECUTABLE`, go into `.robot.toml`, which is gitignored.
 - `npm ci`, then `npm run dev` or `npm run build` in `docs/` — install the documentation site's dependencies, serve it locally with live reload, or build it into `docs/dist/`. Only Node.js is needed, no Python. Started by an agent, `npm run dev` runs in the background; stop it with `npx astro dev stop` in `docs/`.
 

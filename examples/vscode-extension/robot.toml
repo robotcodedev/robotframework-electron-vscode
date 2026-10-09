@@ -12,7 +12,7 @@ output-dir = "results"
 # This profile overrides the command palette locator with an equivalent selector, to show how.
 [profiles.locator-override]
 description = "Find command palette rows through the quick input widget instead of its list"
-extend-variables = { COMMAND_PALETTE_ROW = '.quick-input-widget .monaco-list-row[aria-label*="{title}"]' }
+extend-variables = { COMMAND_PALETTE_ROW = '.quick-input-widget .monaco-list-row[aria-label="{title}"], .quick-input-widget .monaco-list-row[aria-label^="{title}, "]' }
 
 # Where the tests run. Without a display profile they run on the normal desktop.
 # The wrappers run as shell scripts; RobotCode appends its command line, which they run as "$@".

@@ -16,5 +16,6 @@ Button In The Webview
     Get Text    id=status    ==    Not clicked
     Click    id=click-me
     Get Text    id=status    ==    Clicked
+    Take Screenshot    filename=webview
     Leave Webview    ${previous}
     Get Text    .tabs-container .tab.active    *=    Robot Example

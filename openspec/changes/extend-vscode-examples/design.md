@@ -23,7 +23,7 @@ See proposal.md for motivation and the spec delta for the requirements. The exam
 **Non-Goals:**
 - Example tests for every Browser feature. Locator handlers, drag and drop, aria snapshots, the console log and coverage get short snippets in the Browser features guide.
 - Windows support for the terminal example. Its command is POSIX shell, as on the CI the repository uses.
-- Video, HAR and tracing. `New Electron Application` does not pass Playwright's recording options yet, which is a separate change.
+- Videos in the example. The guide *Videos and slow motion* covers them; HAR and tracing are not available yet.
 
 ## Decisions
 
@@ -36,7 +36,13 @@ See proposal.md for motivation and the spec delta for the requirements. The exam
 ### `Open Example VS Code`
 
 - It passes on any named arguments of `Open VS Code`, such as `extensions`, as `&{options}`.
-- Besides `window.newWindowDimensions: maximized` from `add-window-manager`, its settings switch on `files.simpleDialog.enable`, and set `terminal.integrated.defaultProfile.linux` and `.osx` to `sh`. That keeps the terminal independent of personal shell configuration, in tests and in screenshots. The exact profile name is checked against VS Code 1.141.
+- Besides `window.newWindowDimensions: maximized` from `add-window-manager`, its settings switch on `files.simpleDialog.enable` and make the terminal run `sh`. VS Code 1.141 has no built-in profile `sh`, only `bash`, `fish`, `pwsh`, `tmux` and the like, so the settings define one in `terminal.integrated.profiles.linux` and `.osx` (`{"sh": {"path": "sh"}}`) and make it the default. That keeps the terminal independent of personal shell configuration, in tests and in screenshots.
+
+### Changes to `Run Command` and the row locators
+
+Two findings while writing the terminal test change the existing command palette and quick pick resources:
+- **Late commands:** some commands, such as *Terminal: Create New Terminal*, are registered only a while after VS Code has started, and a palette that is already open does not show them, like the commands of an extension installed into a running instance. `Run Command` therefore opens a fresh palette until the command's row appears, within `${COMMAND_TIMEOUT}` (30 seconds), and each attempt waits two seconds. During the attempts it switches off Browser's run-on-failure keyword and restores it afterwards, so failed attempts leave no failure screenshots. The Python test needs no retry of its own.
+- **Exact rows:** `aria-label*="{title}"` matched five rows for *Terminal: Create New Terminal*, for example *… (In Active Workspace)*, and Browser's strict mode failed. `:text-is()` does not help, because every row has a highlighted span with exactly the typed text. A row's `aria-label` is the title, or the title followed by `, ` and its key binding or a hint such as `similar commands`. The locators therefore match `[aria-label="{title}"]` or `[aria-label^="{title}, "]`, for palette rows and quick pick items, and the `locator-override` profile follows.
 
 ### New resources
 
@@ -45,7 +51,7 @@ Each new resource covers one workbench part, has its locators as template variab
   - `Open File    ${name}` opens a file through Quick Open, waits for its row, and then waits for the file's tab to be active.
   - `Save File` saves the active editor.
   - Shortcuts use Playwright's `ControlOrMeta`, so they also work on macOS.
-- `file_dialog.resource`: `Open File With Dialog    ${path}` runs *File: Open File...*, replaces the path in the dialog's input and confirms.
+- `file_dialog.resource`: `Open File With Dialog    ${path}` runs *File: Open File...*, replaces the path in the dialog's input and confirms. The dialog lists its folder asynchronously and then sets the input to that folder, which overwrote a path filled in too early; the keyword therefore waits for the first listed entry and checks the input's value before it presses Enter.
 - `terminal.resource`:
   - `Run In Terminal    ${command}` opens a new terminal and runs the command.
   - `Terminal Should Show    ${text}` waits until the active terminal shows the text.
@@ -56,12 +62,12 @@ Each new resource covers one workbench part, has its locators as template variab
   - A test opens a file, types, saves, and checks the file on disk.
   - Another test opens a file through the dialog.
 - `terminal.robot`: runs `echo $((40 + 2))` and waits for `42`. The number shows that the command ran, because it does not appear in the typed command line.
-- `python.robot`: one test opens VS Code with `extensions=${{ ["ms-python.python"] }}`, and the other installs the extension with `Install VS Code Extension` after the start. Both open `hello.py`, run *Python: Run Python File in Terminal* and wait for `Hello World`. The suite needs network access and a Python interpreter, as its documentation says.
+- `python.robot`: before it runs the Python extension's command, each test waits until the extension shows the chosen interpreter in the status bar. Run right after opening `hello.py`, the command failed with "Unable to find workspace for given file" while the extension was still starting. One test opens VS Code with `extensions=${{ ["ms-python.python"] }}`, and the other installs the extension with `Install VS Code Extension` after the start. Both open `hello.py`, run *Python: Run Python File in Terminal* and wait for `Hello World`. The suite needs network access and a Python interpreter, as its documentation says.
 - `windows.robot`: opens a new window with `ControlOrMeta+Shift+N`, which avoids the palette, where *New Window* also matches *New Window with Profile*. It switches to the new page, checks the workbench there, closes it, and checks the first window.
 
 ### Screenshots
 
-- **In the example:** the tests call `Take Screenshot    filename=<name>` at their important steps, so every run has the pictures in its log. The names are stable, for example `command-palette`, `quick-pick`, `webview`, `editor`, `terminal` and `python-run`.
+- **In the example:** the tests call `Take Screenshot    filename=<name>` at their important steps, so every run has the pictures in its log. The names are stable: `notification`, `quick-pick`, `webview`, `editor`, `terminal` and `python-run`. The palette itself is not shown, because `Run Command` presses Enter at once; for the quick pick, `quick_pick.resource` gets `Quick Pick Item Should Be Shown`, so that the screenshot is taken while the list is open.
 - **Script:** `docs/scripts/update_screenshots.py` runs the example from the repository root. It uses the example's `xvfb` profile, so the run is hidden on a Full HD screen with Openbox, where the maximised VS Code fills the screen. It then copies the selected screenshots from the run's `browser/screenshot` folder to `docs/src/assets/screenshots/`.
 - **Committed:** the screenshots are committed, like the reference pages. The guides show them as Markdown images, which Astro optimises at build time.
 - **AGENTS.md** says when to run the script: after changes to the example or to the VS Code version.
@@ -79,8 +85,8 @@ Each new resource covers one workbench part, has its locators as template variab
 
 ## Risks / Trade-offs
 
-- [VS Code registers an extension installed into a running instance shortly after the install, and an open command palette does not refresh] → As in the library's acceptance test, the Python test runs the extension's command with a freshly opened palette until it appears.
-- [`Install VS Code Extension` with `ms-python.python` needs a reload because of its dependencies] → The library's tests installed only a small extension into a running instance. The Python test checks it. If a reload is needed, the test reloads the window with *Developer: Reload Window*, and the extensions guide says so.
+- [VS Code registers an extension installed into a running instance shortly after the install, and an open command palette does not refresh] → `Run Command` opens a fresh palette until the command appears, see above.
+- [`Install VS Code Extension` with `ms-python.python` needs a reload because of its dependencies] → Checked: VS Code 1.141 picks up the Python extension and its dependencies in the running instance without a reload.
 - [The Python tests download about 100 MB from the Marketplace per instance] → Accepted for the example. The guide mentions it, and the tests are tagged `network` so that offline runs can exclude them.
 - [Screenshots in the repository go stale] → The script makes regenerating one command, and AGENTS.md names when to run it. Stale pictures do not break anything.
 - [The terminal shows personal shell output despite `sh`, for example through `ENV`] → It is checked when the screenshots are generated; the setting can name `/bin/sh` with arguments if needed.
