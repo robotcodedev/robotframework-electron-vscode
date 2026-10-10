@@ -27,7 +27,8 @@ VS Code's windows are ordinary Browser pages, so most Browser keywords work on t
 | Native dialogs and message boxes | Does not work | They are outside the page. |
 | `Save Page As PDF` | Does not work | Electron does not provide Chromium's PDF printing (`Page.printToPDF`). |
 | Playwright's `slowMo` | Does not work | Playwright has no `slowMo` for Electron; use presenter mode. |
-| HAR recording and tracing | Not available | There are no keywords for them in Electron applications yet. |
+| Tracing and HAR recording | Works | `tracing` and `record_har` of `New Electron Application` and `Open VS Code`, see [Traces and HAR files](../traces/). |
+| `Download` | Works | Tested with an Electron application. The libraries tell Browser that the application accepts downloads, as Electron does by default. |
 
 ## Snippets
 
@@ -65,4 +66,11 @@ JavaScript coverage of the workbench while a command runs:
 Start Coverage
 Run Command    Robot Example: Say Hello
 ${report} =    Stop Coverage
+```
+
+Downloading a file into the output directory from a page of an Electron application. The page must be loaded from a URL, and `Download` fetches the file from that page:
+
+```robotframework
+Go To    https://example.com/
+${download} =    Download    https://example.com/report.csv    saveAs=${OUTPUT_DIR}/report.csv
 ```

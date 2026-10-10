@@ -7,7 +7,8 @@ A small VS Code extension with Robot Framework tests that drive the VS Code work
 - run a command in the integrated terminal and read its output (`terminal.robot`);
 - open a second window (`windows.robot`);
 - run a Python script with the Python extension, installed when VS Code starts and into the running VS Code (`python.robot`);
-- record videos in the size of the screen: with presenter mode, of a demonstration of the extension and of a Python script that the test creates, saves through VS Code's own dialog and runs; without presenter mode, of a Python script created in the explorer (`video.robot`).
+- record videos in the size of the screen: with presenter mode, of a demonstration of the extension and of a Python script that the test creates, saves through VS Code's own dialog and runs; without presenter mode, of a Python script created in the explorer (`video.robot`);
+- record Playwright traces of tests and a HAR file of a webview's network traffic (`tracing.robot`).
 
 Each VS Code opens a fresh copy of `tests/workspace` in the output directory, so the tests can change files.
 
@@ -49,7 +50,7 @@ The tests that use the Python extension, in `python.robot` and `video.robot`, ar
 robotcode -p xvfb robot -e network
 ```
 
-The tests take screenshots at their important steps, which the log shows and which are kept in `results/browser/screenshot/`. The videos of `video.robot` are in `results/browser/video/`, and the log embeds them as well.
+The tests take screenshots at their important steps, which the log shows and which are kept in `results/browser/screenshot/`. The videos of `video.robot` are in `results/browser/video/`, and the log embeds them as well. The traces of `tracing.robot` are in `results/browser/traces/`; open one with `rfbrowser show-trace <file>`. Its HAR file is `results/har/webview.har`.
 
 The profile `locator-override` in `robot.toml` shows how a project overrides locators, for example per VS Code version:
 
