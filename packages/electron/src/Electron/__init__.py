@@ -227,6 +227,7 @@ class Electron(Browser):
             recordVideo=video,
             recordHar=self._har_options(record_har),
             tracing=trace_file or None,
+            defaultTimeout=int(self.timeout),
         )
         logger.info(f"Started Electron application {executable} as {adopted['browserId']}")
         if trace_file:

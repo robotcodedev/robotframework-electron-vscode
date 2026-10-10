@@ -143,6 +143,14 @@ def test_relative_paths_are_relative_to_the_working_directory(fake_launch, tmp_p
     assert calls[0]["cwd"] == str(tmp_path / "work")
 
 
+def test_gives_the_application_the_library_timeout(fake_launch, tmp_path):
+    electron, calls = fake_launch
+
+    electron.new_electron_application(tmp_path / "bin" / "electron")
+
+    assert calls[0]["defaultTimeout"] == int(electron.timeout)
+
+
 def test_application_runs_in_the_working_directory_by_default(fake_launch, tmp_path):
     electron, calls = fake_launch
 

@@ -21,7 +21,7 @@ const app = {
         if (scenario === 'no-window') throw new Error('no window');
         return { video: () => null };
     },
-    context: () => ({}),
+    context: () => ({ setDefaultTimeout: (timeout) => calls.push(`setDefaultTimeout ${timeout}`) }),
     close: async () => {
         calls.push('close');
         if (scenario === 'close-fails') throw new Error('close failed');
@@ -42,7 +42,7 @@ async function adoptContext() {
     return { browserId: 'browser', contextId: 'context', pageId: 'page' };
 }
 const hook = scenario === 'no-hook' ? 'RESERVED' : adoptContext;
-robotframeworkElectronLaunch('/electron', [], {}, '/cwd', 1000, null, null, null, playwright, hook)
+robotframeworkElectronLaunch('/electron', [], {}, '/cwd', 1000, null, null, null, 7000, playwright, hook)
     .then((result) => ({ result }), (error) => ({ error: error.message }))
     .then((outcome) => console.log(JSON.stringify({ ...outcome, calls })));
 """
@@ -62,7 +62,7 @@ def test_returns_the_adopted_context(tmp_path):
     outcome = run(tmp_path, "success")
 
     assert outcome["result"] == {"browserId": "browser", "contextId": "context", "pageId": "page", "videoPath": None}
-    assert outcome["calls"] == ["launch", "firstWindow", "adoptContext"]
+    assert outcome["calls"] == ["launch", "firstWindow", "setDefaultTimeout 7000", "adoptContext"]
 
 
 def test_starts_nothing_without_the_hook(tmp_path):
@@ -76,8 +76,12 @@ def test_starts_nothing_without_the_hook(tmp_path):
     ("scenario", "error", "calls"),
     [
         ("no-window", "no window", ["launch", "firstWindow", "close"]),
-        ("adopt-fails", "adopt failed", ["launch", "firstWindow", "adoptContext", "close"]),
-        ("close-fails", "adopt failed", ["launch", "firstWindow", "adoptContext", "close", "kill"]),
+        ("adopt-fails", "adopt failed", ["launch", "firstWindow", "setDefaultTimeout 7000", "adoptContext", "close"]),
+        (
+            "close-fails",
+            "adopt failed",
+            ["launch", "firstWindow", "setDefaultTimeout 7000", "adoptContext", "close", "kill"],
+        ),
     ],
 )
 def test_closes_the_application_when_the_start_fails(tmp_path, scenario, error, calls):

@@ -2,7 +2,7 @@
 // The function name is prefixed because Browser resolves extension functions
 // by name across all loaded modules.
 
-async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, playwright, adoptContext) {
+async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, defaultTimeout, playwright, adoptContext) {
     // Browser releases without the hook pass a placeholder instead of a function.
     if (typeof adoptContext !== 'function') {
         throw new Error('The Browser library has no adoptContext hook, which the Electron library needs to take over the application.');
@@ -22,6 +22,8 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
     });
     try {
         const window = await app.firstWindow({ timeout });
+        // The library timeout, as the contexts that Browser creates get it.
+        app.context().setDefaultTimeout(defaultTimeout);
         const adopted = await adoptContext(app.context(), { name: 'electron', tracing: tracing || undefined, contextOptions });
         return { ...adopted, videoPath: recordVideo ? await window.video()?.path() : null };
     } catch (error) {
