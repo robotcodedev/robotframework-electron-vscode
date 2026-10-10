@@ -133,8 +133,14 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v7
+        with:
+          # The version comes from the tags and the commits since the last one.
+          fetch-depth: 0
 
       - uses: astral-sh/setup-uv@v10.3.0
+
+      - name: Write the version from git
+        run: uv run scripts/update_versions.py
 
       - name: Build the packages
         run: uv build --all-packages -o dist
