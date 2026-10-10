@@ -18,7 +18,7 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
         await app.close().catch(() => app.process().kill());
         throw error;
     }
-    const adopted = await adoptContext(app.context());
+    const adopted = await adoptContext(app.context(), { name: 'electron' });
     return { ...adopted, videoPath: recordVideo ? await window.video()?.path() : null };
 }
 

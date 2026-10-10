@@ -38,3 +38,7 @@ Return Value
     Get Browser Ids    ACTIVE    contains    ${browser_id}
     Get Context Ids    ACTIVE    ACTIVE    contains    ${context_id}
     Get Page Ids    ACTIVE    ACTIVE    ACTIVE    contains    ${page}[page_id]
+
+Browser Catalog Names The Application Electron
+    ${browser_id}    ${_}    ${_} =    Start Fixture App
+    Get Browser Catalog    validate    [b["type"] for b in value if b["id"] == "${browser_id}"] == ["electron"]
