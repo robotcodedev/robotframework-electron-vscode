@@ -19,10 +19,84 @@ robotframework-browser = { path = "../robotframework-browser", editable = true }
 
 [dependency-groups]
 dev = [
+    "mypy>=2.4.0",
+    "pre-commit>=4.6.2",
     "pytest>=8",
     "robotcode[analyze,repl,runner]>=2.7.0",
+    "ruff>=0.17.0",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["packages/electron/tests", "packages/vscode/tests"]
 addopts = "--import-mode=importlib"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+include = ["packages/**/*.py", "examples/**/*.py", "docs/scripts/**/*.py"]
+
+[tool.ruff.lint]
+# Like robotframework-platynui: Ruff's default rule set plus the families it does not cover.
+# A Ruff upgrade can widen the default set; triage new findings and extend `ignore` here.
+ignore = [
+    "E741",
+    "ISC001",
+    "N999",   # Robot Framework libraries have capitalized module names such as `Electron`
+    "RUF012",
+    "D100",   # missing docstring in module
+    "D102",   # missing docstring in public method
+    "D104",   # missing docstring in public package
+    "D105",   # missing docstring in magic methods
+    "D107",   # missing docstring in __init__ methods
+]
+extend-select = ["E", "F", "W", "I", "N", "YTT", "DTZ", "T10", "ISC", "G", "PIE", "PT", "Q", "RET", "RSE", "RUF"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = ["Electron", "VSCode"]
+known-third-party = ["Browser", "robot", "robotlibcore"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["D"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+# robotlibcore's `keyword` decorator has no type hints.
+disallow_untyped_decorators = false
+# Both packages have test modules of the same name. Module names relative to the
+# repository root keep them apart, while the sources keep their import names.
+explicit_package_bases = true
+# The Browser clone is installed through an import hook, which mypy cannot follow,
+# so it is on the path until Browser is released with the adoptContext hook.
+mypy_path = ["packages/electron/src", "packages/vscode/src", "../robotframework-browser", "."]
+files = [
+    "packages/electron/src",
+    "packages/vscode/src",
+    "packages/electron/tests",
+    "packages/vscode/tests",
+    "packages/electron/atest/resources",
+    "packages/vscode/atest/resources",
+    "docs/scripts",
+]
+
+[[tool.mypy.overrides]]
+module = ["robot.*", "robotlibcore.*"]
+ignore_missing_imports = true
+
+# Browser's types, without reporting the errors of Browser's own code.
+[[tool.mypy.overrides]]
+module = ["Browser", "Browser.*"]
+follow_imports = "silent"
+ignore_errors = true
+
+# Tests need no annotations on every test function, but their bodies are checked.
+[[tool.mypy.overrides]]
+module = ["packages.electron.tests.*", "packages.vscode.tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true

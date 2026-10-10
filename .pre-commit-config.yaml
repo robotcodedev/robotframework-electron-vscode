@@ -1,0 +1,74 @@
+minimum_pre_commit_version: "4.0.0"
+# Texts taken over verbatim: the license and the Robot Framework grammar from RobotCode.
+exclude: ^(LICENSE|packages/[^/]+/LICENSE|docs/grammars/)
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args:
+          - --verbose
+          - feat
+          - fix
+          - docs
+          - style
+          - refactor
+          - perf
+          - test
+          - build
+          - ci
+          - chore
+          - revert
+
+  # The project's own tools from the workspace, so that their versions match uv.lock.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check
+        language: system
+        pass_filenames: false
+        types_or: [python, pyi]
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --check
+        language: system
+        pass_filenames: false
+        types_or: [python, pyi]
+
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        pass_filenames: false
+        types_or: [python, pyi]
+
+      - id: robotcode-analyze
+        name: robotcode analyze
+        # Hints, such as variables overridden in a personal .robot.toml, do not fail the hook.
+        entry: uv run robotcode -r . analyze code --exit-code-mask hint
+        language: system
+        pass_filenames: false
+        files: ^packages/.*\.(robot|resource|py)$|^robot\.toml$
+
+      - id: robotcode-analyze-example
+        name: robotcode analyze (example)
+        entry: uv run robotcode -r examples/vscode-extension analyze code --exit-code-mask hint
+        language: system
+        pass_filenames: false
+        files: ^examples/vscode-extension/
