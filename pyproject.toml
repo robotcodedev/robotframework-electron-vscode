@@ -19,6 +19,8 @@ robotframework-browser = { path = "../robotframework-browser", editable = true }
 
 [dependency-groups]
 dev = [
+    "commitizen>=4.19.2",
+    "git-cliff>=2.14.2",
     "mypy>=2.4.0",
     "pre-commit>=4.6.2",
     "pytest>=8",
@@ -26,14 +28,35 @@ dev = [
     "ruff>=0.17.0",
 ]
 
+[tool.commitizen]
+name = "cz_conventional_commits"
+bump_message = "chore(release): bump version $current_version → $new_version"
+tag_format = "v$version"
+version_scheme = "pep440"
+version_provider = "scm"
+# 0.x: a breaking change raises the minor version.
+major_version_zero = true
+# git-cliff writes the changelog, see cliff.toml.
+update_changelog_on_bump = false
+gpg_sign = true
+annotated_tag = true
+pre_bump_hooks = [
+    "uv run scripts/update_versions.py",
+    "uv run git-cliff --tag v$CZ_PRE_NEW_VERSION -o CHANGELOG.md",
+    "uv lock --offline",
+    "git add CHANGELOG.md uv.lock pyproject.toml packages/electron/pyproject.toml packages/vscode/pyproject.toml",
+]
+
 [tool.pytest.ini_options]
-testpaths = ["packages/electron/tests", "packages/vscode/tests"]
+testpaths = ["packages/electron/tests", "packages/vscode/tests", "scripts/tests"]
 addopts = "--import-mode=importlib"
+# The tests of the scripts import them as `scripts.<name>`.
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 120
 target-version = "py310"
-include = ["packages/**/*.py", "examples/**/*.py", "docs/scripts/**/*.py"]
+include = ["packages/**/*.py", "examples/**/*.py", "docs/scripts/**/*.py", "scripts/**/*.py"]
 
 [tool.ruff.lint]
 # Like robotframework-platynui: Ruff's default rule set plus the families it does not cover.
@@ -82,6 +105,7 @@ files = [
     "packages/electron/atest/resources",
     "packages/vscode/atest/resources",
     "docs/scripts",
+    "scripts",
 ]
 
 [[tool.mypy.overrides]]
@@ -96,7 +120,7 @@ ignore_errors = true
 
 # Tests need no annotations on every test function, but their bodies are checked.
 [[tool.mypy.overrides]]
-module = ["packages.electron.tests.*", "packages.vscode.tests.*"]
+module = ["packages.electron.tests.*", "packages.vscode.tests.*", "scripts.tests.*"]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 check_untyped_defs = true
