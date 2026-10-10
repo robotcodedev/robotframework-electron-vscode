@@ -10,7 +10,7 @@ from typing import Any, TypedDict
 
 from Browser import Browser
 from Browser.utils import logger
-from Browser.utils.data_types import NewPageDetails, SelectionType, ViewportDimensions
+from Browser.utils.data_types import NewPageDetails, RecordHar, SelectionType, ViewportDimensions
 from robotlibcore import keyword
 
 __version__ = version("robotframework-electron")
@@ -85,6 +85,8 @@ class Electron(Browser):
         cwd: Path | None = None,
         timeout: timedelta | None = None,
         record_video: RecordVideo | None = None,
+        record_har: RecordHar | None = None,
+        tracing: bool | Path | None = None,
     ) -> tuple[str, str, NewPageDetails]:
         """Starts an Electron application and makes its first window the active page.
 
@@ -112,6 +114,21 @@ class Electron(Browser):
                 once the application has closed. Recording needs Playwright's
                 ffmpeg, which is installed with Browser's browsers.
 
+          - ``record_har``: Records the network traffic of the application's
+                windows into a [http://www.softwareishard.com/blog/har-12-spec/|HAR]
+                file, as ``recordHar`` of `New Context`: a dictionary with the
+                ``path`` of the file and optionally ``omitContent``. A relative
+                path is relative to the output directory. The file is written
+                when the application closes.
+          - ``tracing``: Records a Playwright trace of the application, as
+                ``tracing`` of `New Context`: ``True`` saves it as
+                ``browser/traces/trace_{contextid}.zip`` in the output directory,
+                and a ``*.zip`` path or a folder saves it there. The variable or
+                environment variable ``ROBOT_FRAMEWORK_BROWSER_TRACING`` set to
+                ``True`` traces every application. The trace is saved when the
+                application closes and shows the keyword calls as groups. Open
+                it with ``rfbrowser show-trace /path/to/trace.zip``.
+
         Returns a tuple of browser id, context id and page details of the
         first window, like `New Persistent Context`. The page details contain
         the path of the video, or an empty string if no video is recorded.
@@ -120,6 +137,7 @@ class Electron(Browser):
         | ${app} =    `New Electron Application`    /opt/my-app/my-app
         | `Get Title`    ==    My App
         | `New Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
+        | `New Electron Application`    /opt/my-app/my-app    tracing=True    record_har={'path': 'my-app.har'}
         """
         executable = shutil.which(str(executable_path))
         if executable is None:
@@ -130,6 +148,7 @@ class Electron(Browser):
             self.init_js_extension(_JS_MODULE)
             self._electron_extension_loaded = True
         video = self._video_options(record_video)
+        trace_file = self._playwright_state._resolve_trace_file(tracing)
         adopted = self.call_js_keyword(
             "robotframeworkElectronLaunch",
             executablePath=executable,
@@ -138,8 +157,13 @@ class Electron(Browser):
             cwd=str(cwd) if cwd else None,
             timeout=self.get_timeout(timeout),
             recordVideo=video,
+            recordHar=self._har_options(record_har),
+            tracing=trace_file or None,
         )
         logger.info(f"Started Electron application {executable} as {adopted['browserId']}")
+        if trace_file:
+            logger.info(f"The trace of {adopted['browserId']} is saved to {trace_file} when the application closes")
+            self._playwright_state.add_context_and_keyword_call_stack_to_trace(trace_file, adopted["contextId"])
         if video is not None:
             self._playwright_state.context_cache.add(adopted["contextId"], video["size"])
         video_path = self._playwright_state._embed_video(
@@ -158,6 +182,14 @@ class Electron(Browser):
         state = self._playwright_state
         params = state._set_video_size_to_int(state._set_video_path({"recordVideo": {"dir": None, **record_video}}))
         return {**params["recordVideo"], "dir": str(params["recordVideo"]["dir"])}
+
+    def _har_options(self, record_har: RecordHar | None) -> dict[str, Any] | None:
+        """Resolve a relative HAR path against the output directory."""
+        if record_har is None:
+            return None
+        if "path" not in record_har:
+            raise ValueError("record_har needs a 'path' for the HAR file.")
+        return {**record_har, "path": str(Path(self.outputdir, record_har["path"]))}
 
     @keyword
     def close_electron_application(self, browser: SelectionType | str = SelectionType.CURRENT) -> None:

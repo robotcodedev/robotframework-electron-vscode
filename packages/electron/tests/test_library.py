@@ -82,3 +82,30 @@ def test_record_video_converts_robot_framework_values():
 def test_record_video_rejects_unknown_keys():
     with pytest.raises(ValueError, match="'speed' not allowed"):
         TypeInfo.from_type_hint(RecordVideo).convert("{'speed': 2}")
+
+
+def test_no_har_options_without_record_har():
+    assert import_library()._har_options(None) is None
+
+
+def test_har_path_is_relative_to_the_output_directory(tmp_path):
+    electron = import_library()
+    electron.outputdir = str(tmp_path)
+
+    options = electron._har_options({"path": "network.har", "omitContent": True})
+
+    assert options == {"path": str(tmp_path / "network.har"), "omitContent": True}
+
+
+def test_absolute_har_path_is_kept(tmp_path):
+    electron = import_library()
+    electron.outputdir = str(tmp_path / "output")
+
+    options = electron._har_options({"path": str(tmp_path / "network.har")})
+
+    assert options == {"path": str(tmp_path / "network.har")}
+
+
+def test_record_har_without_path_fails():
+    with pytest.raises(ValueError, match="needs a 'path'"):
+        import_library()._har_options({"omitContent": True})
