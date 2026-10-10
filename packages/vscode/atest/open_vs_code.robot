@@ -27,6 +27,14 @@ Folder
     Open Test VS Code    ${TEST_WORKSPACE}
     Get Title    *=    workspace
 
+Trace And HAR Of The Workbench
+    Open Test VS Code
+    ...    tracing=${OUTPUT_DIR}/traces/workbench.zip    record_har=${{ {"path": "har/workbench.har"} }}
+    Get Element States    .monaco-workbench    contains    visible
+    Close VS Code
+    File Should Not Be Empty    ${OUTPUT_DIR}/traces/workbench.zip
+    File Should Not Be Empty    ${OUTPUT_DIR}/har/workbench.har
+
 Video Of The Workbench
     ${_}    ${_}    ${page} =    Open Test VS Code
     ...    extension_development_path=${TEST_EXTENSION}    record_video=${{ {"size": {"width": 1280, "height": 800}} }}

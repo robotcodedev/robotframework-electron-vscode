@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from Browser.utils import logger
-from Browser.utils.data_types import ElementState, NewPageDetails, SelectionType
+from Browser.utils.data_types import ElementState, NewPageDetails, RecordHar, SelectionType
 from Electron import Electron, RecordVideo
 from robotlibcore import keyword
 
@@ -79,6 +79,8 @@ class VSCode(Electron):
         cache_dir: Path | None = None,
         timeout: timedelta = timedelta(seconds=60),
         record_video: RecordVideo | None = None,
+        record_har: RecordHar | None = None,
+        tracing: bool | Path | None = None,
     ) -> tuple[str, str, NewPageDetails]:
         """Starts an isolated VS Code instance and returns once its workbench is ready.
 
@@ -117,6 +119,10 @@ class VSCode(Electron):
                 `New Electron Application`. VS Code's window keeps its own size,
                 so for a full frame give the video a ``size`` and call
                 `Set Viewport Size` with the same size after the start.
+          - ``record_har``: Records the network traffic of the workbench into a
+                HAR file, as for `New Electron Application`.
+          - ``tracing``: Records a Playwright trace of the workbench, as for
+                `New Electron Application`.
 
         Returns a tuple of browser id, context id and page details of the
         workbench window, like `New Electron Application`.
@@ -141,7 +147,13 @@ class VSCode(Electron):
         arguments = launch_arguments(directories, extension_development_path or [], args or [], path)
         logger.info(f"Starting VS Code {product or executable} with instance directory {directories.root}")
         ids = self.new_electron_application(
-            executable, args=arguments, env=env, timeout=timeout, record_video=record_video
+            executable,
+            args=arguments,
+            env=env,
+            timeout=timeout,
+            record_video=record_video,
+            record_har=record_har,
+            tracing=tracing,
         )
         try:
             self.wait_for_elements_state(".monaco-workbench", ElementState.visible, timeout)
