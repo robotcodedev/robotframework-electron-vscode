@@ -33,6 +33,7 @@ And if you like the project, but just don't have time to contribute, that's fine
   - [Your First Code Contribution](#your-first-code-contribution)
     - [Development Environment Setup](#development-environment-setup)
     - [IDE Configuration](#ide-configuration)
+    - [Pre-commit Hooks](#pre-commit-hooks)
     - [Development Workflow](#development-workflow)
     - [Pull Request Guidelines](#pull-request-guidelines)
     - [Running Tests](#running-tests)
@@ -41,6 +42,7 @@ And if you like the project, but just don't have time to contribute, that's fine
   - [Improving The Documentation](#improving-the-documentation)
 - [Styleguides](#styleguides)
   - [Commit Messages](#commit-messages)
+  - [Python Code](#python-code)
   - [Robot Framework Code](#robot-framework-code)
 - [Join The Project Team](#join-the-project-team)
 
@@ -213,13 +215,31 @@ We recommend VS Code with the [RobotCode](https://robotcode.io) extension, which
 
 Open the repository root as the workspace folder, so that RobotCode reads the root `robot.toml`. Personal settings belong into gitignored files: test variables such as a local `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` into `.robot.toml`, editor settings into `.vscode/` or a `*.code-workspace` file.
 
+#### Pre-commit Hooks
+
+The project ships a [`.pre-commit-config.yaml`](.pre-commit-config.yaml) that runs the same checks as CI, before every commit:
+
+- standard checks: large files, valid TOML and YAML, a newline at the end of files and no trailing whitespace;
+- [Conventional Commits](#commit-messages) on the commit message;
+- `ruff check` and `ruff format --check` on the Python code, see [Python Code](#python-code);
+- mypy in strict mode;
+- RobotCode's static analysis of the Robot Framework files, of the repository and of the example project.
+
+Install the hooks once, after `uv sync`:
+
+```bash
+uv run pre-commit install
+```
+
+This installs the `pre-commit` and `commit-msg` hooks. To run all checks against the whole repository: `uv run pre-commit run --all-files`.
+
 #### Development Workflow
 
 1. **Discuss larger changes first** in an issue. Larger work is planned as an [OpenSpec](https://github.com/Fission-AI/OpenSpec) change in `openspec/changes/` — proposal, specs, design and tasks — before it is implemented; the main specs in `openspec/specs/` describe the current behavior.
 2. **Create a branch:** `git checkout -b feature/your-feature-name`
 3. **Make your changes** following the project's [styleguides](#styleguides)
 4. **Run tests:** `uv run pytest` and `uv run robotcode -r . -p xvfb robot` (see [Running Tests](#running-tests)) — run all tests before committing or pushing, not only the tests you added or changed
-5. **Run the static analysis:** `uv run robotcode -r . analyze code`
+5. **Run the checks:** `uv run pre-commit run --all-files`, which the [pre-commit hooks](#pre-commit-hooks) also run before each commit
 6. **Commit your changes** with a descriptive, [signed](#signed-commits-required) commit message
 7. **Push and create a pull request**
 
@@ -233,7 +253,7 @@ Before submitting your pull request, make sure that:
 - [ ] The change is **focused** on a single concern (no unrelated refactors or formatting noise).
 - [ ] **Tests** for the change have been added or updated, and `uv run pytest` and `uv run robotcode -r . -p xvfb robot` pass locally — *not required for documentation-only or other non-code changes; note that in the PR*.
 - [ ] The **example project** still passes, `uv run robotcode -r examples/vscode-extension -p xvfb robot`, if you changed a library or the example.
-- [ ] The **static analysis** reports no errors or warnings: `uv run robotcode -r . analyze code`.
+- [ ] The **checks** pass: `uv run pre-commit run --all-files`, with ruff, mypy and RobotCode's static analysis (also enforced by the [pre-commit hooks](#pre-commit-hooks) if installed).
 - [ ] **Documentation** has been updated where relevant (user docs, docstrings, README).
 - [ ] **Generated files** (if any) were regenerated with the documented script, not edited by hand.
 - [ ] **Commits** follow [Conventional Commits](#commit-messages) and are [cryptographically signed](#signed-commits-required) (`git commit -S`, GPG/SSH).
@@ -252,7 +272,7 @@ A good PR description:
 <!-- omit in toc -->
 ##### PR Review Process
 
-- Automated checks must pass (tests, static analysis, etc.).
+- Automated checks must pass (linting, type checks, static analysis and tests).
 - At least one maintainer review is required.
 - Address feedback promptly.
 - Keep your PR up to date with the main branch.
@@ -294,6 +314,8 @@ uv run robotcode -r examples/vscode-extension -p xvfb robot -e network   # witho
 - `uv run robotcode -r . discover tests` — List the acceptance tests.
 - `uv run robotcode -r . results summary` — Summarise the last run.
 - `uv run robotcode -r . analyze code` — Analyse the Robot Framework files statically.
+- `uv run ruff check --fix` and `uv run ruff format` — Fix lint findings and format the Python code.
+- `uv run mypy` — Type-check the packages and their tests.
 - `uv run robotcode -r . repl` — Run keywords one by one against a running application, for example to find locators.
 - `uv run python docs/scripts/update_screenshots.py` — Run the example project with `-p xvfb` and copy its screenshots into the documentation site. Run it after changing the example or its VS Code version, and commit the images. It needs Xvfb, Openbox and network access.
 
@@ -444,6 +466,12 @@ Prefer GPG (or already have a GPG key)? Follow GitHub's [Managing commit signatu
 **For pull requests:**
 - All commits in the PR must be signed
 - You can sign previous commits using: `git rebase --exec 'git commit --amend --no-edit -S' -i HEAD~<number-of-commits>`
+
+### Python Code
+
+- Ruff checks and formats the code; its configuration is in the root `pyproject.toml`. Lines are at most 120 characters, strings use double quotes, and docstrings follow the Google style.
+- mypy checks the packages in strict mode. Tests need no annotations on every test function, but their bodies are checked.
+- Keyword docstrings use Robot Framework's documentation format. Document arguments under `*Arguments:*`, the return value under `*Returns:*` and exceptions under `*Raises:*`: Libdoc shows them with the arguments, the return type and the exceptions.
 
 ### Robot Framework Code
 
