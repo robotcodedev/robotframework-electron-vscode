@@ -2,6 +2,7 @@ import inspect
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 from Browser import playwright
@@ -70,7 +71,7 @@ def test_import_is_documented_with_browsers_arguments():
     assert [arg.name for arg in init.args] == [arg.name for arg in LibraryDocumentation("Browser").inits[0].args]
 
 
-def own_keywords(library: str) -> list:
+def own_keywords(library: str) -> list[Any]:
     package = Path(inspect.getfile(Electron)).parent
     return [kw for kw in LibraryDocumentation(library).keywords if Path(kw.source).is_relative_to(package)]
 

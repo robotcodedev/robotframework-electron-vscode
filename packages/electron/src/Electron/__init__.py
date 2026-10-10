@@ -81,11 +81,11 @@ Example:
 class ShowActions(TypedDict, total=False):
     """Overlay of the performed actions in a video, as Playwright's ``recordVideo.showActions``.
 
-    | =Key= | =Description= |
-    | ``duration`` | How long each action is shown, in milliseconds. |
-    | ``position`` | Where the overlay is shown: ``top-left``, ``top``, ``top-right``, ``bottom-left``, ``bottom`` or ``bottom-right``. |
-    | ``fontSize`` | Font size of the overlay, in pixels. |
-    | ``cursor`` | ``pointer`` shows the mouse cursor, ``none`` hides it. |
+    - ``duration``: How long each action is shown, in milliseconds.
+    - ``position``: Where the overlay is shown: ``top-left``, ``top``,
+      ``top-right``, ``bottom-left``, ``bottom`` or ``bottom-right``.
+    - ``fontSize``: Font size of the overlay, in pixels.
+    - ``cursor``: ``pointer`` shows the mouse cursor, ``none`` hides it.
     """
 
     duration: int
@@ -101,14 +101,19 @@ class RecordVideo(TypedDict, total=False):
     `New Context`, ``showActions`` is Playwright's overlay of the performed
     actions.
 
-    | =Key= | =Description= |
-    | ``dir`` | Folder for the videos. Relative paths are relative to Browser's video folder ``browser/video`` in the output directory, which is also the default. |
-    | ``size`` | Size of the video, as a dictionary with ``width`` and ``height``. Defaults to 1280×720. A larger window is scaled down to fit, a smaller one is shown at its own size with a grey margin. |
-    | ``showActions`` | Shows the performed actions in the video: a dictionary with ``duration`` (milliseconds), ``position``, ``fontSize`` and ``cursor``. |
+    - ``dir``: Folder for the videos. Relative paths are relative to
+      Browser's video folder ``browser/video`` in the output directory,
+      which is also the default.
+    - ``size``: Size of the video, as a dictionary with ``width`` and
+      ``height``. Defaults to 1280x720. A larger window is scaled down to
+      fit, a smaller one is shown at its own size with a grey margin.
+    - ``showActions``: Shows the performed actions in the video: a
+      dictionary with ``duration`` (milliseconds), ``position``,
+      ``fontSize`` and ``cursor``.
 
     Example:
     | `New Electron Application`    ${ELECTRON}    record_video={'size': {'width': 1920, 'height': 1080}}
-    | `New Electron Application`    ${ELECTRON}    record_video={'showActions': {'duration': 800, 'position': 'top-right'}}
+    | `New Electron Application`    ${ELECTRON}    record_video={'showActions': {'duration': 800}}
     """
 
     dir: str
@@ -121,11 +126,12 @@ class Electron(Browser):
 
     _electron_extension_loaded = False
 
-    # The signature and the types of the import arguments come from Browser through __wrapped__.
-    @functools.wraps(Browser.__init__)
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
+    # Libdoc and robotlibcore take the signature and the types of the import arguments
+    # from Browser through __wrapped__. A decorator would hide __init__ from mypy.
+    functools.update_wrapper(__init__, Browser.__init__)
     __init__.__doc__ = cleandoc(_IMPORTING) + "\n\n" + browser_import_arguments()
 
     @keyword

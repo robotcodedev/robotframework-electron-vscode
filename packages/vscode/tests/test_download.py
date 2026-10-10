@@ -7,6 +7,7 @@ import sys
 import tarfile
 import threading
 import urllib.error
+from email.message import Message
 from pathlib import Path
 
 import pytest
@@ -71,7 +72,7 @@ class FakeUpdateService:
             if self.broken_download:
                 return BrokenStream()
             return io.BytesIO(self.archive)
-        raise urllib.error.HTTPError(url, 404, "Not Found", None, None)
+        raise urllib.error.HTTPError(url, 404, "Not Found", Message(), None)
 
 
 class BrokenStream(io.BytesIO):
@@ -118,7 +119,7 @@ def test_resolves_fixed_version(service):
 
 
 def test_unknown_version_names_the_version(service):
-    with pytest.raises(ValueError, match="'0.0.1' not found"):
+    with pytest.raises(ValueError, match=r"'0\.0\.1' not found"):
         resolve_build("0.0.1", PLATFORM)
 
 
@@ -208,7 +209,11 @@ def test_finds_executable_in_macos_app_bundle(tmp_path):
         ("linux", "code", "bin/code"),
         ("linux", "code-insiders", "bin/code-insiders"),
         ("win32", "Code.exe", "bin/code.cmd"),
-        ("darwin", "Visual Studio Code.app/Contents/MacOS/Code", "Visual Studio Code.app/Contents/Resources/app/bin/code"),
+        (
+            "darwin",
+            "Visual Studio Code.app/Contents/MacOS/Code",
+            "Visual Studio Code.app/Contents/Resources/app/bin/code",
+        ),
     ],
 )
 def test_finds_command_line_script_next_to_executable(tmp_path, system, executable, cli):
@@ -248,7 +253,9 @@ def test_extracted_files_keep_their_mode(service, tmp_path):
 )
 def test_finds_command_line_script_by_product_application_name(tmp_path, system, executable, application_name, cli):
     app_folder = (
-        tmp_path / "VSCodium.app" / "Contents" / "Resources" / "app" if system == "darwin" else tmp_path / "resources" / "app"
+        tmp_path / "VSCodium.app" / "Contents" / "Resources" / "app"
+        if system == "darwin"
+        else tmp_path / "resources" / "app"
     )
     app_folder.mkdir(parents=True)
     (app_folder / "product.json").write_text(json.dumps({"applicationName": application_name}))

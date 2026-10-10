@@ -5,11 +5,12 @@ import stat
 import sys
 import urllib.error
 import zipfile
+from email.message import Message
 from pathlib import Path
 
 import pytest
 
-from Electron import Helper as helper_module
+from Electron import Helper as HelperModule
 from Electron.Helper import (
     Helper,
     download_electron,
@@ -42,16 +43,16 @@ class FakeReleases:
 
     def open(self, url: str):
         self.requests.append(url)
-        key = url.removeprefix(helper_module.RELEASES_URL + "/")
+        key = url.removeprefix(HelperModule.RELEASES_URL + "/")
         if key not in self.files:
-            raise urllib.error.HTTPError(url, 404, "Not Found", None, None)
+            raise urllib.error.HTTPError(url, 404, "Not Found", Message(), None)
         return io.BytesIO(self.files[key])
 
 
 @pytest.fixture
 def releases(monkeypatch):
     fake = FakeReleases()
-    monkeypatch.setattr(helper_module, "_open", fake.open)
+    monkeypatch.setattr(HelperModule, "_open", fake.open)
     return fake
 
 
@@ -105,7 +106,7 @@ def test_keeps_the_executable_bit(releases, tmp_path):
 
 def test_checksum_mismatch_fails_and_leaves_nothing_in_the_cache(monkeypatch, tmp_path):
     fake = FakeReleases(checksum="0" * 64)
-    monkeypatch.setattr(helper_module, "_open", fake.open)
+    monkeypatch.setattr(HelperModule, "_open", fake.open)
 
     with pytest.raises(ValueError, match="Checksum mismatch"):
         download_electron(VERSION, tmp_path)
@@ -114,12 +115,14 @@ def test_checksum_mismatch_fails_and_leaves_nothing_in_the_cache(monkeypatch, tm
 
 
 def test_unknown_version_names_the_version(releases, tmp_path):
-    with pytest.raises(ValueError, match="'0.0.1' not found"):
+    with pytest.raises(ValueError, match=r"'0\.0\.1' not found"):
         download_electron("0.0.1", tmp_path)
 
 
 def test_returns_given_executable_without_downloading(releases, tmp_path):
-    executable = Helper().get_electron_executable(VERSION, executable=Path("/opt/electron/electron"), cache_dir=tmp_path)
+    executable = Helper().get_electron_executable(
+        VERSION, executable=Path("/opt/electron/electron"), cache_dir=tmp_path
+    )
 
     assert executable == str(Path("/opt/electron/electron"))
     assert releases.requests == []

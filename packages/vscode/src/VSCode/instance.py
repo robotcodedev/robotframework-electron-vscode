@@ -67,7 +67,9 @@ def write_settings(user_data: Path, settings: Mapping[str, Any] | None) -> dict[
 
 def instance_environment(environ: Mapping[str, str]) -> dict[str, str]:
     """Return ``environ`` without the variables that tie a process to a running VS Code."""
-    return {key: value for key, value in environ.items() if not key.startswith("VSCODE_") and key != "ELECTRON_RUN_AS_NODE"}
+    return {
+        key: value for key, value in environ.items() if not key.startswith("VSCODE_") and key != "ELECTRON_RUN_AS_NODE"
+    }
 
 
 def launch_arguments(

@@ -25,4 +25,3 @@ Application Already Exited
     Close Page
     Wait Until Keyword Succeeds    10s    200ms    Fixture App Has Exited    --already-exited
     Close Electron Application
-

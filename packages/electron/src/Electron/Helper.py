@@ -11,6 +11,7 @@ import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
+from typing import Any
 
 from robot.api.deco import keyword, library
 
@@ -51,14 +52,14 @@ def default_cache_dir() -> Path:
     return user_cache_dir() / "robotframework-electron" / "electron"
 
 
-def _open(url: str):
+def _open(url: str) -> Any:
     return urllib.request.urlopen(url)
 
 
 def _expected_sha256(release_url: str, asset: str, version: str) -> str:
     try:
         with _open(f"{release_url}/SHASUMS256.txt") as response:
-            lines = response.read().decode().splitlines()
+            lines: list[str] = response.read().decode().splitlines()
     except urllib.error.HTTPError as error:
         raise ValueError(f"Electron release '{version}' not found ({error.code} for {release_url}).") from error
     for line in lines:

@@ -29,4 +29,3 @@ Only The Given Instance Gets The Extension
     Length Should Be    ${installed}    1
     ${installed} =    List Directories In Directory    ${second_instance}/extensions    robot.test-extension-*
     Length Should Be    ${installed}    0
-

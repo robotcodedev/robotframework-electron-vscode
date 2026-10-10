@@ -6,6 +6,7 @@ import threading
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Any
 
 FIXTURE_APP = Path(__file__).resolve().parent.parent / "fixtures" / "app"
 
@@ -22,7 +23,7 @@ def count_fixture_app_processes(marker: str) -> int:
     line, so both orders are matched.
     """
     pattern = f"{FIXTURE_APP}.*{marker}|{marker}.*{FIXTURE_APP}"
-    result = subprocess.run(["pgrep", "-f", pattern], capture_output=True, text=True)
+    result = subprocess.run(["pgrep", "-f", pattern], capture_output=True, text=True, check=False)
     return len(result.stdout.split())
 
 
@@ -31,13 +32,15 @@ _PAGE = b"""<!doctype html>
 <div id="result"></div>
 <script>
 document.getElementById("load").onclick = () =>
-    fetch("/api").then((response) => response.text()).then((text) => (document.getElementById("result").textContent = text));
+    fetch("/api")
+        .then((response) => response.text())
+        .then((text) => (document.getElementById("result").textContent = text));
 </script>
 """
 
 
 class _Handler(BaseHTTPRequestHandler):
-    def do_GET(self):  # noqa: N802
+    def do_GET(self) -> None:
         body, content_type = (b'{"answer": 42}', "application/json") if self.path == "/api" else (_PAGE, "text/html")
         self.send_response(200)
         self.send_header("Content-Type", content_type)
@@ -45,7 +48,7 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def log_message(self, *args):
+    def log_message(self, *args: Any) -> None:
         pass
 
 
@@ -54,7 +57,7 @@ _server: ThreadingHTTPServer | None = None
 
 def web_server_url() -> str:
     """Return the URL of a local web server with a page that loads ``/api``, starting it on first use."""
-    global _server  # noqa: PLW0603
+    global _server
     if _server is None:
         _server = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
         threading.Thread(target=_server.serve_forever, daemon=True).start()

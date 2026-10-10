@@ -7,7 +7,7 @@ from Browser.utils.data_types import AutoClosingLevel
 from robot.running.arguments.typeinfo import TypeInfo
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
-from Electron import Electron, RecordVideo, __version__
+from Electron import Electron, RecordVideo, ShowActions, __version__
 
 
 @pytest.fixture(autouse=True)
@@ -17,7 +17,8 @@ def _isolated_cwd(tmp_path, monkeypatch):
 
 
 def import_library(*args: str) -> Electron:
-    return RobotLibrary.from_name("Electron", args=list(args)).instance
+    electron: Electron = RobotLibrary.from_name("Electron", args=list(args)).instance
+    return electron
 
 
 def test_contains_every_browser_keyword():
@@ -53,6 +54,7 @@ def test_video_defaults_to_browsers_folder_and_size(tmp_path):
 
     options = electron._video_options({})
 
+    assert options is not None
     assert options["dir"] == str(tmp_path / "browser" / "video")
     assert options["size"] == {"width": 1280, "height": 720}
 
@@ -60,12 +62,12 @@ def test_video_defaults_to_browsers_folder_and_size(tmp_path):
 def test_video_folder_size_and_action_overlay_are_passed_on(tmp_path):
     electron = import_library()
     electron.outputdir = str(tmp_path)
-    show_actions = {"duration": 800, "position": "top-right"}
+    show_actions: ShowActions = {"duration": 800, "position": "top-right"}
+    record_video: RecordVideo = {"dir": "demo", "size": {"width": 1920, "height": 1080}, "showActions": show_actions}
 
-    options = electron._video_options(
-        {"dir": "demo", "size": {"width": 1920, "height": 1080}, "showActions": show_actions}
-    )
+    options = electron._video_options(record_video)
 
+    assert options is not None
     assert Path(options["dir"]) == (tmp_path / "browser" / "video" / "demo").resolve()
     assert options["size"] == {"width": 1920, "height": 1080}
     assert options["showActions"] == show_actions

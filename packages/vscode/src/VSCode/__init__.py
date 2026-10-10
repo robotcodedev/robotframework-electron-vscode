@@ -10,9 +10,10 @@ from typing import Any, NamedTuple
 
 from Browser.utils import logger
 from Browser.utils.data_types import ElementState, NewPageDetails, RecordHar, SelectionType
+from robotlibcore import keyword
+
 from Electron import Electron, RecordVideo
 from Electron._docs import browser_import_arguments, browser_sections
-from robotlibcore import keyword
 
 from .download import cli_path, default_cache_dir, download_vscode, executable_path, product_version
 from .instance import (
@@ -103,14 +104,15 @@ class VSCode(Electron):
 
     _instance_cleanup_done = False
 
-    # The signature and the types of the import arguments come from Browser through __wrapped__.
-    @functools.wraps(Electron.__init__)
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
+    # Libdoc and robotlibcore take the signature and the types of the import arguments
+    # from Browser through __wrapped__. A decorator would hide __init__ from mypy.
+    functools.update_wrapper(__init__, Electron.__init__)
     __init__.__doc__ = cleandoc(_IMPORTING) + "\n\n" + browser_import_arguments()
 
-    def _start_suite(self, name, attrs):
+    def _start_suite(self, name: str, attrs: dict[str, Any]) -> None:
         super()._start_suite(name, attrs)
         # Like Browser's output folders: once per process, before the run opens its first instance.
         if not VSCode._instance_cleanup_done:
@@ -118,7 +120,8 @@ class VSCode(Electron):
             remove_instance_directories(Path(self.outputdir))
 
     def _instances(self) -> dict[str, Instance]:
-        return self.__dict__.setdefault("_vscode_instances", {})
+        instances: dict[str, Instance] = self.__dict__.setdefault("_vscode_instances", {})
+        return instances
 
     @keyword("Open VS Code")
     def open_vs_code(
@@ -193,6 +196,7 @@ class VSCode(Electron):
         | `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
         | `Open VS Code`    version=1.141.0    settings=${{ {"window.title": "robot-test"} }}
         """
+        product: str | None
         if executable is None:
             cached = download_vscode(version, cache_dir or default_cache_dir())
             executable = executable_path(cached.folder, cached.quality)
@@ -208,7 +212,7 @@ class VSCode(Electron):
             extension_development_path = [extension_development_path]
         arguments = launch_arguments(directories, extension_development_path or [], args or [], path)
         logger.info(f"Starting VS Code {product or executable} with instance directory {directories.root}")
-        ids = self.new_electron_application(
+        ids: tuple[str, str, NewPageDetails] = self.new_electron_application(
             executable,
             args=arguments,
             env=env,
@@ -244,9 +248,7 @@ class VSCode(Electron):
         self.close_electron_application(browser)
 
     @keyword("Install VS Code Extension")
-    def install_vs_code_extension(
-        self, extension: str, browser: SelectionType | str = SelectionType.CURRENT
-    ) -> None:
+    def install_vs_code_extension(self, extension: str, browser: SelectionType | str = SelectionType.CURRENT) -> None:
         """Installs an extension into a running VS Code instance started with `Open VS Code`.
 
         The extension is installed the way ``extensions`` of `Open VS Code`

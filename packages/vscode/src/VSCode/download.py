@@ -11,7 +11,7 @@ import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from Electron.Helper import extract_zip, user_cache_dir
 
@@ -51,7 +51,7 @@ def default_cache_dir() -> Path:
     return user_cache_dir() / "robotframework-vscode" / "vscode"
 
 
-def _open(url: str):
+def _open(url: str) -> Any:
     return urllib.request.urlopen(url)
 
 
@@ -167,7 +167,7 @@ def _application_name(executable: Path, system: str) -> str | None:
     """Return the ``applicationName`` from the build's ``product.json``, such as ``codium`` for VSCodium."""
     product = _app_folder(executable, system) / "product.json"
     try:
-        return json.loads(product.read_text(encoding="utf-8"))["applicationName"]
+        return str(json.loads(product.read_text(encoding="utf-8"))["applicationName"])
     except (OSError, ValueError, KeyError):
         return None
 
@@ -187,6 +187,6 @@ def product_version(executable: Path, system: str = sys.platform) -> str | None:
     """Return the version of the VS Code that ``executable`` belongs to, if it can be found."""
     package = _app_folder(executable, system) / "package.json"
     try:
-        return json.loads(package.read_text(encoding="utf-8"))["version"]
+        return str(json.loads(package.read_text(encoding="utf-8"))["version"])
     except (OSError, ValueError, KeyError):
         return None

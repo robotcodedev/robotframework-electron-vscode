@@ -3,14 +3,15 @@ import json
 import re
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 from Browser import playwright
 from Browser.utils.data_types import AutoClosingLevel
-from Electron import Electron
 from robot.libdoc import LibraryDocumentation
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
+from Electron import Electron
 from VSCode import VSCode, __version__
 
 
@@ -94,7 +95,7 @@ def test_import_is_documented_with_browsers_arguments():
     assert [arg.name for arg in init.args] == [arg.name for arg in LibraryDocumentation("Browser").inits[0].args]
 
 
-def own_keywords(library: str) -> list:
+def own_keywords(library: str) -> list[Any]:
     package = Path(inspect.getfile(VSCode)).parent
     return [kw for kw in LibraryDocumentation(library).keywords if Path(kw.source).is_relative_to(package)]
 

@@ -47,7 +47,9 @@ def test_removes_variables_that_tie_a_process_to_a_running_vscode():
 def test_launch_arguments_isolate_the_instance_and_open_the_path_last(tmp_path):
     directories = InstanceDirectories(tmp_path, tmp_path / "user-data", tmp_path / "extensions")
 
-    arguments = launch_arguments(directories, [Path("/ext/a"), Path("/ext/b")], ["--verbose"], Path("/work/space"), "linux")
+    arguments = launch_arguments(
+        directories, [Path("/ext/a"), Path("/ext/b")], ["--verbose"], Path("/work/space"), "linux"
+    )
 
     assert arguments == [
         f"--user-data-dir={tmp_path / 'user-data'}",
