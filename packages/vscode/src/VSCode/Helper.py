@@ -56,6 +56,14 @@ class Helper:
                 (``~/.cache`` on Linux, ``~/Library/Caches`` on macOS,
                 ``%LOCALAPPDATA%`` on Windows).
 
+        *Returns:*
+          The path of the VS Code executable.
+
+        *Raises:*
+          - ``ValueError``: VS Code has no builds for the current platform, the
+                version does not exist for it, or the download does not match
+                its checksum.
+
         Example:
         | ${code} =    `Get VS Code Executable`
         | ${code} =    `Get VS Code Executable`    1.141.0    cache_dir=${EXECDIR}/.cache

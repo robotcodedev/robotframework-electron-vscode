@@ -25,11 +25,19 @@ Importing the `Electron` library, including generating its documentation or anal
 - **THEN** no Node.js process and no application process is started
 
 ### Requirement: Library documentation
-The library documentation SHALL describe the Electron keywords and SHALL contain the Browser library's documentation with working internal links. It SHALL report the version of the `Electron` library, not that of Browser.
+The library documentation SHALL start with an introduction of the `Electron` library's own, followed by the Browser library's sections that Browser keywords link to, without Browser's opening text. The import documentation SHALL be the library's own and SHALL show Browser's import arguments with their types, defaults and descriptions. The documentation SHALL report the version of the `Electron` library, not that of Browser.
 
 #### Scenario: Generated documentation
 - **WHEN** libdoc generates the documentation of `Electron`
 - **THEN** it reports the version of `robotframework-electron`, and links in the Browser keyword documentation, such as those to `Assertions`, resolve to sections of the same document
+
+#### Scenario: Own introduction
+- **WHEN** libdoc generates the documentation of `Electron`
+- **THEN** the introduction starts with the `Electron` library's own text and sections, contains the Browser library's section `Assertions`, and does not contain Browser's opening text
+
+#### Scenario: Own import documentation
+- **WHEN** libdoc generates the documentation of `Electron`
+- **THEN** the import documentation starts with the `Electron` library's own text, and the import arguments are Browser's, with Browser's description of each argument
 
 ### Requirement: Start an application
 `New Electron Application` SHALL start the Electron application at a given executable path and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. If no environment variables are given, the application SHALL inherit the environment of the test run without `ELECTRON_RUN_AS_NODE`.
@@ -159,3 +167,10 @@ Browser's `Download` SHALL work in an application's windows. The library SHALL g
 #### Scenario: Download in an application
 - **WHEN** a window of an application shows a page from a web server and a test calls `Download` for a URL of that server
 - **THEN** the file is saved with the content that the server returned
+
+### Requirement: Keyword documentation
+The library's own keywords SHALL document every argument, their return value and the exceptions they raise for invalid input, so that Libdoc shows them with the arguments, the return type and the exceptions.
+
+#### Scenario: Keyword documentation
+- **WHEN** libdoc generates the documentation of `Electron` or `Electron.Helper`
+- **THEN** every argument of their own keywords has a description, keywords that return a value document it, and keywords that raise an exception for invalid input document it

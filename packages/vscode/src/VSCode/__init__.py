@@ -1,5 +1,6 @@
 """Robot Framework library for end-to-end testing of VS Code extensions."""
 
+import functools
 import os
 from datetime import timedelta
 from importlib.metadata import version
@@ -10,6 +11,7 @@ from typing import Any, NamedTuple
 from Browser.utils import logger
 from Browser.utils.data_types import ElementState, NewPageDetails, RecordHar, SelectionType
 from Electron import Electron, RecordVideo
+from Electron._docs import browser_import_arguments, browser_sections
 from robotlibcore import keyword
 
 from .download import cli_path, default_cache_dir, download_vscode, executable_path, product_version
@@ -28,20 +30,66 @@ __version__ = version("robotframework-vscode")
 _INTRO = """
 VSCode library is a Robot Framework library for end-to-end testing of VS Code extensions.
 
-It is built on the Electron library, which is built on the
-[https://robotframework-browser.org|Browser library]: it contains every
-Electron and Browser keyword and takes Browser's import arguments. Import
-``VSCode`` instead of ``Browser`` or ``Electron``.
+It is built on the Electron library and the
+[https://robotframework-browser.org|Browser library] and contains every
+Electron and Browser keyword. Import ``VSCode`` instead of ``Browser`` or
+``Electron``. It takes Browser's import arguments, see `Importing`. Guides and
+an example project are on the
+[https://robotcodedev.github.io/robotframework-electron-vscode/|documentation site].
 
-`Open VS Code` downloads VS Code if needed and starts an isolated instance
-with the extension under test, `Close VS Code` ends it. The workbench
-window is an ordinary Browser page. To get a VS Code executable without
-starting it, for example in a CI setup step, use ``Get VS Code Executable``
-from the ``VSCode.Helper`` library.
+= Opening VS Code =
 
-= Electron library documentation =
+`Open VS Code` starts an isolated VS Code instance with the extension under
+test and returns once the workbench is ready. It downloads the requested
+VS Code version into a cache if needed, or starts an installed VS Code or a
+fork. Each instance gets its own user data and extensions directories under the
+output directory, so neither your own VS Code nor other instances affect it.
 
-The rest of this documentation is the Electron library's own.
+| `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+
+Extensions that the extension under test depends on are installed with
+``extensions`` when VS Code starts, or with `Install VS Code Extension` into the
+running instance.
+
+= The workbench =
+
+The workbench window is an ordinary Browser page, and windows that VS Code
+opens later are pages too. The library has no keywords for the command palette,
+notifications or other parts of the workbench. Their DOM changes with VS Code
+releases and differs between forks, so these keywords and their locators belong
+to your project. The documentation site shows how to write them.
+
+= Closing VS Code =
+
+`Close VS Code` ends an instance. `Close Browser` and automatic closing end it
+as well, see `Automatic page and context closing`.
+
+= Videos, traces and HAR files =
+
+`Open VS Code` takes ``record_video``, ``tracing`` and ``record_har`` as
+`New Electron Application` does.
+
+= VS Code without starting it =
+
+``Get VS Code Executable`` of the ``VSCode.Helper`` library downloads VS Code
+and returns its executable, for example in a setup step of a CI job.
+
+= Electron and Browser keywords =
+
+`New Electron Application` starts other Electron applications. Browser keywords
+work on the workbench as on any other page. The following sections come from
+the Browser library's documentation.
+"""
+
+_IMPORTING = """
+VSCode library takes the same import arguments as the Browser library.
+
+They configure the Browser keywords, for example their timeout or presenter
+mode, and apply to the windows of VS Code as to any other page. All arguments
+are named arguments.
+
+Example:
+| Library    VSCode    timeout=20s    enable_presenter_mode=True
 """
 
 
@@ -54,6 +102,13 @@ class VSCode(Electron):
     ROBOT_LIBRARY_VERSION = __version__
 
     _instance_cleanup_done = False
+
+    # The signature and the types of the import arguments come from Browser through __wrapped__.
+    @functools.wraps(Electron.__init__)
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+    __init__.__doc__ = cleandoc(_IMPORTING) + "\n\n" + browser_import_arguments()
 
     def _start_suite(self, name, attrs):
         super()._start_suite(name, attrs)
@@ -124,8 +179,15 @@ class VSCode(Electron):
           - ``tracing``: Records a Playwright trace of the workbench, as for
                 `New Electron Application`.
 
-        Returns a tuple of browser id, context id and page details of the
-        workbench window, like `New Electron Application`.
+        *Returns:*
+          A tuple of browser id, context id and page details of the workbench
+          window, like `New Electron Application`.
+
+        *Raises:*
+          - ``ValueError``: The version does not exist for the current
+                platform, the download does not match its checksum, or the
+                executable or its command-line script is not found.
+          - ``RuntimeError``: Installing one of the ``extensions`` fails.
 
         Example:
         | `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
@@ -168,9 +230,12 @@ class VSCode(Electron):
         """Ends a VS Code instance started with `Open VS Code`.
 
         The keyword returns after the VS Code process has exited. It behaves
-        like `Close Electron Application`: ``CURRENT`` ends the active
-        instance, a browser id ends that instance, ``ALL`` closes all
-        browsers and applications.
+        like `Close Electron Application`.
+
+        *Arguments:*
+          - ``browser``: The browser id returned by `Open VS Code`. ``CURRENT``
+                ends the active instance, ``ALL`` closes all browsers and
+                applications.
 
         Example:
         | ${vscode}    ${_}    ${_} =    `Open VS Code`
@@ -200,6 +265,12 @@ class VSCode(Electron):
           - ``browser``: ``CURRENT`` for the active instance, or a browser id
                 that `Open VS Code` returned.
 
+        *Raises:*
+          - ``ValueError``: The browser is not a VS Code instance started with
+                `Open VS Code`.
+          - ``RuntimeError``: VS Code's command-line script fails to install
+                the extension.
+
         Example:
         | `Open VS Code`    ${EXECDIR}/tests/workspace
         | `Install VS Code Extension`    ms-python.python
@@ -222,6 +293,6 @@ class VSCode(Electron):
         logger.info(f"Installed extension {extension} into the VS Code instance {instance.directories.root}")
 
 
-VSCode.__doc__ = cleandoc(_INTRO) + "\n\n" + cleandoc(Electron.__doc__ or "")
+VSCode.__doc__ = cleandoc(_INTRO) + "\n\n" + browser_sections()
 
 __all__ = ["VSCode"]

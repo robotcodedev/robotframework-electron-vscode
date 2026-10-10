@@ -1,5 +1,6 @@
 """Robot Framework library for testing Electron applications, built on the Browser library."""
 
+import functools
 import os
 import shutil
 from datetime import timedelta
@@ -13,6 +14,8 @@ from Browser.utils import logger
 from Browser.utils.data_types import NewPageDetails, RecordHar, SelectionType, ViewportDimensions
 from robotlibcore import keyword
 
+from ._docs import browser_import_arguments, browser_sections
+
 __version__ = version("robotframework-electron")
 
 _JS_MODULE = Path(__file__).with_name("electron.js")
@@ -20,16 +23,58 @@ _JS_MODULE = Path(__file__).with_name("electron.js")
 _INTRO = """
 Electron library is a Robot Framework library for testing Electron applications.
 
-It is built on the [https://robotframework-browser.org|Browser library]: it
-contains every Browser keyword and takes the same import arguments. Import
-``Electron`` instead of ``Browser``, start an application with
-`New Electron Application`, and use Browser keywords such as `Click` and
-`Get Text` on its windows. Each application window is a page of the
-application's context.
+It is built on the [https://robotframework-browser.org|Browser library] and
+contains every Browser keyword. Import ``Electron`` instead of ``Browser``. It
+takes the same import arguments, see `Importing`. Guides and examples are on the
+[https://robotcodedev.github.io/robotframework-electron-vscode/|documentation site].
 
-= Browser library documentation =
+= Starting an application =
 
-The rest of this documentation is the Browser library's own.
+`New Electron Application` starts an application and waits for its first
+window. Pass the application's executable, or for an application that the plain
+Electron binary runs, the Electron executable and the application folder in
+``args``. ``Get Electron Executable`` of the ``Electron.Helper`` library
+downloads an Electron release and returns its executable.
+
+| `New Electron Application`    /opt/my-app/my-app
+| `Get Title`    ==    My App
+| `Click`    text=Settings
+
+= Windows and pages =
+
+The application becomes a browser with one context, and each of its windows is
+a page of that context, see `Browser, Context and Page`. The first window is the
+active page, and windows that the application opens later can be selected with
+`Switch Page`. `Get Browser Catalog` lists the application with the type
+``electron``.
+
+= Closing an application =
+
+`Close Electron Application` ends an application. `Close Browser`,
+`Close Context` and automatic closing end it as well, see
+`Automatic page and context closing`.
+
+= Videos, traces and HAR files =
+
+`New Electron Application` records a video of the windows with
+``record_video``, a Playwright trace with ``tracing``, and the network traffic
+of the windows with ``record_har``. They are saved when the application closes.
+
+= Browser keywords =
+
+Browser keywords work on the windows as on any other page. The following
+sections come from the Browser library's documentation.
+"""
+
+_IMPORTING = """
+Electron library takes the same import arguments as the Browser library.
+
+They configure the Browser keywords, for example their timeout or presenter
+mode, and apply to the windows of Electron applications as to any other page.
+All arguments are named arguments.
+
+Example:
+| Library    Electron    timeout=20s    enable_presenter_mode=True
 """
 
 
@@ -75,6 +120,13 @@ class Electron(Browser):
     ROBOT_LIBRARY_VERSION = __version__
 
     _electron_extension_loaded = False
+
+    # The signature and the types of the import arguments come from Browser through __wrapped__.
+    @functools.wraps(Browser.__init__)
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+    __init__.__doc__ = cleandoc(_IMPORTING) + "\n\n" + browser_import_arguments()
 
     @keyword
     def new_electron_application(
@@ -129,9 +181,14 @@ class Electron(Browser):
                 application closes and shows the keyword calls as groups. Open
                 it with ``rfbrowser show-trace /path/to/trace.zip``.
 
-        Returns a tuple of browser id, context id and page details of the
-        first window, like `New Persistent Context`. The page details contain
-        the path of the video, or an empty string if no video is recorded.
+        *Returns:*
+          A tuple of browser id, context id and page details of the first
+          window, like `New Persistent Context`. The page details contain the
+          path of the video, or an empty string if no video is recorded.
+
+        *Raises:*
+          - ``ValueError``: The executable is not found, or ``record_har`` has
+                no ``path``.
 
         Example:
         | ${app} =    `New Electron Application`    /opt/my-app/my-app
@@ -215,6 +272,6 @@ class Electron(Browser):
         self.close_browser(browser)
 
 
-Electron.__doc__ = cleandoc(_INTRO) + "\n\n" + cleandoc(Browser.__doc__ or "")
+Electron.__doc__ = cleandoc(_INTRO) + "\n\n" + browser_sections()
 
 __all__ = ["Electron"]

@@ -158,6 +158,14 @@ class Helper:
                 directory (``~/.cache`` on Linux, ``~/Library/Caches`` on
                 macOS, ``%LOCALAPPDATA%`` on Windows).
 
+        *Returns:*
+          The path of the Electron executable.
+
+        *Raises:*
+          - ``ValueError``: Electron has no releases for the current platform,
+                the version does not exist or has no download for the
+                platform, or the download does not match its checksum.
+
         Example:
         | ${electron} =    `Get Electron Executable`    44.7.0
         | ${electron} =    `Get Electron Executable`    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}
