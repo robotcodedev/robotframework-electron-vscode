@@ -12,12 +12,14 @@ from pathlib import Path
 
 import pytest
 
+import Electron.Helper
 from VSCode import download
 from VSCode.download import (
     UPDATE_SERVICE,
     cli_path,
     download_vscode,
     executable_path,
+    installed_executable,
     product_version,
     resolve_build,
     vscode_platform,
@@ -80,10 +82,16 @@ class BrokenStream(io.BytesIO):
         raise ConnectionResetError("connection lost")
 
 
+@pytest.fixture(autouse=True)
+def _fresh_latest_builds(monkeypatch):
+    # `stable` and `insiders` are resolved once per process; every test starts without them.
+    monkeypatch.setattr(download, "_latest", {})
+
+
 @pytest.fixture
 def service(monkeypatch):
     fake = FakeUpdateService()
-    monkeypatch.setattr(download, "_open", fake.open)
+    monkeypatch.setattr(Electron.Helper, "open_url", fake.open)
     return fake
 
 
@@ -147,7 +155,7 @@ def test_cached_fixed_version_needs_no_network(service, tmp_path):
 
 def test_checksum_mismatch_fails_and_leaves_nothing_in_the_cache(monkeypatch, tmp_path):
     fake = FakeUpdateService(checksum="0" * 64)
-    monkeypatch.setattr(download, "_open", fake.open)
+    monkeypatch.setattr(Electron.Helper, "open_url", fake.open)
 
     with pytest.raises(ValueError, match="Checksum mismatch"):
         download_vscode("stable", tmp_path)
@@ -157,7 +165,7 @@ def test_checksum_mismatch_fails_and_leaves_nothing_in_the_cache(monkeypatch, tm
 
 def test_interrupted_download_leaves_nothing_in_the_cache(monkeypatch, tmp_path):
     fake = FakeUpdateService(broken_download=True)
-    monkeypatch.setattr(download, "_open", fake.open)
+    monkeypatch.setattr(Electron.Helper, "open_url", fake.open)
 
     with pytest.raises(ConnectionResetError):
         download_vscode("stable", tmp_path)
@@ -268,3 +276,75 @@ def test_finds_command_line_script_by_product_application_name(tmp_path, system,
 def test_reports_missing_command_line_script(tmp_path):
     with pytest.raises(ValueError, match="No VS Code command-line script found"):
         cli_path(tmp_path / "codium", "linux")
+
+
+def test_rejects_unsupported_architecture():
+    with pytest.raises(ValueError, match="armv7l"):
+        vscode_platform("linux", "armv7l")
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="fake archive has the Linux layout")
+def test_stable_is_looked_up_once_per_process(service, tmp_path):
+    first = download_vscode("stable", tmp_path)
+    second = download_vscode("stable", tmp_path)
+
+    assert first == second
+    latest = f"{UPDATE_SERVICE}/api/update/{PLATFORM}/stable/latest"
+    assert service.requests.count(latest) == 1
+
+
+def unreachable(url: str):
+    raise urllib.error.URLError("no network")
+
+
+def test_newest_cached_build_is_used_when_the_update_service_is_unreachable(monkeypatch, tmp_path):
+    for version in ("1.9.0", "1.10.0", "1.2.3"):
+        (tmp_path / f"stable-{version}-{PLATFORM}").mkdir()
+    (tmp_path / f"insider-1.11.0-insider-{PLATFORM}").mkdir()
+    monkeypatch.setattr(Electron.Helper, "open_url", unreachable)
+
+    cached = download_vscode("stable", tmp_path)
+
+    assert cached.version == "1.10.0"
+    assert cached.folder == tmp_path / f"stable-1.10.0-{PLATFORM}"
+
+
+def test_unreachable_update_service_without_cached_build_fails(monkeypatch, tmp_path):
+    monkeypatch.setattr(Electron.Helper, "open_url", unreachable)
+
+    with pytest.raises(urllib.error.URLError):
+        download_vscode("stable", tmp_path)
+
+
+def make_executable(path: Path) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("")
+    path.chmod(0o755)
+    return path
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX executables and symbolic links")
+def test_given_executable_is_resolved_through_symbolic_links(tmp_path):
+    target = make_executable(tmp_path / "VSCode-linux-x64" / "code")
+    make_executable(tmp_path / "VSCode-linux-x64" / "bin" / "code")
+    link = tmp_path / "links" / "code"
+    link.parent.mkdir()
+    link.symlink_to(target)
+
+    executable = installed_executable(link)
+
+    assert executable == target.resolve()
+    assert cli_path(executable, "linux") == target.resolve().parent / "bin" / "code"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX executables")
+def test_given_executable_is_found_on_path(tmp_path, monkeypatch):
+    target = make_executable(tmp_path / "bin" / "my-code")
+    monkeypatch.setenv("PATH", str(target.parent))
+
+    assert installed_executable(Path("my-code")) == target.resolve()
+
+
+def test_missing_executable_is_reported(tmp_path):
+    with pytest.raises(ValueError, match=r"VS Code executable '.*missing-code' not found"):
+        installed_executable(tmp_path / "missing-code")

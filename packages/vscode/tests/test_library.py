@@ -12,7 +12,8 @@ from robot.libdoc import LibraryDocumentation
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
 from Electron import Electron
-from VSCode import VSCode, __version__
+from VSCode import Instance, VSCode, __version__
+from VSCode.instance import InstanceDirectories
 
 
 @pytest.fixture(autouse=True)
@@ -48,10 +49,48 @@ def test_install_into_a_browser_not_opened_by_open_vs_code_fails(monkeypatch):
     def fail(*args, **kwargs):
         raise AssertionError("nothing may be installed")
 
-    monkeypatch.setattr("VSCode.install_extension", fail)
+    monkeypatch.setattr("VSCode.install_extensions", fail)
 
-    with pytest.raises(ValueError, match="'browser=unknown' is not a VS Code instance"):
+    with pytest.raises(ValueError, match="'browser=unknown' is not an open VS Code instance"):
         import_library().install_vs_code_extension("ms-python.python", browser="browser=unknown")
+
+
+def test_install_into_a_closed_instance_fails(monkeypatch, tmp_path):
+    def fail(*args, **kwargs):
+        raise AssertionError("nothing may be installed")
+
+    monkeypatch.setattr("VSCode.install_extensions", fail)
+    vscode = import_library()
+    monkeypatch.setattr(vscode, "get_browser_ids", lambda browser: ["browser=open"])
+    directories = InstanceDirectories(tmp_path, tmp_path / "user-data", tmp_path / "extensions")
+    instances = vscode._instances()
+    instances["browser=open"] = instances["browser=closed"] = Instance(tmp_path / "code", directories)
+
+    with pytest.raises(ValueError, match="'browser=closed' is not an open VS Code instance"):
+        vscode.install_vs_code_extension("ms-python.python", browser="browser=closed")
+    assert list(vscode._instances()) == ["browser=open"]
+
+
+def test_keeps_the_error_of_the_workbench_when_closing_fails(monkeypatch, tmp_path):
+    executable = tmp_path / "code"
+    executable.write_text("")
+    executable.chmod(0o755)
+    vscode = import_library()
+    vscode.outputdir = str(tmp_path / "output")
+
+    def not_ready(*args, **kwargs):
+        raise TimeoutError("workbench not ready")
+
+    def close_fails(*args, **kwargs):
+        raise RuntimeError("closing failed")
+
+    monkeypatch.setattr(vscode, "new_electron_application", lambda *args, **kwargs: ("browser", "context", {}))
+    monkeypatch.setattr(vscode, "wait_for_elements_state", not_ready)
+    monkeypatch.setattr(vscode, "close_browser", close_fails)
+
+    with pytest.raises(TimeoutError, match="workbench not ready"):
+        vscode.open_vs_code(executable=executable)
+    assert vscode._instances() == {}
 
 
 def test_converts_browser_import_arguments():

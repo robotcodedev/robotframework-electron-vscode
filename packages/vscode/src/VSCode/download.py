@@ -1,19 +1,19 @@
 """Resolving, downloading and caching VS Code builds."""
 
-import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import sys
-import tarfile
 import tempfile
 import urllib.error
-import urllib.request
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
-from Electron.Helper import extract_zip, user_cache_dir
+# Imported as a module, so that tests can replace Electron.Helper.open_url for both downloads.
+import Electron.Helper
+from Electron.Helper import architecture, download, extract_tar, extract_zip, sha256, user_cache_dir
 
 UPDATE_SERVICE = "https://update.code.visualstudio.com"
 LATEST = {"stable": "stable", "insiders": "insider", "insider": "insider"}
@@ -36,23 +36,19 @@ class CachedBuild(NamedTuple):
 
 def vscode_platform(system: str = sys.platform, machine: str = platform.machine()) -> str:
     """Return the update service's platform name, for example ``linux-x64``."""
-    arm = machine.lower() in ("arm64", "aarch64")
+    if system not in ("linux", "win32", "darwin"):
+        raise ValueError(f"VS Code builds are not available for platform '{system}'.")
+    arm = architecture(machine, "VS Code") == "arm64"
     if system == "linux":
         return "linux-arm64" if arm else "linux-x64"
     if system == "win32":
         return "win32-arm64-archive" if arm else "win32-x64-archive"
-    if system == "darwin":
-        return "darwin-arm64" if arm else "darwin"
-    raise ValueError(f"VS Code builds are not available for platform '{system}'.")
+    return "darwin-arm64" if arm else "darwin"
 
 
 def default_cache_dir() -> Path:
     """Return the user's cache directory for VS Code builds."""
     return user_cache_dir() / "robotframework-vscode" / "vscode"
-
-
-def _open(url: str) -> Any:
-    return urllib.request.urlopen(url)
 
 
 def _quality_of(version: str) -> str:
@@ -68,7 +64,7 @@ def resolve_build(version: str, platform_name: str) -> Build:
         quality = _quality_of(version)
         url = f"{UPDATE_SERVICE}/api/versions/{version}/{platform_name}/{quality}"
     try:
-        with _open(url) as response:
+        with Electron.Helper.open_url(url) as response:
             body = response.read()
     except urllib.error.HTTPError as error:
         raise ValueError(f"VS Code version '{version}' not found for {platform_name} ({error.code}).") from error
@@ -78,22 +74,10 @@ def resolve_build(version: str, platform_name: str) -> Build:
     return Build(quality, data["productVersion"], data["url"], data["sha256hash"])
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with open(path, "rb") as file:
-        for chunk in iter(lambda: file.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _extract(archive: Path, target: Path) -> Path:
     """Extract a build archive and return the folder that holds the build."""
     if archive.name.endswith(".tar.gz"):
-        with tarfile.open(archive) as tar:
-            if hasattr(tarfile, "tar_filter"):
-                tar.extractall(target, filter="tar")
-            else:  # Python < 3.12
-                tar.extractall(target)
+        extract_tar(archive, target)
     else:
         extract_zip(archive, target)
     entries = list(target.iterdir())
@@ -107,18 +91,59 @@ def _cache_folder(cache_dir: Path, quality: str, version: str, platform_name: st
     return cache_dir / f"{quality}-{version}-{platform_name}"
 
 
+# Builds that ``stable`` and ``insiders`` resolved to in this process, by quality and platform.
+_latest: dict[tuple[str, str], Build] = {}
+
+
+def _version_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in re.findall(r"\d+", version))
+
+
+def _newest_cached(cache_dir: Path, quality: str, platform_name: str) -> CachedBuild | None:
+    """Return the newest build of ``quality`` in the cache, if there is one."""
+    prefix, suffix = f"{quality}-", f"-{platform_name}"
+    versions = [
+        folder.name[len(prefix) : -len(suffix)] for folder in cache_dir.glob(f"{prefix}*{suffix}") if folder.is_dir()
+    ]
+    if not versions:
+        return None
+    version = max(versions, key=_version_key)
+    return CachedBuild(_cache_folder(cache_dir, quality, version, platform_name), quality, version)
+
+
+def _resolve_latest(version: str, platform_name: str, cache_dir: Path) -> Build | CachedBuild:
+    """Resolve ``stable`` or ``insiders`` once per process, or use the newest cached build when offline."""
+    key = (LATEST[version.lower()], platform_name)
+    if key not in _latest:
+        try:
+            _latest[key] = resolve_build(version, platform_name)
+        except OSError:  # the update service cannot be reached
+            cached = _newest_cached(cache_dir, key[0], platform_name)
+            if cached is None:
+                raise
+            return cached
+    return _latest[key]
+
+
 def download_vscode(version: str, cache_dir: Path) -> CachedBuild:
     """Return the cached build of ``version``, downloading it first if needed.
 
-    A fixed version that is already cached is returned without network access.
+    A fixed version that is already cached is returned without network access. ``stable``
+    and ``insiders`` are looked up once per process, and offline the newest cached build
+    of that quality is used.
     """
     platform_name = vscode_platform()
-    if version.lower() not in LATEST:
+    if version.lower() in LATEST:
+        resolved = _resolve_latest(version, platform_name, cache_dir)
+        if isinstance(resolved, CachedBuild):
+            return resolved
+        build = resolved
+    else:
         quality = _quality_of(version)
         folder = _cache_folder(cache_dir, quality, version, platform_name)
         if folder.is_dir():
             return CachedBuild(folder, quality, version)
-    build = resolve_build(version, platform_name)
+        build = resolve_build(version, platform_name)
     folder = _cache_folder(cache_dir, build.quality, build.version, platform_name)
     cached = CachedBuild(folder, build.quality, build.version)
     if folder.is_dir():
@@ -126,9 +151,8 @@ def download_vscode(version: str, cache_dir: Path) -> CachedBuild:
     cache_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=cache_dir) as tmp:
         archive = Path(tmp, "build.tar.gz" if build.url.endswith(".tar.gz") else "build.zip")
-        with _open(build.url) as response, open(archive, "wb") as file:
-            shutil.copyfileobj(response, file)
-        actual = _sha256(archive)
+        download(build.url, archive)
+        actual = sha256(archive)
         if actual != build.sha256:
             raise ValueError(f"Checksum mismatch for VS Code {build.version}: got {actual}, expected {build.sha256}.")
         root = _extract(archive, Path(tmp, "extracted"))
@@ -170,6 +194,14 @@ def _application_name(executable: Path, system: str) -> str | None:
         return str(json.loads(product.read_text(encoding="utf-8"))["applicationName"])
     except (OSError, ValueError, KeyError):
         return None
+
+
+def installed_executable(executable: Path) -> Path:
+    """Return the file that ``executable`` names, also as a command on ``PATH`` or through symbolic links."""
+    found = shutil.which(str(executable))
+    if found is None:
+        raise ValueError(f"VS Code executable '{executable}' not found.")
+    return Path(found).resolve()
 
 
 def cli_path(executable: Path, system: str = sys.platform) -> Path:

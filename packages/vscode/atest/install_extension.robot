@@ -29,3 +29,13 @@ Only The Given Instance Gets The Extension
     Length Should Be    ${installed}    1
     ${installed} =    List Directories In Directory    ${second_instance}/extensions    robot.test-extension-*
     Length Should Be    ${installed}    0
+
+Closed Instance
+    ${vsix} =    Pack Extension    ${TEST_EXTENSION}    ${OUTPUT_DIR}/test-extension.vsix
+    ${vscode}    ${_}    ${_} =    Open Test VS Code
+    ${instance} =    Newest Instance
+    Close VS Code    ${vscode}
+    Run Keyword And Expect Error    *Browser '${vscode}' is not an open VS Code instance*
+    ...    Install VS Code Extension    ${vsix}    browser=${vscode}
+    ${installed} =    List Directories In Directory    ${instance}/extensions    robot.test-extension-*
+    Length Should Be    ${installed}    0

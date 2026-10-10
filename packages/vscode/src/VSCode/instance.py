@@ -20,6 +20,9 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "workbench.secondarySideBar.defaultVisibility": "hidden",
 }
 
+# Seconds for one call of the command-line script, enough for large extensions on a slow CI runner.
+INSTALL_TIMEOUT = 600
+
 QUIET_START_ARGUMENTS = [
     "--skip-welcome",
     "--skip-release-notes",
@@ -91,22 +94,21 @@ def launch_arguments(
     return arguments
 
 
-def install_extension(cli: Path, extension: str, directories: InstanceDirectories, env: Mapping[str, str]) -> None:
-    """Install a Marketplace extension or a ``.vsix`` file into the instance's extensions directory."""
-    result = subprocess.run(
-        [
-            str(cli),
-            "--install-extension",
-            extension,
-            "--extensions-dir",
-            str(directories.extensions),
-            "--user-data-dir",
-            str(directories.user_data),
-        ],
-        env=dict(env),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def install_extensions(
+    cli: Path, extensions: Sequence[str], directories: InstanceDirectories, env: Mapping[str, str]
+) -> None:
+    """Install Marketplace extensions or ``.vsix`` files into the instance's extensions directory with one call."""
+    command = [str(cli)]
+    for extension in extensions:
+        command += ["--install-extension", extension]
+    command += ["--extensions-dir", str(directories.extensions), "--user-data-dir", str(directories.user_data)]
+    names = ", ".join(f"'{extension}'" for extension in extensions)
+    what = f"extension {names}" if len(extensions) == 1 else f"extensions {names}"
+    try:
+        result = subprocess.run(
+            command, env=dict(env), capture_output=True, text=True, check=False, timeout=INSTALL_TIMEOUT
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"Installing {what} did not finish within {INSTALL_TIMEOUT // 60} minutes.") from None
     if result.returncode != 0:
-        raise RuntimeError(f"Installing extension '{extension}' failed: {(result.stderr or result.stdout).strip()}")
+        raise RuntimeError(f"Installing {what} failed: {(result.stderr or result.stdout).strip()}")

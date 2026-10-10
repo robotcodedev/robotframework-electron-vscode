@@ -6,7 +6,8 @@ import pytest
 from Browser import playwright
 from robot.libdoc import LibraryDocumentation
 
-from VSCode import VSCode, __version__, download
+import Electron.Helper
+from VSCode import VSCode, __version__
 from VSCode.Helper import Helper
 
 
@@ -21,7 +22,7 @@ def no_network(monkeypatch):
     def fail(url):
         raise AssertionError(f"network access to {url}")
 
-    monkeypatch.setattr(download, "_open", fail)
+    monkeypatch.setattr(Electron.Helper, "open_url", fail)
 
 
 def test_returns_given_executable_without_downloading(no_network, tmp_path):

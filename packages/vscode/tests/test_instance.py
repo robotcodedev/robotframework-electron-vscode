@@ -1,11 +1,18 @@
 import json
+import subprocess
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
+
+import pytest
 
 from VSCode.instance import (
     DEFAULT_SETTINGS,
+    INSTALL_TIMEOUT,
     QUIET_START_ARGUMENTS,
     InstanceDirectories,
     create_instance_directories,
+    install_extensions,
     instance_environment,
     launch_arguments,
     remove_instance_directories,
@@ -87,3 +94,60 @@ def test_removing_without_instance_directories_is_fine(tmp_path):
     remove_instance_directories(tmp_path)
 
     assert list(tmp_path.iterdir()) == []
+
+
+def fake_cli(
+    monkeypatch: pytest.MonkeyPatch, outcome: Callable[[list[str], float], subprocess.CompletedProcess[str]]
+) -> list[tuple[list[str], dict[str, Any]]]:
+    """Replaces the command-line script's run with ``outcome(command, timeout)`` and records the calls."""
+    calls: list[tuple[list[str], dict[str, Any]]] = []
+
+    def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        calls.append((command, kwargs))
+        return outcome(command, kwargs["timeout"])
+
+    monkeypatch.setattr(subprocess, "run", run)
+    return calls
+
+
+def instance_directories(root: Path) -> InstanceDirectories:
+    return InstanceDirectories(root, root / "user-data", root / "extensions")
+
+
+def test_installs_all_extensions_with_one_call(tmp_path, monkeypatch):
+    calls = fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 0, "", ""))
+    directories = instance_directories(tmp_path)
+
+    install_extensions(tmp_path / "code", ["ms-python.python", "extension.vsix"], directories, {"NAME": "value"})
+
+    [(command, kwargs)] = calls
+    assert command == [
+        str(tmp_path / "code"),
+        "--install-extension",
+        "ms-python.python",
+        "--install-extension",
+        "extension.vsix",
+        "--extensions-dir",
+        str(directories.extensions),
+        "--user-data-dir",
+        str(directories.user_data),
+    ]
+    assert kwargs["env"] == {"NAME": "value"}
+    assert kwargs["timeout"] == INSTALL_TIMEOUT == 600
+
+
+def test_installation_that_does_not_finish_names_the_extensions(tmp_path, monkeypatch):
+    def hang(command, timeout):
+        raise subprocess.TimeoutExpired(command, timeout)
+
+    fake_cli(monkeypatch, hang)
+
+    with pytest.raises(RuntimeError, match=r"extensions 'one', 'two' did not finish within 10 minutes"):
+        install_extensions(tmp_path / "code", ["one", "two"], instance_directories(tmp_path), {})
+
+
+def test_failed_installation_reports_the_output_of_the_script(tmp_path, monkeypatch):
+    fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 1, "", "Not found.\n"))
+
+    with pytest.raises(RuntimeError, match=r"^Installing extension 'unknown.ext' failed: Not found\.$"):
+        install_extensions(tmp_path / "code", ["unknown.ext"], instance_directories(tmp_path), {})

@@ -1,6 +1,7 @@
 """Test helper for the VSCode acceptance tests: instance folders, processes and extension packages."""
 
 import json
+import re
 import subprocess
 import zipfile
 from pathlib import Path
@@ -14,7 +15,7 @@ def newest_instance_directory(output_dir: str) -> str:
 
 def count_processes_with(text: str) -> int:
     """Count running processes whose command line contains ``text``."""
-    result = subprocess.run(["pgrep", "-f", "--", text], capture_output=True, text=True, check=False)
+    result = subprocess.run(["pgrep", "-f", "--", re.escape(text)], capture_output=True, text=True, check=False)
     return len(result.stdout.split())
 
 

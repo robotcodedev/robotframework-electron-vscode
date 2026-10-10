@@ -15,11 +15,18 @@ from robotlibcore import keyword
 from Electron import Electron, RecordVideo
 from Electron._docs import browser_import_arguments, browser_sections
 
-from .download import cli_path, default_cache_dir, download_vscode, executable_path, product_version
+from .download import (
+    cli_path,
+    default_cache_dir,
+    download_vscode,
+    executable_path,
+    installed_executable,
+    product_version,
+)
 from .instance import (
     InstanceDirectories,
     create_instance_directories,
-    install_extension,
+    install_extensions,
     instance_environment,
     launch_arguments,
     remove_instance_directories,
@@ -120,7 +127,11 @@ class VSCode(Electron):
             remove_instance_directories(Path(self.outputdir))
 
     def _instances(self) -> dict[str, Instance]:
+        """The instances of `Open VS Code` that are still open, by browser id."""
         instances: dict[str, Instance] = self.__dict__.setdefault("_vscode_instances", {})
+        if instances:
+            for closed in instances.keys() - set(self.get_browser_ids(SelectionType.ALL)):
+                del instances[closed]
         return instances
 
     @keyword("Open VS Code")
@@ -159,12 +170,14 @@ class VSCode(Electron):
           - ``version``: VS Code to download and start: ``stable``, ``insiders``
                 or a version such as ``1.141.0``. Builds are verified and cached
                 as by ``Get VS Code Executable`` from ``VSCode.Helper``.
-          - ``executable``: An installed VS Code executable to start instead.
-                Nothing is downloaded then.
+          - ``executable``: An installed VS Code executable to start instead,
+                as a path or as a command found on ``PATH``. Symbolic links are
+                followed. Nothing is downloaded then.
           - ``extension_development_path``: Folder of the extension under test,
                 or a list of folders. They are loaded as development extensions.
           - ``extensions``: Extensions to install into the instance before it
-                starts, as Marketplace identifiers or ``.vsix`` files.
+                starts, as Marketplace identifiers or ``.vsix`` files. The
+                installation fails if it takes longer than 10 minutes.
           - ``settings``: User settings for the instance. They override the
                 defaults, which switch off the welcome page, update checks,
                 telemetry, workspace trust, the screen reader mode and the
@@ -190,7 +203,8 @@ class VSCode(Electron):
           - ``ValueError``: The version does not exist for the current
                 platform, the download does not match its checksum, or the
                 executable or its command-line script is not found.
-          - ``RuntimeError``: Installing one of the ``extensions`` fails.
+          - ``RuntimeError``: Installing the ``extensions`` fails or does not
+                finish within 10 minutes.
 
         Example:
         | `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
@@ -202,12 +216,13 @@ class VSCode(Electron):
             executable = executable_path(cached.folder, cached.quality)
             product = cached.version
         else:
-            product = product_version(Path(executable))
+            executable = installed_executable(Path(executable))
+            product = product_version(executable)
         directories = create_instance_directories(Path(self.outputdir))
         write_settings(directories.user_data, settings)
         env = instance_environment(os.environ)
-        for extension in extensions or []:
-            install_extension(cli_path(Path(executable)), extension, directories, env)
+        if extensions:
+            install_extensions(cli_path(Path(executable)), extensions, directories, env)
         if isinstance(extension_development_path, Path):
             extension_development_path = [extension_development_path]
         arguments = launch_arguments(directories, extension_development_path or [], args or [], path)
@@ -224,7 +239,10 @@ class VSCode(Electron):
         try:
             self.wait_for_elements_state(".monaco-workbench", ElementState.visible, timeout)
         except Exception:
-            self.close_browser(ids[0])
+            try:
+                self.close_browser(ids[0])
+            except Exception as error:  # noqa: BLE001 - the error of the workbench is the one to report
+                logger.warn(f"Closing the VS Code instance {ids[0]} failed: {error}")
             raise
         self._instances()[ids[0]] = Instance(Path(executable), directories)
         return ids
@@ -268,10 +286,10 @@ class VSCode(Electron):
                 that `Open VS Code` returned.
 
         *Raises:*
-          - ``ValueError``: The browser is not a VS Code instance started with
-                `Open VS Code`.
+          - ``ValueError``: The browser is not an open VS Code instance
+                started with `Open VS Code`.
           - ``RuntimeError``: VS Code's command-line script fails to install
-                the extension.
+                the extension or does not finish within 10 minutes.
 
         Example:
         | `Open VS Code`    ${EXECDIR}/tests/workspace
@@ -286,11 +304,11 @@ class VSCode(Electron):
         instance = self._instances().get(browser_id)
         if instance is None:
             raise ValueError(
-                f"Browser '{browser_id}' is not a VS Code instance started by 'Open VS Code'; "
+                f"Browser '{browser_id}' is not an open VS Code instance started by 'Open VS Code'; "
                 "only those can install extensions."
             )
-        install_extension(
-            cli_path(instance.executable), extension, instance.directories, instance_environment(os.environ)
+        install_extensions(
+            cli_path(instance.executable), [extension], instance.directories, instance_environment(os.environ)
         )
         logger.info(f"Installed extension {extension} into the VS Code instance {instance.directories.root}")
 
