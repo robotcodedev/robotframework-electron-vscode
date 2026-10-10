@@ -38,6 +38,7 @@ And if you like the project, but just don't have time to contribute, that's fine
     - [Pull Request Guidelines](#pull-request-guidelines)
     - [Running Tests](#running-tests)
     - [Additional Development Commands](#additional-development-commands)
+    - [Versions and Releases](#versions-and-releases)
     - [Troubleshooting Development Setup](#troubleshooting-development-setup)
   - [Improving The Documentation](#improving-the-documentation)
 - [Styleguides](#styleguides)
@@ -318,6 +319,24 @@ uv run robotcode -r examples/vscode-extension -p xvfb robot -e network   # witho
 - `uv run mypy` — Type-check the packages and their tests.
 - `uv run robotcode -r . repl` — Run keywords one by one against a running application, for example to find locators.
 - `uv run python docs/scripts/update_screenshots.py` — Run the example project with `-p xvfb` and copy its screenshots into the documentation site. Run it after changing the example or its VS Code version, and commit the images. It needs Xvfb, Openbox and network access.
+
+#### Versions and Releases
+
+Both packages always have the same version, and `robotframework-vscode` requires exactly the `robotframework-electron` of its own version. The version comes from git:
+
+- A release is a tag `v<version>`, such as `v0.1.0`. The [commit messages](#commit-messages) since the last release decide the next version: a `feat` raises the minor version, and a `fix`, `refactor` or `perf` the patch version. While the version is 0.x, a breaking change raises the minor version as well.
+- The `pyproject.toml` files contain the version of the last release. Before CI builds the wheels, it writes the version of the commit into them: `<next version>.dev<commits since the last release>`, for example `0.2.0.dev5`. `uv run scripts/update_versions.py` does the same locally; do not commit its changes.
+- `CHANGELOG.md` is generated from the commit messages by [git-cliff](https://git-cliff.org), configured in `cliff.toml`. `uv run git-cliff -o CHANGELOG.md` regenerates it. Commits of the types `chore`, `ci`, `build`, `style` and `test`, and `docs(openspec)` commits, are left out. The others appear with their subject and body, so write them for the readers of the changelog.
+
+Releases are made by the maintainers with [commitizen](https://commitizen-tools.github.io/commitizen/):
+
+```bash
+uv run cz bump --dry-run   # show the next version and its tag
+uv run cz bump             # write the version and the changelog, commit and tag
+git push --follow-tags
+```
+
+`cz bump` writes the version into the `pyproject.toml` files, regenerates `CHANGELOG.md`, updates `uv.lock`, and creates a signed release commit and a signed, annotated tag. Publishing to PyPI is not set up yet.
 
 #### Troubleshooting Development Setup
 

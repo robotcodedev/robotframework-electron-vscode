@@ -49,11 +49,13 @@ After switching branches in the clone or changing its TypeScript or proto files,
 - `uv run robotcode -r examples/vscode-extension robot` — run the VS Code example project. It has its own `robot.toml` with the same display profiles and is not part of the root `robot.toml` paths. Its guides in `docs/` include its files, so check them when you change the example.
 - `uv run python docs/scripts/update_screenshots.py` — run the example with `-p xvfb` and copy its screenshots to `docs/src/assets/screenshots/`. Run it after changing the example or its VS Code version, and commit the images. It needs Xvfb, Openbox and network access for the Python tests.
 - Personal settings, such as a local `ELECTRON_EXECUTABLE`, go into `.robot.toml`, which is gitignored.
+- `uv run git-cliff -o CHANGELOG.md` — regenerate the changelog from the Conventional Commits (`cliff.toml`). `uv run scripts/update_versions.py` writes the version from git (`<next version>.dev<commits>` after the last tag `v<version>`) into the `pyproject.toml` files; CI runs it before building the wheels, and its changes are not committed. Releases are made with `uv run cz bump`, see "Versions and Releases" in CONTRIBUTING.md.
 - `npm ci`, then `npm run dev` or `npm run build` in `docs/` — install the documentation site's dependencies, serve it locally with live reload, or build it into `docs/dist/`. Only Node.js is needed, no Python. Started by an agent, `npm run dev` runs in the background; stop it with `npx astro dev stop` in `docs/`.
 
 ## Agent Notes
 
 - Never open issues, pull requests or comments in other repositories (including the Browser library) unless explicitly asked.
+- Never run `cz bump`, create tags or release unless explicitly asked.
 - Make small, focused changes; plan larger work as an OpenSpec change first.
 - Follow [CONTRIBUTING.md](CONTRIBUTING.md) and the [AI_POLICY.md](AI_POLICY.md): issues and pull requests end with an "AI / tooling disclosure", and commits must be cryptographically signed.
 - Write commit messages as [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<optional scope>): <description>`, for example `feat(electron): add New Electron Application` or `docs(openspec): plan vscode workbench keywords change`. Use the package (`electron`, `vscode`) or `openspec` as scope where it fits.
