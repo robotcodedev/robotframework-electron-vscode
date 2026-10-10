@@ -4,7 +4,7 @@
 
 See proposal.md for motivation and the spec deltas for the requirements.
 - **Starting:** `electron.js` starts an application with `playwright._electron.launch` and hands its context to Browser with the `adoptContext` hook. Browser keeps the context, but nothing keeps the `ElectronApplication` object.
-- **The hook:** `adoptContext(context, onClose)` calls `onClose` once when Browser closes the browser.
+- **The hook:** `adoptContext(context, { onClose })` calls `onClose` once when Browser closes the browser.
 - **Evaluating:** `electronApplication.evaluate(pageFunction, arg)` serialises the function, runs it in the main process with the `electron` module as first argument, and returns its JSON-serialisable result.
 
 ## Goals / Non-Goals
@@ -32,7 +32,7 @@ Evaluate In Main Process    function    arg=None    browser=CURRENT
 ### Applications in `electron.js`
 
 - A module-level `Map` holds each started `ElectronApplication` under its browser id.
-- `robotframeworkElectronLaunch` adds the application after `adoptContext` and passes an `onClose` that removes it again.
+- `robotframeworkElectronLaunch` adds the application after `adoptContext` and passes an `onClose` option that removes it again.
 - A new function `robotframeworkElectronEvaluate(browserId, script, arg)` looks the application up and fails with a message that names the browser id if there is none. It turns `script` into a function with `new Function('return (' + script + ')')()` and calls `application.evaluate(fn, arg)`. A string passed to Playwright directly would be evaluated as an expression, so a function text would be returned instead of run.
 
 ### Fixture
