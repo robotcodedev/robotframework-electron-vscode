@@ -27,6 +27,18 @@ Arguments And Environment
     Get Text    id=run-only-var    ==    ${EMPTY}
     [Teardown]    Run Keywords    Remove Environment Variable    ROBOT_ONLY_IN_RUN    AND    Close Browser    ALL
 
+Default Working Directory
+    Start Fixture App
+    Get Text    id=cwd    ==    ${EXECDIR}
+
+Relative Executable Path
+    ${electron} =    Get Electron Executable    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}    ${ELECTRON_CACHE}
+    ${relative} =    Evaluate    os.path.relpath(shutil.which($electron))    modules=os,shutil
+    Should Not Be Equal    ${relative}    ${{ os.path.abspath($relative) }}
+    ${app} =    Get Fixture App
+    New Electron Application    ${relative}    args=${{ [$app] }}
+    Get Title    ==    Electron Fixture
+
 Test Run Started From Inside VS Code
     Set Environment Variable    ELECTRON_RUN_AS_NODE    1
     Start Fixture App

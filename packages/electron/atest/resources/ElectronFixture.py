@@ -1,6 +1,7 @@
 """Test helper for the Electron acceptance tests: the fixture app and its processes."""
 
 import json
+import re
 import subprocess
 import threading
 import zipfile
@@ -22,7 +23,8 @@ def count_fixture_app_processes(marker: str) -> int:
     Chromium moves switches in front of positional arguments in its command
     line, so both orders are matched.
     """
-    pattern = f"{FIXTURE_APP}.*{marker}|{marker}.*{FIXTURE_APP}"
+    app, marker = re.escape(str(FIXTURE_APP)), re.escape(marker)
+    pattern = f"{app}.*{marker}|{marker}.*{app}"
     result = subprocess.run(["pgrep", "-f", pattern], capture_output=True, text=True, check=False)
     return len(result.stdout.split())
 

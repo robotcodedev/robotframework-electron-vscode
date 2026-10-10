@@ -1,5 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 from Browser import Browser
@@ -111,3 +112,48 @@ def test_absolute_har_path_is_kept(tmp_path):
 def test_record_har_without_path_fails():
     with pytest.raises(ValueError, match="needs a 'path'"):
         import_library()._har_options({"omitContent": True})
+
+
+@pytest.fixture
+def fake_launch(tmp_path, monkeypatch):
+    """Replaces the start in Browser's Node process and records its arguments."""
+    executable = tmp_path / "bin" / "electron"
+    executable.parent.mkdir()
+    executable.write_text("")
+    executable.chmod(0o755)
+    monkeypatch.delenv("ROBOT_FRAMEWORK_BROWSER_TRACING", raising=False)
+    electron = import_library()
+    calls: list[dict[str, Any]] = []
+
+    def call_js_keyword(name, **arguments):
+        calls.append(arguments)
+        return {"browserId": "browser", "contextId": "context"}
+
+    monkeypatch.setattr(electron, "init_js_extension", lambda path: None)
+    monkeypatch.setattr(electron, "call_js_keyword", call_js_keyword)
+    return electron, calls
+
+
+def test_relative_paths_are_relative_to_the_working_directory(fake_launch, tmp_path):
+    electron, calls = fake_launch
+
+    electron.new_electron_application(Path("bin/electron"), cwd=Path("work"))
+
+    assert calls[0]["executablePath"] == str(tmp_path / "bin" / "electron")
+    assert calls[0]["cwd"] == str(tmp_path / "work")
+
+
+def test_application_runs_in_the_working_directory_by_default(fake_launch, tmp_path):
+    electron, calls = fake_launch
+
+    electron.new_electron_application(tmp_path / "bin" / "electron")
+
+    assert calls[0]["cwd"] == str(tmp_path)
+
+
+def test_first_window_closed_during_the_start(fake_launch, tmp_path):
+    electron, _ = fake_launch
+
+    browser_id, context_id, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+
+    assert (browser_id, context_id, page["page_id"]) == ("browser", "context", "")

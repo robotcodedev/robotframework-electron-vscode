@@ -156,14 +156,17 @@ class Electron(Browser):
 
         *Arguments:*
           - ``executable_path``: The Electron executable, as a path or as a
-                command found on ``PATH``. For an app that is run by the plain
-                Electron binary, pass the app folder in ``args``.
+                command found on ``PATH``. A relative path is relative to the
+                working directory of the test run. For an app that is run by
+                the plain Electron binary, pass the app folder in ``args``.
           - ``args``: Command-line arguments for the application.
           - ``env``: Environment variables of the application. If not given,
                 the application gets the environment of the test run without
                 ``ELECTRON_RUN_AS_NODE``, which runs started from VS Code have
                 and which would make Electron run as plain Node.js.
-          - ``cwd``: Working directory of the application.
+          - ``cwd``: Working directory of the application. A relative path is
+                relative to the working directory of the test run, which is
+                also the default.
           - ``timeout``: How long to wait for the application to start and
                 open its first window. Defaults to the library timeout.
           - ``record_video``: Records a video of the application's windows,
@@ -202,9 +205,11 @@ class Electron(Browser):
         | `New Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
         | `New Electron Application`    /opt/my-app/my-app    tracing=True    record_har={'path': 'my-app.har'}
         """
-        executable = shutil.which(str(executable_path))
-        if executable is None:
+        found = shutil.which(str(executable_path))
+        if found is None:
             raise ValueError(f"Electron executable '{executable_path}' not found.")
+        # Browser's Node process runs in Browser's own folder, so it only gets absolute paths.
+        executable = os.path.abspath(found)
         if env is None:
             env = {k: v for k, v in os.environ.items() if k != "ELECTRON_RUN_AS_NODE"}
         if not self._electron_extension_loaded:
@@ -217,7 +222,7 @@ class Electron(Browser):
             executablePath=executable,
             args=args or [],
             env=env,
-            cwd=str(cwd) if cwd else None,
+            cwd=os.path.abspath(cwd or os.curdir),
             timeout=self.get_timeout(timeout),
             recordVideo=video,
             recordHar=self._har_options(record_har),
@@ -235,7 +240,7 @@ class Electron(Browser):
         return (
             adopted["browserId"],
             adopted["contextId"],
-            NewPageDetails(page_id=adopted["pageId"], video_path=video_path),
+            NewPageDetails(page_id=adopted.get("pageId", ""), video_path=video_path),
         )
 
     def _video_options(self, record_video: RecordVideo | None) -> dict[str, Any] | None:

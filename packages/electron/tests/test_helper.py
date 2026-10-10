@@ -3,7 +3,9 @@ import io
 import os
 import stat
 import sys
+import tarfile
 import urllib.error
+import urllib.request
 import zipfile
 from email.message import Message
 from pathlib import Path
@@ -52,7 +54,7 @@ class FakeReleases:
 @pytest.fixture
 def releases(monkeypatch):
     fake = FakeReleases()
-    monkeypatch.setattr(HelperModule, "_open", fake.open)
+    monkeypatch.setattr(HelperModule, "open_url", fake.open)
     return fake
 
 
@@ -106,7 +108,7 @@ def test_keeps_the_executable_bit(releases, tmp_path):
 
 def test_checksum_mismatch_fails_and_leaves_nothing_in_the_cache(monkeypatch, tmp_path):
     fake = FakeReleases(checksum="0" * 64)
-    monkeypatch.setattr(HelperModule, "_open", fake.open)
+    monkeypatch.setattr(HelperModule, "open_url", fake.open)
 
     with pytest.raises(ValueError, match="Checksum mismatch"):
         download_electron(VERSION, tmp_path)
@@ -126,3 +128,107 @@ def test_returns_given_executable_without_downloading(releases, tmp_path):
 
     assert executable == str(Path("/opt/electron/electron"))
     assert releases.requests == []
+
+
+def test_rejects_unsupported_architecture():
+    with pytest.raises(ValueError, match="armv7l"):
+        electron_platform("linux", "armv7l")
+
+
+def test_network_operations_have_a_timeout(monkeypatch):
+    calls: list[dict[str, object]] = []
+    monkeypatch.setattr(urllib.request, "urlopen", lambda url, **kwargs: calls.append(kwargs))
+
+    HelperModule.open_url("https://example.org/")
+
+    assert calls == [{"timeout": HelperModule.NETWORK_TIMEOUT}]
+
+
+class StalledStream(io.BytesIO):
+    def read(self, *args):
+        raise TimeoutError("timed out")
+
+
+def test_download_names_the_url_when_the_server_stops_sending(monkeypatch, tmp_path):
+    monkeypatch.setattr(HelperModule, "open_url", lambda url: StalledStream())
+
+    with pytest.raises(TimeoutError, match=r"https://example\.org/file\.zip"):
+        HelperModule.download("https://example.org/file.zip", tmp_path / "file.zip")
+
+
+def make_zip(path: Path, entries: list[tuple[str, bytes, int]]) -> Path:
+    with zipfile.ZipFile(path, "w") as zf:
+        for name, content, mode in entries:
+            info = zipfile.ZipInfo(name)
+            info.external_attr = mode << 16
+            zf.writestr(info, content)
+    return path
+
+
+@pytest.mark.parametrize("name", ["../evil.txt", "folder/../../evil.txt"])
+def test_zip_entry_outside_the_folder_is_refused(tmp_path, name):
+    archive = make_zip(tmp_path / "evil.zip", [(name, b"evil", stat.S_IFREG | 0o644)])
+
+    with pytest.raises(ValueError, match="outside"):
+        HelperModule.extract_zip(archive, tmp_path / "target")
+
+    assert not (tmp_path / "evil.txt").exists()
+
+
+def test_zip_symlink_pointing_outside_the_folder_is_refused(tmp_path):
+    archive = make_zip(tmp_path / "evil.zip", [("link", b"../../outside", stat.S_IFLNK | 0o777)])
+
+    with pytest.raises(ValueError, match="outside"):
+        HelperModule.extract_zip(archive, tmp_path / "target")
+
+    assert not (tmp_path / "target" / "link").is_symlink()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="symlinks need privileges on Windows")
+def test_zip_symlink_inside_the_folder_is_kept(tmp_path):
+    archive = make_zip(
+        tmp_path / "app.zip",
+        [
+            ("app/Versions/A/binary", b"#!/bin/sh\n", stat.S_IFREG | 0o755),
+            ("app/Current", b"Versions/A", stat.S_IFLNK | 0o777),
+        ],
+    )
+
+    HelperModule.extract_zip(archive, tmp_path / "target")
+
+    assert (tmp_path / "target" / "app" / "Current" / "binary").read_text() == "#!/bin/sh\n"
+
+
+def make_tar(path: Path, members: list[tarfile.TarInfo]) -> Path:
+    with tarfile.open(path, "w:gz") as tar:
+        for member in members:
+            tar.addfile(member, io.BytesIO(b"x" * member.size) if member.isfile() else None)
+    return path
+
+
+def tar_member(name: str, kind: bytes = tarfile.REGTYPE, link: str = "") -> tarfile.TarInfo:
+    member = tarfile.TarInfo(name)
+    member.type = kind
+    member.linkname = link
+    member.size = 1 if kind == tarfile.REGTYPE else 0
+    return member
+
+
+@pytest.mark.parametrize(
+    "member",
+    [
+        tar_member("../evil.txt"),
+        tar_member("/evil.txt"),
+        tar_member("link", tarfile.SYMTYPE, "../../outside"),
+        tar_member("hard", tarfile.LNKTYPE, "../outside"),
+    ],
+    ids=["parent", "absolute", "symlink", "hardlink"],
+)
+def test_tar_entry_outside_the_folder_is_refused(tmp_path, member):
+    archive = make_tar(tmp_path / "evil.tar.gz", [member])
+
+    with pytest.raises(ValueError, match="outside"):
+        HelperModule.extract_tar(archive, tmp_path / "target")
+
+    assert not (tmp_path / "evil.txt").exists()
+    assert list((tmp_path / "target").iterdir()) == []
