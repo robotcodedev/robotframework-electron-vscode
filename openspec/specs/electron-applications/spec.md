@@ -40,7 +40,7 @@ The library documentation SHALL start with an introduction of the `Electron` lib
 - **THEN** the import documentation starts with the `Electron` library's own text, and the import arguments are Browser's, with Browser's description of each argument
 
 ### Requirement: Start an application
-`New Electron Application` SHALL start the Electron application at a given executable path and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. If no environment variables are given, the application SHALL inherit the environment of the test run without `ELECTRON_RUN_AS_NODE`.
+`New Electron Application` SHALL start the Electron application at a given executable path, or a command on `PATH`, and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. A relative executable path and a relative working directory SHALL be relative to the test run's working directory, and without a working directory the application SHALL run in the test run's working directory. If no environment variables are given, the application SHALL inherit the environment of the test run without `ELECTRON_RUN_AS_NODE`.
 
 #### Scenario: Application opens a window
 - **WHEN** `New Electron Application` is called with the path of an Electron application
@@ -53,6 +53,18 @@ The library documentation SHALL start with an introduction of the `Electron` lib
 #### Scenario: Test run started from inside VS Code
 - **WHEN** the test run has `ELECTRON_RUN_AS_NODE=1` in its environment, as runs started from VS Code do, and no environment variables are given
 - **THEN** the application starts normally and does not see `ELECTRON_RUN_AS_NODE`
+
+#### Scenario: Default working directory
+- **WHEN** the keyword is called without a working directory
+- **THEN** the application runs in the test run's working directory
+
+#### Scenario: Relative executable path
+- **WHEN** the keyword is called with an executable path relative to the test run's working directory
+- **THEN** the application starts
+
+#### Scenario: First window closes during the start
+- **WHEN** the application's first window closes while the keyword takes the application over
+- **THEN** the keyword returns without an error, and windows that the application opens later can be selected with `Switch Page`
 
 ### Requirement: Windows are Browser pages
 A started application SHALL be a browser in Browser's state with one context. Each of its windows SHALL be a page of that context, and its first window SHALL be the active page when `New Electron Application` returns.
@@ -114,7 +126,7 @@ An application SHALL end whenever Browser closes its browser or context: through
 - **THEN** the application process ends
 
 ### Requirement: Failed start
-If the application cannot be started, or opens no window within the time allowed, `New Electron Application` SHALL fail with an error that names the cause. It SHALL leave no application process running and SHALL add nothing to Browser's state.
+If the application cannot be started, opens no window within the time allowed, or cannot be taken over by the Browser library, `New Electron Application` SHALL fail with an error that names the cause. It SHALL leave no application process running and SHALL add nothing to Browser's state.
 
 #### Scenario: Wrong executable path
 - **WHEN** the executable path does not exist
@@ -123,6 +135,10 @@ If the application cannot be started, or opens no window within the time allowed
 #### Scenario: No window
 - **WHEN** the application opens no window within the time allowed
 - **THEN** the keyword fails, and afterwards no process of the application is running
+
+#### Scenario: Browser cannot take the application over
+- **WHEN** the Browser library cannot take over the started application, for example because it has no `adoptContext` hook
+- **THEN** the keyword fails with an error that names the cause, and afterwards no process of the application is running
 
 ### Requirement: Video recording
 `New Electron Application` SHALL record a video of the application's windows when it is given `record_video`. It SHALL store the video in Browser's video folder of the output directory unless `record_video` names a folder, return the video's path in the page details of its return value, and embed the video in the log, as Browser does for `New Context`.
