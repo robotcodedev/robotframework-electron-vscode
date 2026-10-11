@@ -45,35 +45,6 @@ def test_reports_own_version():
     assert import_library().ROBOT_LIBRARY_VERSION == __version__
 
 
-def test_no_video_options_without_record_video():
-    assert import_library()._video_options(None) is None
-
-
-def test_video_defaults_to_browsers_folder_and_size(tmp_path):
-    electron = import_library()
-    electron.outputdir = str(tmp_path)
-
-    options = electron._video_options({})
-
-    assert options is not None
-    assert options["dir"] == str(tmp_path / "browser" / "video")
-    assert options["size"] == {"width": 1280, "height": 720}
-
-
-def test_video_folder_size_and_action_overlay_are_passed_on(tmp_path):
-    electron = import_library()
-    electron.outputdir = str(tmp_path)
-    show_actions: ShowActions = {"duration": 800, "position": "top-right"}
-    record_video: RecordVideo = {"dir": "demo", "size": {"width": 1920, "height": 1080}, "showActions": show_actions}
-
-    options = electron._video_options(record_video)
-
-    assert options is not None
-    assert Path(options["dir"]) == (tmp_path / "browser" / "video" / "demo").resolve()
-    assert options["size"] == {"width": 1920, "height": 1080}
-    assert options["showActions"] == show_actions
-
-
 def test_record_video_converts_robot_framework_values():
     value = "{'size': {'width': '1920', 'height': '1080'}, 'showActions': {'duration': '800', 'cursor': 'none'}}"
 
@@ -85,33 +56,6 @@ def test_record_video_converts_robot_framework_values():
 def test_record_video_rejects_unknown_keys():
     with pytest.raises(ValueError, match="'speed' not allowed"):
         TypeInfo.from_type_hint(RecordVideo).convert("{'speed': 2}")
-
-
-def test_no_har_options_without_record_har():
-    assert import_library()._har_options(None) is None
-
-
-def test_har_path_is_relative_to_the_output_directory(tmp_path):
-    electron = import_library()
-    electron.outputdir = str(tmp_path)
-
-    options = electron._har_options({"path": "network.har", "omitContent": True})
-
-    assert options == {"path": str(tmp_path / "network.har"), "omitContent": True}
-
-
-def test_absolute_har_path_is_kept(tmp_path):
-    electron = import_library()
-    electron.outputdir = str(tmp_path / "output")
-
-    options = electron._har_options({"path": str(tmp_path / "network.har")})
-
-    assert options == {"path": str(tmp_path / "network.har")}
-
-
-def test_record_har_without_path_fails():
-    with pytest.raises(ValueError, match="needs a 'path'"):
-        import_library()._har_options({"omitContent": True})
 
 
 @pytest.fixture
@@ -165,3 +109,39 @@ def test_first_window_closed_during_the_start(fake_launch, tmp_path):
     browser_id, context_id, page = electron.new_electron_application(tmp_path / "bin" / "electron")
 
     assert (browser_id, context_id, page["page_id"]) == ("browser", "context", "")
+
+
+def test_no_recording_by_default(fake_launch, tmp_path):
+    electron, calls = fake_launch
+
+    electron.new_electron_application(tmp_path / "bin" / "electron")
+
+    assert calls[0]["recordVideo"] is None
+    assert calls[0]["tracing"] is None
+
+
+def test_recording_options_come_from_browser(fake_launch, tmp_path):
+    electron, calls = fake_launch
+    electron.outputdir = str(tmp_path)
+    show_actions: ShowActions = {"duration": 800, "position": "top-right"}
+
+    electron.new_electron_application(
+        tmp_path / "bin" / "electron", record_video={"showActions": show_actions}, tracing=True
+    )
+
+    assert calls[0]["recordVideo"] == {
+        "dir": str((tmp_path / "browser" / "video").resolve()),
+        "size": {"width": 1280, "height": 720},
+        "showActions": show_actions,
+    }
+    assert calls[0]["tracing"] == str(tmp_path / "browser" / "traces")
+    assert electron.tracing_contexts == ["context"]
+
+
+def test_har_options_come_from_browser(fake_launch, tmp_path):
+    electron, calls = fake_launch
+    electron.outputdir = str(tmp_path)
+
+    electron.new_electron_application(tmp_path / "bin" / "electron", record_har={"path": "network.har"})
+
+    assert calls[0]["recordHar"] == {"path": str((tmp_path / "network.har").resolve())}

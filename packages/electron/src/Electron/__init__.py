@@ -196,8 +196,7 @@ class Electron(Browser):
           path of the video, or an empty string if no video is recorded.
 
         *Raises:*
-          - ``ValueError``: The executable is not found, or ``record_har`` has
-                no ``path``.
+          - ``ValueError``: The executable is not found.
 
         Example:
         | ${app} =    `New Electron Application`    /opt/my-app/my-app
@@ -215,8 +214,7 @@ class Electron(Browser):
         if not self._electron_extension_loaded:
             self.init_js_extension(_JS_MODULE)
             self._electron_extension_loaded = True
-        video = self._video_options(record_video)
-        trace_file = self._playwright_state._resolve_trace_file(tracing)
+        recording = self.adopted_context_options(tracing=tracing, recordVideo=record_video, recordHar=record_har)
         adopted = self.call_js_keyword(
             "robotframeworkElectronLaunch",
             executablePath=executable,
@@ -224,41 +222,21 @@ class Electron(Browser):
             env=env,
             cwd=os.path.abspath(cwd or os.curdir),
             timeout=self.get_timeout(timeout),
-            recordVideo=video,
-            recordHar=self._har_options(record_har),
-            tracing=trace_file or None,
+            recordVideo=recording.get("recordVideo"),
+            recordHar=recording.get("recordHar"),
+            tracing=recording["tracing"] or None,
             defaultTimeout=int(self.timeout),
         )
         logger.info(f"Started Electron application {executable} as {adopted['browserId']}")
-        if trace_file:
+        if recording["tracing"]:
+            trace_file = recording["tracing"]
             logger.info(f"The trace of {adopted['browserId']} is saved to {trace_file} when the application closes")
-            self._playwright_state.add_context_and_keyword_call_stack_to_trace(trace_file, adopted["contextId"])
-        if video is not None:
-            self._playwright_state.context_cache.add(adopted["contextId"], video["size"])
-        video_path = self._playwright_state._embed_video(
-            {"video_path": adopted.get("videoPath"), "contextUuid": adopted["contextId"]}
-        )
+        video_path = self.register_adopted_context(adopted["contextId"], recording, adopted.get("videoPath"))
         return (
             adopted["browserId"],
             adopted["contextId"],
             NewPageDetails(page_id=adopted.get("pageId", ""), video_path=video_path),
         )
-
-    def _video_options(self, record_video: RecordVideo | None) -> dict[str, Any] | None:
-        """Resolve folder and size of ``record_video`` the way Browser does for ``recordVideo``."""
-        if record_video is None:
-            return None
-        state = self._playwright_state
-        params = state._set_video_size_to_int(state._set_video_path({"recordVideo": {"dir": None, **record_video}}))
-        return {**params["recordVideo"], "dir": str(params["recordVideo"]["dir"])}
-
-    def _har_options(self, record_har: RecordHar | None) -> dict[str, Any] | None:
-        """Resolve a relative HAR path against the output directory."""
-        if record_har is None:
-            return None
-        if "path" not in record_har:
-            raise ValueError("record_har needs a 'path' for the HAR file.")
-        return {**record_har, "path": str(Path(self.outputdir, record_har["path"]))}
 
     @keyword
     def close_electron_application(self, browser: SelectionType | str = SelectionType.CURRENT) -> None:
