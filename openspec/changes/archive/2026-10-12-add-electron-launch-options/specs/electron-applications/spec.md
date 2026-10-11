@@ -17,8 +17,8 @@
 `New Electron Application` SHALL start the application's pages with the given `locale` and `timezone_id`, which apply to the language the pages report and to their number and date formatting. Without them, the pages SHALL follow the system.
 
 #### Scenario: Given locale and time zone
-- **WHEN** a test starts an application with `locale=de-DE` and `timezone_id=Asia/Tokyo`
-- **THEN** its page reports the language `de-DE` and the time zone `Asia/Tokyo`, and formats numbers as in German
+- **WHEN** a test starts an application with `locale=pt-BR` and `timezone_id=Asia/Tokyo`
+- **THEN** its page reports the language `pt-BR` and the time zone `Asia/Tokyo`, and formats numbers as in Brazilian Portuguese
 
 ### Requirement: Bypass the Content Security Policy
 `New Electron Application` SHALL start the application with the Content Security Policy of its pages bypassed, including Trusted Types, when `bypass_csp` is true. By default, the policy SHALL be enforced.
