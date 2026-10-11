@@ -22,3 +22,6 @@ results/
 docs/node_modules/
 docs/dist/
 docs/.astro/
+
+# playground files
+playground/
