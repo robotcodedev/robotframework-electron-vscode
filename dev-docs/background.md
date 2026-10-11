@@ -14,8 +14,8 @@ Decisions so far:
 - RobotCode-specific keywords and the RobotCode tests themselves stay in the RobotCode repository.
 - Electron support is **not** built into the Browser library. Upstream only gets one small, generic hook (see below).
 - Until the hook is released, the Browser library comes from a local clone at `~/develop/robot/robotframework-browser` (`../robotframework-browser` from this repository), used as an editable path dependency.
-  - The hook is developed there on the branch `adopt-context-hook`, created from `main` at `2cf74ae6`.
-  - It is only a local clone so far: `origin` is `MarketSquare/robotframework-browser`, and there is no GitHub fork.
+  - The hook was developed there on the branch `adopt-context-hook`, created from `main` at `2cf74ae6`, and merged into Browser's `main` in MarketSquare/robotframework-browser#5318 on 2026-10-11.
+  - `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`.
   - How to prepare the clone is described in [AGENTS.md](../AGENTS.md).
 - Do not model the design on Browser PR #4695 ("Add Electron application support"). It is AI-generated, stalled since 2026-03 and has open maintainer remarks.
 

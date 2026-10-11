@@ -19,10 +19,11 @@ Background, research and the initial design ideas are in [dev-docs/background.md
 
 ## Browser Library Dependency
 
-Until our hook is merged and released upstream, `robotframework-browser` comes from a local clone at `../robotframework-browser` (editable path source in the root `pyproject.toml`).
+Until a Browser release contains our changes, `robotframework-browser` comes from a local clone at `../robotframework-browser` (editable path source in the root `pyproject.toml`).
 
-- The hook is developed in the clone on the branch `adopt-context-hook`.
-- The clone's `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`. The hook is proposed upstream in MarketSquare/robotframework-browser#5318. Push to the fork over SSH (`git@github.com:d-biehl/robotframework-browser.git`); the HTTPS `origin` has no credentials.
+- The hook was merged into Browser's `main` in MarketSquare/robotframework-browser#5318, but is not released yet.
+- The libraries also need its follow-up, the public methods `adopted_context_options` and `register_adopted_context`. It is developed in the clone on the branch `adopted-context-recording`, created from `upstream/main`. CI checks out this branch from the fork.
+- The clone's `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`. Push to the fork over SSH (`git@github.com:d-biehl/robotframework-browser.git`); the HTTPS `origin` has no credentials.
 
 The clone needs its generated gRPC stubs and the built Node wrapper, which are not in git:
 

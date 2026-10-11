@@ -181,10 +181,10 @@ Welcome to your first code contribution! Here's how to set up your development e
    - [Git](https://git-scm.com/)
    - On Linux, for the display profiles: Xvfb (`xvfb` on Debian and Ubuntu, `xorg-server-xvfb` on Arch Linux), Xephyr (`xserver-xephyr` or `xorg-server-xephyr`) and the window manager Openbox (`openbox`)
 
-2. **Browser library:** the libraries need the `adoptContext` hook of the Browser library, which is not in a Browser release yet. Until it is, the workspace takes `robotframework-browser` from a clone next to this repository, `../robotframework-browser`, on the branch `adopt-context-hook`. The clone needs its generated gRPC code and the built Node wrapper:
+2. **Browser library:** the libraries need the `adoptContext` hook of the Browser library and a follow-up of it, which are not in a Browser release yet. Until they are, the workspace takes `robotframework-browser` from a clone of the branch `adopted-context-recording` of the fork `d-biehl/robotframework-browser` next to this repository, `../robotframework-browser`. The clone needs its generated gRPC code and the built Node wrapper:
 
    ```bash
-   git clone --branch adopt-context-hook https://github.com/d-biehl/robotframework-browser.git
+   git clone --branch adopted-context-recording https://github.com/d-biehl/robotframework-browser.git
    cd robotframework-browser
    uv venv .venv && uv pip install pip      # the invoke tasks call pip
    source .venv/bin/activate
