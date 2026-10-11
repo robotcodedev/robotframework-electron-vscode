@@ -172,3 +172,10 @@ The library's own keywords SHALL document every argument, their return value and
 #### Scenario: Script added to the workbench
 - **WHEN** a test opens VS Code with `bypass_csp=True` and adds a script element with inline code to the workbench through `Evaluate JavaScript`
 - **THEN** the script runs, although the workbench requires Trusted Types for scripts
+
+### Requirement: Main process of an instance
+`Evaluate In Main Process` SHALL work for instances started by `Open VS Code`.
+
+#### Scenario: VS Code's version from its main process
+- **WHEN** a test opens VS Code 1.141.0 and evaluates `({ app }) => app.getVersion()` in its main process
+- **THEN** the keyword returns `1.141.0`
