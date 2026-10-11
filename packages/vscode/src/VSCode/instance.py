@@ -1,6 +1,7 @@
 """Directories, settings, environment and arguments of isolated VS Code instances."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -21,7 +22,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 }
 
 # Seconds for one call of the command-line script, enough for large extensions on a slow CI runner.
-INSTALL_TIMEOUT = 600
+CLI_TIMEOUT = 600
 
 QUIET_START_ARGUMENTS = [
     "--skip-welcome",
@@ -38,8 +39,11 @@ class InstanceDirectories(NamedTuple):
     extensions: Path
 
 
-def create_instance_directories(output_dir: Path) -> InstanceDirectories:
-    """Create the next numbered instance folder ``<output_dir>/vscode/<n>``."""
+def create_instance_directories(output_dir: Path, extensions_dir: Path | None = None) -> InstanceDirectories:
+    """Create the next numbered instance folder ``<output_dir>/vscode/<n>``.
+
+    With ``extensions_dir``, the instance uses that extensions directory instead of one in its folder.
+    """
     base = output_dir / "vscode"
     base.mkdir(parents=True, exist_ok=True)
     number = 1 + max((int(entry.name) for entry in base.iterdir() if entry.name.isdigit()), default=0)
@@ -50,9 +54,10 @@ def create_instance_directories(output_dir: Path) -> InstanceDirectories:
             break
         except FileExistsError:
             number += 1
-    directories = InstanceDirectories(root.absolute(), root.absolute() / "user-data", root.absolute() / "extensions")
+    extensions = Path(os.path.abspath(extensions_dir)) if extensions_dir else root.absolute() / "extensions"
+    directories = InstanceDirectories(root.absolute(), root.absolute() / "user-data", extensions)
     (directories.user_data / "User").mkdir(parents=True)
-    directories.extensions.mkdir()
+    directories.extensions.mkdir(parents=True, exist_ok=True)
     return directories
 
 
@@ -94,21 +99,25 @@ def launch_arguments(
     return arguments
 
 
-def install_extensions(
-    cli: Path, extensions: Sequence[str], directories: InstanceDirectories, env: Mapping[str, str]
-) -> None:
-    """Install Marketplace extensions or ``.vsix`` files into the instance's extensions directory with one call."""
-    command = [str(cli)]
-    for extension in extensions:
-        command += ["--install-extension", extension]
-    command += ["--extensions-dir", str(directories.extensions), "--user-data-dir", str(directories.user_data)]
-    names = ", ".join(f"'{extension}'" for extension in extensions)
-    what = f"extension {names}" if len(extensions) == 1 else f"extensions {names}"
+# Options that would name other directories than the ones run_cli is given.
+DIRECTORY_OPTIONS = ("--extensions-dir", "--user-data-dir")
+
+
+def run_cli(cli: Path, extensions_dir: Path, user_data_dir: Path, args: Sequence[str], env: Mapping[str, str]) -> str:
+    """Run the command-line script with ``args`` on the given directories and return its output."""
+    for arg in args:
+        if arg.split("=", 1)[0] in DIRECTORY_OPTIONS:
+            raise ValueError(f"Give the directories as the keyword's arguments, not as '{arg}'.")
+    command = [str(cli), *args]
+    command += ["--extensions-dir", os.path.abspath(extensions_dir), "--user-data-dir", os.path.abspath(user_data_dir)]
     try:
         result = subprocess.run(
-            command, env=dict(env), capture_output=True, text=True, check=False, timeout=INSTALL_TIMEOUT
+            command, env=dict(env), capture_output=True, text=True, check=False, timeout=CLI_TIMEOUT
         )
     except subprocess.TimeoutExpired:
-        raise RuntimeError(f"Installing {what} did not finish within {INSTALL_TIMEOUT // 60} minutes.") from None
+        raise RuntimeError(
+            f"VS Code's command line did not finish within {CLI_TIMEOUT // 60} minutes: {' '.join(args)}"
+        ) from None
     if result.returncode != 0:
-        raise RuntimeError(f"Installing {what} failed: {(result.stderr or result.stdout).strip()}")
+        raise RuntimeError(f"VS Code's command line failed: {(result.stderr or result.stdout).strip()}")
+    return result.stdout

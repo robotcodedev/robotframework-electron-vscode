@@ -1,5 +1,5 @@
 *** Settings ***
-Name                Install VS Code Extension
+Name                Install Into A Running Instance
 Library             OperatingSystem
 Resource            resources/vscode.resource
 
@@ -11,8 +11,8 @@ Extension In A Running Instance
     ${vsix} =    Pack Extension    ${TEST_EXTENSION}    ${OUTPUT_DIR}/test-extension.vsix
     ${before} =    List User Extensions
     Open Test VS Code
-    Install VS Code Extension    ${vsix}
-    # VS Code registers the extension shortly after the install, and an open palette does not refresh.
+    Install Into Running Instance    ${vsix}    robot.test-extension
+    # An open palette does not refresh, so the command is looked up in a fresh one.
     Wait Until Keyword Succeeds    20s    1s    Run Command From A Fresh Palette    Robot Test: Say Hello
     Get Text    .notifications-toasts .notification-list-item-message    ==    Hello Robot
     ${after} =    List User Extensions
@@ -24,18 +24,9 @@ Only The Given Instance Gets The Extension
     ${first_instance} =    Newest Instance
     Open Test VS Code
     ${second_instance} =    Newest Instance
-    Install VS Code Extension    ${vsix}    browser=${first}
+    ${dirs} =    Get VS Code Instance Directories    ${first}
+    Execute Test VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ${vsix}
     ${installed} =    List Directories In Directory    ${first_instance}/extensions    robot.test-extension-*
     Length Should Be    ${installed}    1
     ${installed} =    List Directories In Directory    ${second_instance}/extensions    robot.test-extension-*
-    Length Should Be    ${installed}    0
-
-Closed Instance
-    ${vsix} =    Pack Extension    ${TEST_EXTENSION}    ${OUTPUT_DIR}/test-extension.vsix
-    ${vscode}    ${_}    ${_} =    Open Test VS Code
-    ${instance} =    Newest Instance
-    Close VS Code    ${vscode}
-    Run Keyword And Expect Error    *Browser '${vscode}' is not an open VS Code instance*
-    ...    Install VS Code Extension    ${vsix}    browser=${vscode}
-    ${installed} =    List Directories In Directory    ${instance}/extensions    robot.test-extension-*
     Length Should Be    ${installed}    0

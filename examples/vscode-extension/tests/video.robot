@@ -22,6 +22,7 @@ Resource            resources/notifications.resource
 Resource            resources/webview.resource
 Resource            resources/editor.resource
 Resource            resources/explorer.resource
+Resource            resources/extensions.resource
 Resource            resources/file_dialog.resource
 Resource            resources/python.resource
 Resource            resources/terminal.resource
@@ -48,7 +49,8 @@ Demonstration Of The Extension
 Python Script Created And Run
     [Tags]    network
     Set Presenter Mode    ${{ {"duration": "1s"} }}
-    Open Example VS Code With Video    extensions=${{ ["ms-python.python"] }}
+    ${extensions} =    Prepared Extensions    ms-python.python
+    Open Example VS Code With Video    extensions_dir=${extensions}
     New File
     Keyboard Input    type    print("Hello Robot Framework")
     ${workspace} =    Example Workspace
@@ -63,7 +65,8 @@ Python Script Created In The Explorer Without Presenter Mode
     ...    Browser does not wait before it closes VS Code, so the test pauses at the end.
     [Tags]    network
     Set Presenter Mode    False
-    Open Example VS Code With Video    extensions=${{ ["ms-python.python"] }}
+    ${extensions} =    Prepared Extensions    ms-python.python
+    Open Example VS Code With Video    extensions_dir=${extensions}
     Create File In Explorer    greeting.py
     Active Editor Should Be    greeting.py
     Keyboard Input    type    print("Hello Robot Framework")
@@ -76,7 +79,7 @@ Python Script Created In The Explorer Without Presenter Mode
 *** Keywords ***
 Open Example VS Code With Video
     [Documentation]    Opens VS Code and records a video in the size of the screen.
-    ...    Further named arguments, such as `extensions`, are passed on.
+    ...    Further named arguments, such as `extensions_dir`, are passed on.
     [Arguments]    &{options}
     ${width}    ${height} =    Split String    %{SCREEN_SIZE=1920x1080}    x
     VAR    &{size}    width=${width}    height=${height}

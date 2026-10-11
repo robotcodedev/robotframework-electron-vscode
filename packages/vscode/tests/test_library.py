@@ -42,24 +42,31 @@ def test_contains_every_electron_and_browser_keyword():
 def test_adds_only_its_own_keywords_to_electron():
     added = set(import_library().get_keyword_names()) - set(Electron().get_keyword_names())
 
-    assert added == {"Open VS Code", "Close VS Code", "Install VS Code Extension"}
+    assert added == {"Open VS Code", "Close VS Code", "Get VS Code Instance Directories"}
 
 
-def test_install_into_a_browser_not_opened_by_open_vs_code_fails(monkeypatch):
-    def fail(*args, **kwargs):
-        raise AssertionError("nothing may be installed")
+def test_instance_directories_of_the_active_instance(monkeypatch, tmp_path):
+    vscode = import_library()
+    monkeypatch.setattr(vscode, "get_browser_ids", lambda browser: ["browser=open"])
+    directories = InstanceDirectories(tmp_path, tmp_path / "user-data", tmp_path / "prepared")
+    vscode._instances()["browser=open"] = Instance(tmp_path / "code", directories)
 
-    monkeypatch.setattr("VSCode.install_extensions", fail)
+    result = vscode.get_vs_code_instance_directories()
 
+    assert result == {
+        "root": str(tmp_path),
+        "user_data": str(tmp_path / "user-data"),
+        "extensions": str(tmp_path / "prepared"),
+    }
+    assert result.extensions == str(tmp_path / "prepared")
+
+
+def test_instance_directories_of_a_browser_not_opened_by_open_vs_code_fail():
     with pytest.raises(ValueError, match="'browser=unknown' is not an open VS Code instance"):
-        import_library().install_vs_code_extension("ms-python.python", browser="browser=unknown")
+        import_library().get_vs_code_instance_directories("browser=unknown")
 
 
-def test_install_into_a_closed_instance_fails(monkeypatch, tmp_path):
-    def fail(*args, **kwargs):
-        raise AssertionError("nothing may be installed")
-
-    monkeypatch.setattr("VSCode.install_extensions", fail)
+def test_instance_directories_of_a_closed_instance_fail(monkeypatch, tmp_path):
     vscode = import_library()
     monkeypatch.setattr(vscode, "get_browser_ids", lambda browser: ["browser=open"])
     directories = InstanceDirectories(tmp_path, tmp_path / "user-data", tmp_path / "extensions")
@@ -67,7 +74,7 @@ def test_install_into_a_closed_instance_fails(monkeypatch, tmp_path):
     instances["browser=open"] = instances["browser=closed"] = Instance(tmp_path / "code", directories)
 
     with pytest.raises(ValueError, match="'browser=closed' is not an open VS Code instance"):
-        vscode.install_vs_code_extension("ms-python.python", browser="browser=closed")
+        vscode.get_vs_code_instance_directories("browser=closed")
     assert list(vscode._instances()) == ["browser=open"]
 
 
@@ -153,9 +160,10 @@ def test_own_keywords_document_every_argument_and_return_value(library):
 @pytest.mark.parametrize(
     ("library", "name", "exceptions"),
     [
-        ("VSCode", "Open VS Code", {"ValueError", "RuntimeError"}),
-        ("VSCode", "Install VS Code Extension", {"ValueError", "RuntimeError"}),
+        ("VSCode", "Open VS Code", {"ValueError"}),
+        ("VSCode", "Get VS Code Instance Directories", {"ValueError"}),
         ("VSCode.Helper", "Get VS Code Executable", {"ValueError"}),
+        ("VSCode.Helper", "Execute VS Code CLI Command", {"ValueError", "RuntimeError"}),
     ],
 )
 def test_keywords_document_the_exceptions_for_invalid_input(library, name, exceptions):

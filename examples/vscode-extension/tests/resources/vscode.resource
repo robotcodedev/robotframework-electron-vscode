@@ -23,7 +23,7 @@ Open Example VS Code
     ...    on Xvfb and Xephyr this needs a window manager, which the display profiles
     ...    start. Its own file dialog replaces the native one, which Browser cannot reach,
     ...    and its terminal runs `sh`, independent of personal shell configuration.
-    ...    Named arguments of `Open VS Code`, such as `extensions` or `record_video`, are
+    ...    Named arguments of `Open VS Code`, such as `extensions_dir` or `record_video`, are
     ...    passed on.
     [Arguments]    &{options}
     ${workspace} =    Example Workspace

@@ -222,3 +222,17 @@ def product_version(executable: Path, system: str = sys.platform) -> str | None:
         return str(json.loads(package.read_text(encoding="utf-8"))["version"])
     except (OSError, ValueError, KeyError):
         return None
+
+
+class SelectedBuild(NamedTuple):
+    executable: Path
+    version: str | None
+
+
+def select_build(version: str, executable: Path | None, cache_dir: Path | None) -> SelectedBuild:
+    """Return a given executable, or the executable of ``version`` from the cache, downloading it on first use."""
+    if executable is None:
+        cached = download_vscode(version, cache_dir or default_cache_dir())
+        return SelectedBuild(executable_path(cached.folder, cached.quality), cached.version)
+    found = installed_executable(Path(executable))
+    return SelectedBuild(found, product_version(found))

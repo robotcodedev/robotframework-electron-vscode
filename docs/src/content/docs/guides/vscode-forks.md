@@ -10,7 +10,7 @@ Open VS Code    ${EXECDIR}/tests/workspace    executable=/opt/vscodium/codium   
 ```
 
 - `version` downloads only Microsoft's VS Code builds. For a fork, always give `executable`.
-- Extensions in `extensions` are installed with the fork's own command-line script, which the library finds through `applicationName` in the fork's `product.json`. They come from the fork's own extension gallery. VSCodium, for example, uses Open VSX, so extensions that exist only in Microsoft's Marketplace are not available there.
+- `Execute VS Code CLI Command` with the fork's `executable` runs the fork's own command-line script, which the library finds through `applicationName` in the fork's `product.json`. Extensions it installs come from the fork's own extension gallery. VSCodium, for example, uses Open VSX, so extensions that exist only in Microsoft's Marketplace are not available there.
 - Locators that a project uses for the workbench may differ between VS Code and a fork, like between VS Code versions.
 
 ## Tried so far

@@ -17,6 +17,16 @@ Local Installation
     Get Element States    .monaco-workbench    contains    visible
     Directory Should Not Exist    ${TEMPDIR}/vscode-never-downloaded
 
+Prepared Extensions Directory
+    VAR    ${prepared}    ${OUTPUT_DIR}/prepared
+    Remove Directory    ${prepared}    recursive=True
+    ${vsix} =    Pack Extension    ${TEST_EXTENSION}    ${prepared}/test-extension.vsix
+    Execute Test VS Code CLI Command    ${prepared}/extensions    ${prepared}/user-data    --install-extension    ${vsix}
+    Copy Directory    ${prepared}/extensions    ${prepared}/copy
+    Open Test VS Code    extensions_dir=${prepared}/copy
+    Wait Until Keyword Succeeds    20s    1s    Run Command From A Fresh Palette    Robot Test: Say Hello
+    Get Text    .notifications-toasts .notification-list-item-message    ==    Hello Robot
+
 Development Extension Is Active
     Open Test VS Code    extension_development_path=${TEST_EXTENSION}
     # VS Code registers the commands of the development extension shortly after the start, and an open palette does not refresh.

@@ -1,26 +1,125 @@
 ---
-title: Dependency extensions
-description: Install the extensions that your extension depends on, before VS Code starts or into the running VS Code.
+title: Extensions
+description: Get the extensions your tests need into an isolated VS Code, from source, prepared before the start, or into the running VS Code, and use VS Code's command line for the rest.
 ---
 
 import { Code } from '@astrojs/starlight/components';
 import pythonTest from '../../../../../examples/vscode-extension/tests/python.robot?raw';
+import extensionsResource from '../../../../../examples/vscode-extension/tests/resources/extensions.resource?raw';
 import pythonResource from '../../../../../examples/vscode-extension/tests/resources/python.resource?raw';
 
-Many extensions build on others, for example on the Python extension. The extension under test is loaded from source with `extension_development_path`. The extensions it depends on are installed into the isolated VS Code in one of two ways:
+Every VS Code that `Open VS Code` starts has its own extensions directory. Neither your own VS Code nor other instances see what is in it. Extensions get into it in several ways. The libraries do not install extensions themselves; they provide the building blocks, and this page shows how to combine them:
 
-- **When VS Code starts:** `Open VS Code` installs the extensions in `extensions` before it starts VS Code. An entry is a Marketplace identifier such as `ms-python.python`, or the path of a `.vsix` file.
-- **Into the running VS Code:** `Install VS Code Extension` installs an extension while VS Code runs, for example to test how your extension reacts when another one arrives. VS Code picks it up without a restart.
+- `extension_development_path` and `extensions_dir` of `Open VS Code`;
+- `Execute VS Code CLI Command` from `VSCode.Helper`, which runs VS Code's command-line script;
+- `Get VS Code Instance Directories`, which returns the directories of an instance.
 
-Both install into the instance's own extensions directory, with VS Code's command-line script, so neither your own VS Code nor other instances get the extension. Extensions that the installed extension declares as dependencies come along: `ms-python.python` brings Pylance, Python Environments and the Python Debugger. Forks of VS Code install from their own gallery; VSCodium, for example, uses Open VSX.
+`Execute VS Code CLI Command` always needs the extensions directory and the user-data directory that it works on. Without them, VS Code's command line would work on your own VS Code. It also removes the variables that tie a process to a running VS Code: in VS Code's integrated terminal, `VSCODE_IPC_HOOK_CLI` would send the call to the VS Code that the terminal belongs to.
+
+## From source
+
+The extension under test is loaded from its folder, without being installed. Several folders are possible as well:
+
+```robotframework
+Open VS Code    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+```
+
+## Before VS Code starts
+
+`Execute VS Code CLI Command` installs Marketplace extensions or `.vsix` files into a directory of their own, and `Open VS Code` starts with a copy of it through `extensions_dir`:
+
+```robotframework
+Execute VS Code CLI Command    ${CACHE}/extensions    ${CACHE}/user-data    --install-extension    ms-python.python
+...    version=${VSCODE_VERSION}
+Copy Directory    ${CACHE}/extensions    ${OUTPUT_DIR}/extensions/${TEST NAME}
+Open VS Code    extensions_dir=${OUTPUT_DIR}/extensions/${TEST NAME}    version=${VSCODE_VERSION}
+```
+
+- **Faster and offline:** if `${CACHE}` is a folder that later runs keep, the extensions are downloaded only once. A second `--install-extension` of an installed extension does nothing. With a folder under `${OUTPUT_DIR}` instead, every run downloads them again.
+- **Dependencies come along.** Extensions that an installed extension declares as dependencies are installed too: `ms-python.python` brings Pylance, Python Environments and the Python Debugger.
+- **Fixed versions:** `publisher.name@1.2.3` installs a fixed version instead of the newest one.
+- **Pre-releases:** add `--pre-release`.
+- **Forks** of VS Code install from their own gallery when `Execute VS Code CLI Command` gets the fork's `executable`; VSCodium, for example, uses Open VSX.
+- **Same VS Code version:** prepare with the VS Code version that opens the copy. Extensions declare which VS Code versions they support.
+- **A copy for each instance:** VS Code writes into its extensions directory while it runs. Instances that share one directory can corrupt it.
+
+## Into the running VS Code
+
+Installing while VS Code runs is useful to test how your extension reacts when another one arrives. `Get VS Code Instance Directories` returns the directories of the running instance, and `Execute VS Code CLI Command` installs into them:
+
+```robotframework
+${dirs} =    Get VS Code Instance Directories
+Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ms-python.python
+```
+
+When the script returns, the extension is on disk, but VS Code has not necessarily taken it in yet. VS Code's shared process notices it a moment later and writes a line to `sharedprocess.log` in the instance's log folder:
+
+```
+[info] Extensions added from another source ms-python.python
+```
+
+Wait for that line before you use the extension. Two things can go wrong:
+
+- **VS Code misses the install.** The shared process reads the list of extensions when it starts, and only then begins to watch for changes. An extension installed in between, typically in the first second after the start, is never reported, and its commands never appear. Uninstalling it and installing it again makes VS Code notice it.
+- **The script fails on a busy file.** The running VS Code writes the list of extensions, `extensions.json`, at the same time, and the script fails with "Unable to write file '…/extensions.json'". Trying again helps.
+
+The example's keyword `Install Into Running VS Code` does all of this, see [the example](#the-example). Without the wait, such tests pass on a fast machine and fail on a loaded CI runner.
+
+## Listing, uninstalling and updating
+
+The same keywords list, uninstall and update the extensions of an instance, or of a prepared directory:
+
+```robotframework
+${dirs} =    Get VS Code Instance Directories
+${list} =    Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --list-extensions    --show-versions
+Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --uninstall-extension    ms-python.python
+Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --update-extensions
+```
+
+A running VS Code notices an uninstalled extension the same way as an installed one, with "Extensions removed from another source" in its shared process log. `code --help` lists all arguments of the command line.
+
+## Switching extensions off
+
+Command-line arguments of VS Code switch extensions off for one instance. This also works for VS Code's built-in extensions:
+
+```robotframework
+Open VS Code    args=${{ ["--disable-extension", "vscode.git"] }}
+Open VS Code    args=${{ ["--disable-extensions"] }}
+```
+
+`--disable-extensions` switches off all installed extensions. Extensions loaded with `extension_development_path` still run.
+
+## Workspace recommendations
+
+The recommendations in a workspace's `.vscode/extensions.json` are only suggestions. VS Code does not install them. To test with them, read them and pass them on:
+
+```robotframework
+${json} =    Get File    ${EXECDIR}/tests/workspace/.vscode/extensions.json
+${recommended} =    Evaluate    json.loads($json)["recommendations"]    modules=json
+VAR    @{install}
+FOR    ${extension}    IN    @{recommended}
+    VAR    @{install}    @{install}    --install-extension    ${extension}
+END
+Execute VS Code CLI Command    ${CACHE}/extensions    ${CACHE}/user-data    @{install}
+```
+
+VS Code allows comments in this file, which `json.loads` does not accept.
+
+## Profiles
+
+VS Code profiles bundle settings and extensions. `args=${{ ["--profile", "Testing"] }}` opens an instance with a profile of that name, created empty if it does not exist. The command line installs into a profile with `--profile` only once the profile exists, and each instance starts with a fresh user-data directory without profiles. For tests, `settings` and the ways above are simpler.
 
 ## The example
 
-The example's `python.robot` runs the workspace's `hello.py` with the run button that the Python extension shows above a Python file, once with the extension installed when VS Code starts and once installed into the running VS Code:
+The example project's `python.robot` runs the workspace's `hello.py` with the run button that the Python extension shows above a Python file. It does so twice: with the extension prepared once and copied into VS Code before it starts, and installed into the running VS Code:
 
 <Code code={pythonTest} lang="robotframework" title="tests/python.robot" />
 
-`Run Python File` comes from a resource of its own, which the example's video test uses as well:
+The keywords for the prepared copy and for the running VS Code are in a resource of their own:
+
+<Code code={extensionsResource} lang="robotframework" title="tests/resources/extensions.resource" />
+
+`Run Python File` comes from a resource that the example's video test uses as well:
 
 <Code code={pythonResource} lang="robotframework" title="tests/resources/python.resource" />
 
@@ -28,7 +127,10 @@ The example's `python.robot` runs the workspace's `hello.py` with the run button
 
 ## Things to know
 
-- **Wait until the extension is ready.** An extension needs a moment to start. Run too early, the Python extension reported an invalid interpreter or failed with "Unable to find workspace for given file", and did not run the file. `Run Python File` therefore waits until the extension shows the chosen interpreter in the status bar, and then until VS Code has stopped redrawing the run button, which it does several times while the extension starts. Look for such signs of readiness in the extensions you depend on.
-- **Commands appear a little later.** After `Install VS Code Extension`, the new extension's commands are registered shortly after the install, and a command palette that is already open does not show them. The example's `Run Command` opens a fresh palette until the command is there, see [Writing your own workbench keywords](../workbench-keywords/).
-- **Network and time.** Marketplace extensions are downloaded for every VS Code instance; the Python extension with its dependencies is about 100 MB. The example's Python tests are tagged `network`, so `-e network` leaves them out where there is no network access.
+- **Wait until the extension is ready.** An extension needs a moment to start.
+  - Run too early, the Python extension reported an invalid interpreter or failed with "Unable to find workspace for given file", and did not run the file.
+  - `Run Python File` therefore waits until the extension shows the chosen interpreter in the status bar. It then waits until VS Code has stopped redrawing the run button, which it does several times while the extension starts.
+  - Look for such signs of readiness in the extensions you depend on.
+- **Commands appear in a fresh palette.** A command palette that is already open does not show the commands of an extension that arrived later. The example's `Run Command` opens a fresh palette until the command is there, see [Writing your own workbench keywords](../workbench-keywords/).
+- **Network and time.** The Python extension with its dependencies is about 100 MB. Prepared in a folder that later runs keep, it is downloaded once; installed into the running VS Code, for every instance. The example's Python tests are tagged `network`, so `-e network` leaves them out where there is no network access.
 - **Interpreters and tools.** The Python extension runs the scripts with an interpreter it finds on the machine. Extensions that need tools, such as a language runtime, need them on the machines where the tests run, including CI.

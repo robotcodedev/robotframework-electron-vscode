@@ -10,23 +10,16 @@ from typing import Any, NamedTuple
 
 from Browser.utils import logger
 from Browser.utils.data_types import ElementState, NewPageDetails, RecordHar, SelectionType
+from robot.utils import DotDict
 from robotlibcore import keyword
 
 from Electron import Electron, RecordVideo
 from Electron._docs import browser_import_arguments, browser_sections
 
-from .download import (
-    cli_path,
-    default_cache_dir,
-    download_vscode,
-    executable_path,
-    installed_executable,
-    product_version,
-)
+from .download import select_build
 from .instance import (
     InstanceDirectories,
     create_instance_directories,
-    install_extensions,
     instance_environment,
     launch_arguments,
     remove_instance_directories,
@@ -55,9 +48,10 @@ output directory, so neither your own VS Code nor other instances affect it.
 
 | `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
 
-Extensions that the extension under test depends on are installed with
-``extensions`` when VS Code starts, or with `Install VS Code Extension` into the
-running instance.
+Extensions that the extension under test depends on come from an extensions
+directory given as ``extensions_dir``, which ``Execute VS Code CLI Command``
+from ``VSCode.Helper`` has filled. The guide on extensions shows this and other
+ways, such as installing into a running instance.
 
 = The workbench =
 
@@ -142,7 +136,7 @@ class VSCode(Electron):
         version: str = "stable",
         executable: Path | None = None,
         extension_development_path: Path | list[Path] | None = None,
-        extensions: list[str] | None = None,
+        extensions_dir: Path | None = None,
         settings: dict[str, Any] | None = None,
         args: list[str] | None = None,
         cache_dir: Path | None = None,
@@ -175,9 +169,12 @@ class VSCode(Electron):
                 followed. Nothing is downloaded then.
           - ``extension_development_path``: Folder of the extension under test,
                 or a list of folders. They are loaded as development extensions.
-          - ``extensions``: Extensions to install into the instance before it
-                starts, as Marketplace identifiers or ``.vsix`` files. The
-                installation fails if it takes longer than 10 minutes.
+          - ``extensions_dir``: An extensions directory to use instead of an
+                empty one of the instance, for example one prepared with
+                ``Execute VS Code CLI Command`` from ``VSCode.Helper``. VS Code
+                writes into this directory while it runs, so give each
+                instance its own copy. A relative path is relative to the
+                working directory of the test run.
           - ``settings``: User settings for the instance. They override the
                 defaults, which switch off the welcome page, update checks,
                 telemetry, workspace trust, the screen reader mode and the
@@ -202,27 +199,16 @@ class VSCode(Electron):
         *Raises:*
           - ``ValueError``: The version does not exist for the current
                 platform, the download does not match its checksum, or the
-                executable or its command-line script is not found.
-          - ``RuntimeError``: Installing the ``extensions`` fails or does not
-                finish within 10 minutes.
+                executable is not found.
 
         Example:
         | `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
         | `Open VS Code`    version=1.141.0    settings=${{ {"window.title": "robot-test"} }}
         """
-        product: str | None
-        if executable is None:
-            cached = download_vscode(version, cache_dir or default_cache_dir())
-            executable = executable_path(cached.folder, cached.quality)
-            product = cached.version
-        else:
-            executable = installed_executable(Path(executable))
-            product = product_version(executable)
-        directories = create_instance_directories(Path(self.outputdir))
+        executable, product = select_build(version, executable, cache_dir)
+        directories = create_instance_directories(Path(self.outputdir), extensions_dir)
         write_settings(directories.user_data, settings)
         env = instance_environment(os.environ)
-        if extensions:
-            install_extensions(cli_path(Path(executable)), extensions, directories, env)
         if isinstance(extension_development_path, Path):
             extension_development_path = [extension_development_path]
         arguments = launch_arguments(directories, extension_development_path or [], args or [], path)
@@ -265,37 +251,42 @@ class VSCode(Electron):
         """
         self.close_electron_application(browser)
 
-    @keyword("Install VS Code Extension")
-    def install_vs_code_extension(self, extension: str, browser: SelectionType | str = SelectionType.CURRENT) -> None:
-        """Installs an extension into a running VS Code instance started with `Open VS Code`.
+    @keyword("Get VS Code Instance Directories")
+    def get_vs_code_instance_directories(self, browser: SelectionType | str = SelectionType.CURRENT) -> DotDict:
+        """Returns the directories of a VS Code instance started with `Open VS Code`.
 
-        The extension is installed the way ``extensions`` of `Open VS Code`
-        installs it before the start: with the instance's command-line script,
-        into the instance's own extensions directory, so neither the user's
-        VS Code nor other instances get it. Forks of VS Code install from
-        their own extension gallery. The keyword returns when the installation
-        has finished. VS Code picks the extension up shortly afterwards,
-        without a restart. A command palette that is already open does not
-        list the new extension's commands, so tests that run one retry with
-        a freshly opened palette, for example with ``Wait Until Keyword Succeeds``.
+        Pass them to ``Execute VS Code CLI Command`` from ``VSCode.Helper`` to
+        install, uninstall or list the instance's extensions, or read VS Code's
+        logs in ``logs`` of the user-data directory. A running VS Code may not
+        notice what the command-line script changes in its extensions
+        directory; the guide on extensions shows how to wait until it does.
 
         *Arguments:*
-          - ``extension``: A Marketplace identifier such as ``ms-python.python``,
-                or the path of a ``.vsix`` file.
           - ``browser``: ``CURRENT`` for the active instance, or a browser id
                 that `Open VS Code` returned.
+
+        *Returns:*
+          A dictionary with the instance's folder as ``root``, its user-data
+          directory as ``user_data`` and its extensions directory as
+          ``extensions``, which is ``extensions_dir`` of `Open VS Code` if it
+          was given. Both ``${dirs.extensions}`` and ``${dirs}[extensions]``
+          work.
 
         *Raises:*
           - ``ValueError``: The browser is not an open VS Code instance
                 started with `Open VS Code`.
-          - ``RuntimeError``: VS Code's command-line script fails to install
-                the extension or does not finish within 10 minutes.
 
         Example:
-        | `Open VS Code`    ${EXECDIR}/tests/workspace
-        | `Install VS Code Extension`    ms-python.python
-        | `Install VS Code Extension`    ${EXECDIR}/dist/my-extension.vsix
+        | ${dirs} =    `Get VS Code Instance Directories`
+        | ${list} =    Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --list-extensions
         """
+        directories = self._instance(browser).directories
+        return DotDict(
+            root=str(directories.root), user_data=str(directories.user_data), extensions=str(directories.extensions)
+        )
+
+    def _instance(self, browser: SelectionType | str) -> Instance:
+        """The instance of `Open VS Code` with the browser id ``browser``, or the active one for ``CURRENT``."""
         if SelectionType.create(browser) is SelectionType.CURRENT:
             active = self.get_browser_ids(SelectionType.CURRENT)
             browser_id = active[0] if active else "CURRENT"
@@ -303,14 +294,8 @@ class VSCode(Electron):
             browser_id = str(browser)
         instance = self._instances().get(browser_id)
         if instance is None:
-            raise ValueError(
-                f"Browser '{browser_id}' is not an open VS Code instance started by 'Open VS Code'; "
-                "only those can install extensions."
-            )
-        install_extensions(
-            cli_path(instance.executable), [extension], instance.directories, instance_environment(os.environ)
-        )
-        logger.info(f"Installed extension {extension} into the VS Code instance {instance.directories.root}")
+            raise ValueError(f"Browser '{browser_id}' is not an open VS Code instance started by 'Open VS Code'.")
+        return instance
 
 
 VSCode.__doc__ = cleandoc(_INTRO) + "\n\n" + browser_sections()

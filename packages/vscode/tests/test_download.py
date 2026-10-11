@@ -22,6 +22,7 @@ from VSCode.download import (
     installed_executable,
     product_version,
     resolve_build,
+    select_build,
     vscode_platform,
 )
 
@@ -348,3 +349,22 @@ def test_given_executable_is_found_on_path(tmp_path, monkeypatch):
 def test_missing_executable_is_reported(tmp_path):
     with pytest.raises(ValueError, match=r"VS Code executable '.*missing-code' not found"):
         installed_executable(tmp_path / "missing-code")
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX executables")
+def test_selects_a_given_executable_with_its_version(tmp_path):
+    target = make_executable(tmp_path / "VSCode-linux-x64" / "code")
+    package = tmp_path / "VSCode-linux-x64" / "resources" / "app" / "package.json"
+    package.parent.mkdir(parents=True)
+    package.write_text(json.dumps({"version": "1.141.0"}))
+
+    build = select_build("stable", target, None)
+
+    assert build == (target.resolve(), "1.141.0")
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="fake archive has the Linux layout")
+def test_selects_a_version_from_the_cache(service, tmp_path):
+    build = select_build("stable", None, tmp_path)
+
+    assert build == (executable_path(tmp_path / f"stable-1.2.3-{PLATFORM}", "stable"), "1.2.3")

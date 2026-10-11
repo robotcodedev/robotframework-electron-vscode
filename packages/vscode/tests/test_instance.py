@@ -7,15 +7,15 @@ from typing import Any
 import pytest
 
 from VSCode.instance import (
+    CLI_TIMEOUT,
     DEFAULT_SETTINGS,
-    INSTALL_TIMEOUT,
     QUIET_START_ARGUMENTS,
     InstanceDirectories,
     create_instance_directories,
-    install_extensions,
     instance_environment,
     launch_arguments,
     remove_instance_directories,
+    run_cli,
     write_settings,
 )
 
@@ -34,6 +34,25 @@ def test_continues_after_the_highest_existing_number(tmp_path):
     (tmp_path / "vscode" / "7").mkdir(parents=True)
 
     assert create_instance_directories(tmp_path).root.name == "8"
+
+
+def test_uses_a_given_extensions_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    prepared = tmp_path / "prepared"
+    (prepared / "robot.test-extension-1.0.0").mkdir(parents=True)
+
+    directories = create_instance_directories(tmp_path / "output", Path("prepared"))
+
+    assert directories.extensions == prepared
+    assert (prepared / "robot.test-extension-1.0.0").is_dir()
+    assert directories.user_data == directories.root / "user-data"
+    assert not (directories.root / "extensions").exists()
+
+
+def test_creates_a_given_extensions_directory_that_does_not_exist(tmp_path):
+    directories = create_instance_directories(tmp_path / "output", tmp_path / "new" / "extensions")
+
+    assert directories.extensions.is_dir()
 
 
 def test_writes_default_settings_overridden_by_given_settings(tmp_path):
@@ -114,40 +133,55 @@ def instance_directories(root: Path) -> InstanceDirectories:
     return InstanceDirectories(root, root / "user-data", root / "extensions")
 
 
-def test_installs_all_extensions_with_one_call(tmp_path, monkeypatch):
-    calls = fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 0, "", ""))
-    directories = instance_directories(tmp_path)
+def test_runs_the_script_on_the_given_directories(tmp_path, monkeypatch):
+    calls = fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 0, "one\ntwo\n", ""))
+    monkeypatch.chdir(tmp_path)
 
-    install_extensions(tmp_path / "code", ["ms-python.python", "extension.vsix"], directories, {"NAME": "value"})
+    output = run_cli(tmp_path / "code", Path("ext"), Path("data"), ["--list-extensions"], {"NAME": "value"})
 
     [(command, kwargs)] = calls
+    assert output == "one\ntwo\n"
     assert command == [
         str(tmp_path / "code"),
-        "--install-extension",
-        "ms-python.python",
-        "--install-extension",
-        "extension.vsix",
+        "--list-extensions",
         "--extensions-dir",
-        str(directories.extensions),
+        str(tmp_path / "ext"),
         "--user-data-dir",
-        str(directories.user_data),
+        str(tmp_path / "data"),
     ]
     assert kwargs["env"] == {"NAME": "value"}
-    assert kwargs["timeout"] == INSTALL_TIMEOUT == 600
+    assert kwargs["timeout"] == CLI_TIMEOUT
 
 
-def test_installation_that_does_not_finish_names_the_extensions(tmp_path, monkeypatch):
+@pytest.mark.parametrize("arg", ["--extensions-dir", "--user-data-dir=/elsewhere"])
+def test_directories_in_the_arguments_are_rejected(tmp_path, monkeypatch, arg):
+    calls = fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 0, "", ""))
+
+    with pytest.raises(ValueError, match="Give the directories as the keyword's arguments"):
+        run_cli(tmp_path / "code", tmp_path / "ext", tmp_path / "data", ["--list-extensions", arg], {})
+
+    assert calls == []
+
+
+def test_failing_script_reports_its_output(tmp_path, monkeypatch):
+    fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 1, "", "Not found.\n"))
+
+    with pytest.raises(RuntimeError, match=r"^VS Code's command line failed: Not found\.$"):
+        run_cli(tmp_path / "code", tmp_path / "ext", tmp_path / "data", ["--install-extension", "unknown.ext"], {})
+
+
+def test_failing_script_without_error_output_reports_its_standard_output(tmp_path, monkeypatch):
+    fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 1, "Failed.\n", ""))
+
+    with pytest.raises(RuntimeError, match=r"failed: Failed\.$"):
+        run_cli(tmp_path / "code", tmp_path / "ext", tmp_path / "data", ["--update-extensions"], {})
+
+
+def test_script_that_does_not_finish_is_reported(tmp_path, monkeypatch):
     def hang(command, timeout):
         raise subprocess.TimeoutExpired(command, timeout)
 
     fake_cli(monkeypatch, hang)
 
-    with pytest.raises(RuntimeError, match=r"extensions 'one', 'two' did not finish within 10 minutes"):
-        install_extensions(tmp_path / "code", ["one", "two"], instance_directories(tmp_path), {})
-
-
-def test_failed_installation_reports_the_output_of_the_script(tmp_path, monkeypatch):
-    fake_cli(monkeypatch, lambda command, timeout: subprocess.CompletedProcess(command, 1, "", "Not found.\n"))
-
-    with pytest.raises(RuntimeError, match=r"^Installing extension 'unknown.ext' failed: Not found\.$"):
-        install_extensions(tmp_path / "code", ["unknown.ext"], instance_directories(tmp_path), {})
+    with pytest.raises(RuntimeError, match=r"did not finish within 10 minutes: --update-extensions"):
+        run_cli(tmp_path / "code", tmp_path / "ext", tmp_path / "data", ["--update-extensions"], {})

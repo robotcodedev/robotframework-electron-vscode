@@ -6,7 +6,7 @@ A small VS Code extension with Robot Framework tests that drive the VS Code work
 - open, edit and save files of a workspace, create a file in the explorer, and open one through VS Code's own file dialog (`editor.robot`);
 - run a command in the integrated terminal and read its output (`terminal.robot`);
 - open a second window (`windows.robot`);
-- run a Python script with the Python extension, installed when VS Code starts and into the running VS Code (`python.robot`);
+- run a Python script with the Python extension, prepared once and copied into VS Code before it starts, and installed into the running VS Code (`python.robot`);
 - record videos in the size of the screen: with presenter mode, of a demonstration of the extension and of a Python script that the test creates, saves through VS Code's own dialog and runs; without presenter mode, of a Python script created in the explorer (`video.robot`);
 - record Playwright traces of tests and a HAR file of a webview's network traffic (`tracing.robot`).
 
@@ -17,7 +17,7 @@ The `VSCode` library only downloads and starts VS Code. The keywords and locator
 ## Prerequisites
 
 - Python with `robotframework-vscode` and RobotCode.
-- For `python.robot`: network access for the Marketplace, which downloads the Python extension (about 100 MB per test), and a Python interpreter on the `PATH`.
+- For `python.robot` and the Python tests of `video.robot`: network access for the Marketplace, which downloads the Python extension (about 100 MB) once into `.cache/extensions` and again for each install into a running VS Code, and a Python interpreter on the `PATH`.
 - On Linux, for the display profiles in `robot.toml`:
   - Xvfb for `xvfb`: the package `xvfb` on Debian and Ubuntu, `xorg-server-xvfb` on Arch Linux;
   - Xephyr for `xephyr`: `xserver-xephyr` or `xorg-server-xephyr`;
@@ -62,4 +62,4 @@ robotcode -p locator-override robot
 
 - [Writing your own workbench keywords](https://robotcodedev.github.io/robotframework-electron-vscode/guides/workbench-keywords/) explains the resources.
 - [VS Code versions and profiles](https://robotcodedev.github.io/robotframework-electron-vscode/guides/vscode-versions/) explains the profiles in `robot.toml`.
-- [Dependency extensions](https://robotcodedev.github.io/robotframework-electron-vscode/guides/extensions/) explains `python.robot`.
+- [Extensions](https://robotcodedev.github.io/robotframework-electron-vscode/guides/extensions/) explains `python.robot` and the other ways to get extensions into VS Code.
