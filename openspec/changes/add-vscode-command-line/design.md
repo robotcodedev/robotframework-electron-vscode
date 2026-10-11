@@ -9,7 +9,7 @@ The building blocks already exist in `packages/vscode/src/VSCode/`:
   - creates the numbered instance directories (`create_instance_directories` returns root, user-data and extensions);
   - removes the variables that tie a process to a running VS Code (`instance_environment`);
   - builds the launch arguments (`launch_arguments`);
-  - runs the script for `extensions` (`install_extensions`, with `INSTALL_TIMEOUT`).
+  - runs the script for `extensions` of `Open VS Code` (`install_extensions`, with `INSTALL_TIMEOUT`), which this change removes; the time limit stays as `CLI_TIMEOUT`.
 - **`VSCode` library:** `Open VS Code` resolves the build inline from `version`, `executable` and `cache_dir`. The library keeps its instances in a registry by browser id (`_instances()`).
 - **`VSCode.Helper`** holds no browser state and offers `Get VS Code Executable`.
 
@@ -28,7 +28,7 @@ See proposal.md for the motivation.
 
 ## Decisions
 
-### `Run VS Code CLI` belongs to `VSCode.Helper`
+### `Execute VS Code CLI Command` belongs to `VSCode.Helper`
 
 Preparing extensions happens before any VS Code runs, often in a suite setup. `VSCode.Helper` holds no browser state and already selects builds, so the keyword fits there.
 
@@ -36,15 +36,15 @@ Preparing extensions happens before any VS Code runs, often in a suite setup. `V
 
 ### Signature and the required directories
 
-`Run VS Code CLI    extensions_dir    user_data_dir    @{args}    version=stable    executable=None    cache_dir=None`
+`Execute VS Code CLI Command    extensions_dir    user_data_dir    @{args}    version=stable    executable=None    cache_dir=None`
 
 - **Required directories:** both directories are required positional arguments. The keyword passes them as `--extensions-dir=` and `--user-data-dir=`.
   - Relative paths are made absolute against the working directory of the test run, as for `New Electron Application`.
   - If `args` contain `--extensions-dir` or `--user-data-dir` themselves, the keyword fails with a `ValueError`. Two values for the same option would leave it unclear which one the script uses.
 - **Selecting the build:** done as in `Open VS Code`. That code moves from `Open VS Code` into a function in `download.py` that both use.
-- **Running the script:** without the variables that tie a process to a running VS Code, using `instance_environment(os.environ)`, and with the time limit of `install_extensions`.
+- **Running the script:** without the variables that tie a process to a running VS Code, using `instance_environment(os.environ)`, and with the time limit `CLI_TIMEOUT`, formerly `INSTALL_TIMEOUT` of `install_extensions`.
 - **Result:** the keyword returns standard output as text. If the exit code is not 0, it fails with a `RuntimeError` that contains the script's error output, or the standard output if there is none.
-- **Rejected:** returning a Process result object, as Robot's Process library does. The output is what tests use, and failing on an error matches `install_extensions`.
+- **Rejected:** returning a Process result object, as Robot's Process library does. The output is what tests use, and failing on an error is what `install_extensions` did.
 
 ### `Get VS Code Instance Directories` returns a dictionary
 
@@ -53,7 +53,6 @@ The keyword returns `root`, `user_data` and `extensions` as a Robot Framework `D
 ### `extensions_dir` of `Open VS Code`
 
 - **Creating the directories:** `create_instance_directories` gets an optional extensions directory. With it, the instance's root and user-data directory are created as before, and the extensions directory is the given one, made absolute and created if it does not exist.
-- **Installing:** `extensions` are installed into it, because `install_extensions` uses the instance's directories.
 - **No copy:** the directory is used as it is, without a copy. A running VS Code writes into its extensions directory, so the documentation tells users to give each instance its own copy, for example with `Copy Directory`.
 - **Rejected:** copying inside `Open VS Code` (`extensions_from`). That is one more behaviour in the library for something a single standard keyword does.
 
@@ -68,24 +67,31 @@ Instead of fixing the keyword, the recipe "into a running instance" shows the st
 
 ```robotframework
 ${dirs} =    Get VS Code Instance Directories
-Run VS Code CLI    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ms-python.python
+Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ms-python.python
 Wait Until Keyword Succeeds    10s    0.2s
 ...    Shared Process Log Should Contain    ${dirs.user_data}    Extensions added from another source ms-python.python
 ```
 
-- **`Shared Process Log Should Contain`** is a user keyword in the example's resources. It reads `sharedprocess.log` of the newest session folder under `<user-data>/logs`.
+- **`Shared Process Log Should Contain`** is a user keyword in the example's resources. It reads the newest `sharedprocess.log` under `<user-data>/logs`. The newest folder there is not always the right one, because every call of the command-line script adds a log folder of its own, without `sharedprocess.log`.
 - **The text explains** why the wait is needed. If the report does not come, the extension should be uninstalled and installed again. If the script fails because `extensions.json` was busy, the call should be repeated.
 - **Rejected:** fixing the keyword with a wait, a repair and a retry. The user decided on 2026-10-11 that the libraries offer building blocks and the documentation shows how to combine them. A keyword that is only the script plus a wait does not fit that.
+
+### `extensions` of `Open VS Code` is removed as well
+
+`extensions` was the last place where the library installed extensions itself. On 2026-10-11 the user decided to leave installing to the tests. Then there is one way into an instance before it starts, `Execute VS Code CLI Command` plus `extensions_dir`, which also covers fixed versions, pre-releases and offline runs.
+
+- **The cost:** the common case, one extension at the start, takes two lines instead of one argument.
+- **Rejected:** keeping `extensions` as a shortcut. It would be a second way with fewer options, and it would keep a part of the library that installs.
 
 ### Recipes
 
 The guide `extensions.mdx` gets one section per way, each with a short snippet:
 
 - from source: `extension_development_path`;
-- at the start: `extensions`, with `id@version` and `--pre-release` through `Run VS Code CLI`;
-- into a running instance: `Run VS Code CLI` and the wait for the instance's report, as shown above;
+- at the start: prepared with `Execute VS Code CLI Command`, with `id@version` and `--pre-release`, and copied into `extensions_dir`;
+- into a running instance: `Execute VS Code CLI Command` and the wait for the instance's report, as shown above;
 - prepared once and copied for each test;
-- uninstalling and listing with `Run VS Code CLI` and `Get VS Code Instance Directories`;
+- uninstalling and listing with `Execute VS Code CLI Command` and `Get VS Code Instance Directories`;
 - disabling extensions with `args`: `--disable-extension`, `--disable-extensions`;
 - workspace recommendations read from `.vscode/extensions.json` with Robot's standard libraries;
 - profiles, with why they bring little for disposable test instances.

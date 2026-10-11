@@ -20,13 +20,13 @@ Rather than a keyword for every use case, the libraries offer the building block
 
 ## What Changes
 
-- **Run VS Code's command line:** a new keyword `Run VS Code CLI` in `VSCode.Helper`.
+- **Run VS Code's command line:** a new keyword `Execute VS Code CLI Command` in `VSCode.Helper`.
   - It runs the command-line script of a VS Code build, selected like `Open VS Code` does (`version`, `executable`, `cache_dir`), with any arguments.
   - The extensions directory and the user-data directory are required arguments, so a call cannot reach the user's own VS Code by accident.
   - It removes the variables that tie a process to a running VS Code from the environment.
   - It returns the script's output and fails with that output if the script reports an error.
-- **The directories of an instance:** a new keyword `Get VS Code Instance Directories` in `VSCode`. It returns the root, user-data and extensions directories of an instance that `Open VS Code` started, for use with `Run VS Code CLI` or to read its logs.
-- **A prepared extensions directory:** `Open VS Code` gets the argument `extensions_dir`. With it, the instance uses that directory instead of an empty one of its own. `extensions` are installed into it as well. Keeping instances apart is then up to the test, for example by copying a prepared directory for each test.
+- **The directories of an instance:** a new keyword `Get VS Code Instance Directories` in `VSCode`. It returns the root, user-data and extensions directories of an instance that `Open VS Code` started, for use with `Execute VS Code CLI Command` or to read its logs.
+- **A prepared extensions directory:** `Open VS Code` gets the argument `extensions_dir`. With it, the instance uses that directory instead of an empty one of its own. Keeping instances apart is then up to the test, for example by copying a prepared directory for each test.
 - **Recipes in the documentation:** the guide on extensions shows every way to get extensions into a test instance:
   - from source;
   - at the start;
@@ -37,8 +37,9 @@ Rather than a keyword for every use case, the libraries offer the building block
   - disabling extensions with `args`;
   - workspace recommendations;
   - profiles.
-- **Example:** the example project prepares the Python extension once with `Run VS Code CLI` and opens VS Code with a copy of it.
-- **`Install VS Code Extension` is removed.** It only ran the command-line script with the instance's directories, which `Run VS Code CLI` and `Get VS Code Instance Directories` now do. The recipe "into a running instance" explains the part the keyword never handled: waiting until the running instance reports the extension in its shared process log, and installing it again if the report does not come. The example's test "Installed While Running" uses this recipe.
+- **Example:** the example project prepares the Python extension once with `Execute VS Code CLI Command` and opens VS Code with a copy of it.
+- **`extensions` of `Open VS Code` is removed.** Installing extensions is left to the tests: `Execute VS Code CLI Command` installs them into a directory, and `Open VS Code` starts with a copy of it through `extensions_dir`. The example and the guide show this as the way to start VS Code with extensions.
+- **`Install VS Code Extension` is removed.** It only ran the command-line script with the instance's directories, which `Execute VS Code CLI Command` and `Get VS Code Instance Directories` now do. The recipe "into a running instance" explains the part the keyword never handled: waiting until the running instance reports the extension in its shared process log, and installing it again if the report does not come. The example's test "Installed While Running" uses this recipe.
 
 ## Capabilities
 
@@ -48,14 +49,14 @@ Rather than a keyword for every use case, the libraries offer the building block
 
 ### Modified Capabilities
 
-- `vscode-launch`: `Open VS Code` can use a given extensions directory, `Get VS Code Instance Directories` returns the directories of an instance, and the requirement "Install extensions into a running instance" is removed.
-- `vscode-examples`: the example shows extensions prepared once and copied for each test, installs into a running instance with the recipe, and the library's added keywords change.
+- `vscode-launch`: `Open VS Code` can use a given extensions directory, and `Get VS Code Instance Directories` returns the directories of an instance. The requirements "Dependency extensions" and "Install extensions into a running instance" are removed. "Open VS Code" and "VS Code forks" no longer install extensions themselves.
+- `vscode-examples`: the example prepares the Python extension once and copies it before the start, installs into a running instance with the recipe, and the library's added keywords change. The guide on dependency extensions becomes the guide on extensions.
 
 ## Impact
 
-- `packages/vscode/src/VSCode/Helper.py`: `Run VS Code CLI`.
-- `packages/vscode/src/VSCode/__init__.py`: the `extensions_dir` argument, `Get VS Code Instance Directories`, and the removal of `Install VS Code Extension`.
-- `packages/vscode/src/VSCode/instance.py`: the instance directories with a given extensions directory.
+- `packages/vscode/src/VSCode/Helper.py`: `Execute VS Code CLI Command`.
+- `packages/vscode/src/VSCode/__init__.py`: the `extensions_dir` argument, `Get VS Code Instance Directories`, and the removal of `extensions` and `Install VS Code Extension`.
+- `packages/vscode/src/VSCode/instance.py`: the instance directories with a given extensions directory, and the removal of `install_extensions`.
 - Unit tests in `packages/vscode/tests/`, acceptance tests in `packages/vscode/atest/`, where `install_extension.robot` is replaced.
-- `docs/src/content/docs/guides/extensions.mdx`, `docs/src/content/docs/getting-started/vscode.md` and the example project in `examples/vscode-extension/`.
+- `docs/src/content/docs/guides/extensions.mdx`, `vscode-forks.md`, `workbench-keywords.mdx`, `docs/src/content/docs/getting-started/vscode.md` and the example project in `examples/vscode-extension/`, including its video tests.
 - No change to the Browser library.
