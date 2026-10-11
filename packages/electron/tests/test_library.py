@@ -180,3 +180,20 @@ def test_null_color_scheme_leaves_it_to_the_application(fake_launch, tmp_path):
     electron.new_electron_application(tmp_path / "bin" / "electron", color_scheme=ColorScheme["null"])
 
     assert calls[0]["launchOptions"] == {}
+
+
+def test_evaluates_in_the_main_process_of_the_active_application(fake_launch, monkeypatch):
+    electron, calls = fake_launch
+    monkeypatch.setattr(electron, "get_browser_ids", lambda browser: ["browser=app"])
+
+    electron.evaluate_in_main_process("({ app }) =>", "app.getName()")
+
+    assert calls[0] == {"browserId": "browser=app", "script": "({ app }) =>\napp.getName()", "arg": None}
+
+
+def test_evaluates_in_the_main_process_of_a_given_application(fake_launch):
+    electron, calls = fake_launch
+
+    electron.evaluate_in_main_process("(electron, arg) => arg", arg={"answer": 42}, browser="browser=other")
+
+    assert calls[0] == {"browserId": "browser=other", "script": "(electron, arg) => arg", "arg": {"answer": 42}}

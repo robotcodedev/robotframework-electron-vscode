@@ -25,7 +25,7 @@ VS Code's windows are ordinary Browser pages, so most Browser keywords work on t
 | `Drag And Drop` in the explorer | Needs a setting | `explorer.confirmDragAndDrop: false`, otherwise VS Code asks for confirmation. |
 | File dialogs | Needs a setting | `files.simpleDialog.enable: true` makes VS Code use its own dialog. |
 | Maximised windows | Needs a window manager | See [CI and the Linux display](../ci-and-display/). |
-| Native dialogs and message boxes | Does not work | They are outside the page. |
+| Native dialogs and message boxes | Needs the main process | They are outside the page. `Evaluate In Main Process` replaces them before VS Code opens them, see [Test an Electron app](../../getting-started/electron/#the-main-process). |
 | `Save Page As PDF` | Does not work | Electron does not provide Chromium's PDF printing (`Page.printToPDF`). |
 | Playwright's `slowMo` | Does not work | Playwright has no `slowMo` for Electron; use presenter mode. |
 | Tracing and HAR recording | Works | `tracing` and `record_har` of `New Electron Application` and `Open VS Code`, see [Traces and HAR files](../traces/). |

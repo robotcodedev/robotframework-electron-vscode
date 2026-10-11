@@ -1,16 +1,26 @@
 // Minimal Electron app for the acceptance tests of the Electron library.
 // Start with `--no-window` to get an app that never opens a window,
 // `--dark` to switch its theme to dark, and `--page=<file>` to load another page.
-const { app, BrowserWindow, nativeTheme } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, nativeTheme } = require('electron');
 const path = require('node:path');
 
 const pageArgument = process.argv.find((arg) => arg.startsWith('--page='));
 const page = pageArgument ? pageArgument.slice('--page='.length) : 'index.html';
 
+// Calls dialog.showOpenDialog through the module, so that a test can replace it.
+ipcMain.handle('open-file', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openFile'] });
+    return result.canceled ? '' : result.filePaths[0];
+});
+
 app.whenReady().then(() => {
     if (process.argv.includes('--no-window')) return;
     if (process.argv.includes('--dark')) nativeTheme.themeSource = 'dark';
-    const win = new BrowserWindow({ width: 800, height: 600 });
+    const win = new BrowserWindow({
+        width: 800,
+        height: 600,
+        webPreferences: { preload: path.join(__dirname, 'preload.js') },
+    });
     win.loadFile(path.join(__dirname, page), {
         query: {
             args: JSON.stringify(process.argv.slice(2)),

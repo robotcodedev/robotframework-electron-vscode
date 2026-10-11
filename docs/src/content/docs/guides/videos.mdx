@@ -45,6 +45,13 @@ The example project's `video.robot` does this. Its keyword reads the screen size
 
 Without a window manager, `Set Viewport Size    1920    1080` after `Open VS Code` makes the workbench fill the frame instead. It emulates the size inside the page and leaves the window as it is.
 
+The window itself can be sized from VS Code's main process as well; `window` is the window of the active page. Without a window manager, a window stays at least one pixel smaller than the screen, so give the window and the video a size below the screen size:
+
+```robotframework
+Open VS Code    record_video={'size': {'width': 1600, 'height': 900}}
+Evaluate In Main Process    (electron, size, window) => window.setBounds(size)    arg=${{ {"x": 0, "y": 0, "width": 1600, "height": 900} }}
+```
+
 ## ffmpeg
 
 Playwright needs its own ffmpeg to record. It is installed together with Browser's browsers, and with Playwright's `install chromium`. If Browser was set up without browsers, install it alone with Playwright's `install ffmpeg` command. Without ffmpeg, the application's first window does not load, and the start fails after its timeout.

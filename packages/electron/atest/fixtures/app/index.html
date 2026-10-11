@@ -8,12 +8,14 @@
     <h1>Electron Fixture</h1>
     <button id="change">Click me</button>
     <button id="open">Open second window</button>
+    <button id="open-file">Open file</button>
     <dl>
         <dt>Arguments</dt><dd id="args"></dd>
         <dt>Working directory</dt><dd id="cwd"></dd>
         <dt>ROBOT_TEST_VAR</dt><dd id="test-var"></dd>
         <dt>ROBOT_ONLY_IN_RUN</dt><dd id="run-only-var"></dd>
         <dt>ELECTRON_RUN_AS_NODE</dt><dd id="run-as-node"></dd>
+        <dt>Opened file</dt><dd id="opened"></dd>
     </dl>
     <script>
         const query = new URLSearchParams(location.search);
@@ -27,6 +29,9 @@
         });
         document.getElementById('open').addEventListener('click', () => {
             window.open('second.html', '_blank');
+        });
+        document.getElementById('open-file').addEventListener('click', async () => {
+            document.getElementById('opened').textContent = await window.fixture.openFile();
         });
     </script>
 </body>

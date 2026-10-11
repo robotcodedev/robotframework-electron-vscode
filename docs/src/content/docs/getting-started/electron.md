@@ -58,6 +58,29 @@ App From Source
 - Windows that the app opens later can be selected with `Switch Page    NEW`.
 - `Close Electron Application`, `Close Browser`, `Close Context` and Browser's automatic closing all end the application.
 
+## The main process
+
+Browser keywords reach the windows, but not the application's main process. `Evaluate In Main Process` runs a JavaScript function there. The function gets the `electron` module, the keyword's `arg`, and the `BrowserWindow` that shows the active page.
+
+Native dialogs, such as file dialogs and message boxes, are outside the page, so no Browser keyword can click them. Replace them before the application opens them:
+
+```robotframework
+Evaluate In Main Process    ({ dialog }, path) => {
+...        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] });
+...    }
+...    arg=${EXECDIR}/data/report.csv
+Click    text=Open report
+```
+
+`showSaveDialog` and `showMessageBox` are replaced the same way. The replacement takes effect when the application calls the dialog through the module, as in `dialog.showOpenDialog(…)`, and lasts until the application ends.
+
+The function can also read the application's state or size the window of the active page:
+
+```robotframework
+${version} =    Evaluate In Main Process    ({ app }) => app.getVersion()
+Evaluate In Main Process    (electron, size, window) => window.setBounds(size)    arg=${{ {"width": 1280, "height": 720} }}
+```
+
 ## Launch options
 
 `New Electron Application` takes some of the options that `New Context` has for a web browser. They apply from the start, so another value means starting the application again.

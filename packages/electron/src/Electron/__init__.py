@@ -235,9 +235,7 @@ class Electron(Browser):
         executable = os.path.abspath(found)
         if env is None:
             env = {k: v for k, v in os.environ.items() if k != "ELECTRON_RUN_AS_NODE"}
-        if not self._electron_extension_loaded:
-            self.init_js_extension(_JS_MODULE)
-            self._electron_extension_loaded = True
+        self._load_electron_extension()
         recording = self.adopted_context_options(tracing=tracing, recordVideo=record_video, recordHar=record_har)
         # Playwright's names. Options that are not given stay out, so that electron.js's defaults apply.
         launch_options = {
@@ -290,6 +288,64 @@ class Electron(Browser):
         | `Close Electron Application`    ${app}
         """
         self.close_browser(browser)
+
+    @keyword
+    def evaluate_in_main_process(
+        self, *function: str, arg: Any = None, browser: SelectionType | str = SelectionType.CURRENT
+    ) -> Any:
+        """Runs a JavaScript function in the main process of an Electron application and returns its result.
+
+        Browser keywords reach the application's windows, but not its main
+        process. There, a test can replace a native dialog before the
+        application opens it, size or focus a window, click a menu item, or
+        read the application's state. The function runs as with Playwright's
+        ``electronApplication.evaluate``.
+
+        *Arguments:*
+          - ``function``: A JavaScript function as text. Several arguments are
+                joined with line breaks, as for `Evaluate JavaScript`. The
+                function gets three parameters: the ``electron`` module,
+                ``arg``, and ``window``, the ``BrowserWindow`` that shows the
+                active page. For a ``<webview>`` or a ``WebContentsView``, that
+                is the window they are shown in. ``window`` is ``null`` if the
+                active page is not one of the application's, for example while
+                another browser is active. The function may return a promise.
+          - ``arg``: A JSON-serialisable value that the function gets.
+          - ``browser``: ``CURRENT`` for the active application, or a browser
+                id that `New Electron Application` returned.
+
+        *Returns:*
+          The function's result, which must be JSON-serialisable. Objects of
+          the main process, such as a ``BrowserWindow``, cannot be returned.
+          ``None`` if the function returns nothing.
+
+        *Raises:*
+          - ``AssertionError``: The browser is not an application started by
+                `New Electron Application`, or the function throws an error.
+
+        Example:
+        | ${name} =    `Evaluate In Main Process`    ({ app }) => app.getName()
+        | `Evaluate In Main Process`    ({ dialog }, path) => {
+        | ...        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] });
+        | ...    }
+        | ...    arg=${EXECDIR}/data/report.csv
+        | `Evaluate In Main Process`    (electron, size, window) => window.setBounds(size)
+        | ...    arg=${{ {"width": 1280, "height": 720} }}
+        """
+        if SelectionType.create(browser) is SelectionType.CURRENT:
+            active = self.get_browser_ids(SelectionType.CURRENT)
+            browser_id = active[0] if active else "CURRENT"
+        else:
+            browser_id = str(browser)
+        self._load_electron_extension()
+        return self.call_js_keyword(
+            "robotframeworkElectronEvaluate", browserId=browser_id, script="\n".join(function), arg=arg
+        )
+
+    def _load_electron_extension(self) -> None:
+        if not self._electron_extension_loaded:
+            self.init_js_extension(_JS_MODULE)
+            self._electron_extension_loaded = True
 
 
 Electron.__doc__ = cleandoc(_INTRO) + "\n\n" + browser_sections()
