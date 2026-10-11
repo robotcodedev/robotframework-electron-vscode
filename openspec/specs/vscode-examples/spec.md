@@ -11,7 +11,7 @@ The `VSCode` library SHALL NOT provide keywords or locators for parts of the VS 
 
 #### Scenario: Keywords of the library
 - **WHEN** libdoc generates the documentation of `VSCode`
-- **THEN** the only keywords it adds to those of `Electron` are `Open VS Code`, `Close VS Code` and `Install VS Code Extension`
+- **THEN** the only keywords it adds to those of `Electron` are `Open VS Code`, `Close VS Code` and `Get VS Code Instance Directories`
 
 ### Requirement: Examples for driving the workbench
 The repository SHALL provide an example project, `examples/vscode-extension`, whose own resources define keywords for running a command through the command palette, selecting a quick pick item, reading notifications, acting inside a webview, opening and editing files, using VS Code's file dialog and reading the terminal.
@@ -52,7 +52,7 @@ The example's locators SHALL be variables of its resources, so that a project ca
 - **THEN** the example's keywords use the locator from the profile
 
 ### Requirement: Guides show the example
-The documentation site SHALL have a guide on writing your own workbench keywords and locators, a guide on profiles per VS Code version and a guide on dependency extensions, all of which include the example's files. The example SHALL keep the keywords and locators of each workbench part in a resource file of its own, so that a guide section shows a whole file.
+The documentation site SHALL have a guide on writing your own workbench keywords and locators, a guide on profiles per VS Code version and a guide on extensions, all of which include the example's files. The example SHALL keep the keywords and locators of each workbench part in a resource file of its own, so that a guide section shows a whole file.
 
 #### Scenario: Guide on workbench keywords
 - **WHEN** the documentation site is built
@@ -64,7 +64,7 @@ The documentation site SHALL have a guide on writing your own workbench keywords
 
 #### Scenario: Guide on dependency extensions
 - **WHEN** the documentation site is built
-- **THEN** the guide on dependency extensions shows the example's Python suite from `examples/vscode-extension`
+- **THEN** the guide on extensions shows the example's Python suite and its resource for extensions from `examples/vscode-extension`
 
 ### Requirement: Examples run with the repository's tests
 The examples SHALL run as part of the repository's tests, so that they keep working with the current libraries and VS Code.
@@ -115,14 +115,14 @@ The example SHALL open every VS Code instance on a fresh copy of its workspace i
 - **THEN** the workspace in `examples/vscode-extension` is unchanged
 
 ### Requirement: Dependency extensions in the example
-The example SHALL show a Marketplace extension that the extension under test depends on, `ms-python.python`, both installed when VS Code starts and installed into a running instance.
+The example SHALL show a Marketplace extension that the extension under test depends on, `ms-python.python`, both prepared once with `Execute VS Code CLI Command` and copied into a VS Code before it starts, and installed into a running VS Code with `Execute VS Code CLI Command`, waiting until VS Code reports it.
 
 #### Scenario: Installed at the start
-- **WHEN** the example opens VS Code with `ms-python.python` in `extensions` and runs `hello.py` with the Python extension's command
+- **WHEN** the example prepares `ms-python.python` once, opens VS Code with a copy of the prepared directory as `extensions_dir`, and runs `hello.py` with the Python extension's command
 - **THEN** the terminal shows `Hello World`
 
 #### Scenario: Installed while running
-- **WHEN** the example installs `ms-python.python` into a running instance with `Install VS Code Extension` and runs `hello.py` with the Python extension's command
+- **WHEN** the example installs `ms-python.python` into a running instance with `Execute VS Code CLI Command`, waits until the instance's shared process log reports it, and runs `hello.py` with the Python extension's command
 - **THEN** the terminal shows `Hello World`
 
 ### Requirement: Screenshots in the documentation

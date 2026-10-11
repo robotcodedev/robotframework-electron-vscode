@@ -29,8 +29,8 @@ The `VSCode` library SHALL provide every keyword of the `Electron` library, and 
 - **THEN** that installation is started and nothing is downloaded
 
 #### Scenario: Executable behind a symbolic link
-- **WHEN** `Open VS Code` is called with a symbolic link to a VS Code executable and with `extensions`
-- **THEN** VS Code starts, and the extensions are installed with the command-line script of that VS Code
+- **WHEN** `Open VS Code` is called with a symbolic link to a VS Code executable
+- **THEN** the VS Code that the link points to starts
 
 #### Scenario: Workbench does not become ready
 - **WHEN** the workbench does not become ready within the time allowed
@@ -53,17 +53,6 @@ Each instance SHALL use its own user-data and extensions directories, so that ne
 #### Scenario: Development extension is active
 - **WHEN** `Open VS Code` is called with the folder of an extension
 - **THEN** the commands that the extension contributes are available in the command palette
-
-### Requirement: Dependency extensions
-`Open VS Code` SHALL install given extensions, as Marketplace identifiers or `.vsix` files, into the instance's extensions directory before it starts. An installation that does not finish within a time limit SHALL fail with an error instead of waiting forever.
-
-#### Scenario: Marketplace extension
-- **WHEN** `Open VS Code` is called with the identifier of a Marketplace extension
-- **THEN** that extension is installed in the instance and is not installed in the user's own VS Code
-
-#### Scenario: Installation does not finish
-- **WHEN** the command-line script does not finish installing an extension within the time limit
-- **THEN** the keyword fails with an error that names the extension
 
 ### Requirement: Settings
 `Open VS Code` SHALL write given settings into the instance's user settings before it starts. By default, the instance SHALL start without welcome page, release notes, update checks, telemetry or workspace trust prompts. Given settings SHALL override these defaults.
@@ -98,15 +87,15 @@ The instance directories, including VS Code's logs, SHALL be created under the o
 - **THEN** the VS Code process of the instance has exited when the keyword returns
 
 ### Requirement: VS Code forks
-`Open VS Code` SHALL start VS Code forks, such as VSCodium, that are given as executable. It SHALL install extensions for them with the fork's own command-line script, and so from the fork's own extension gallery.
+`Open VS Code` SHALL start VS Code forks, such as VSCodium, that are given as executable. Given the same executable, `Execute VS Code CLI Command` SHALL install extensions for them with the fork's own command-line script, and so from the fork's own extension gallery.
 
 #### Scenario: VSCodium
 - **WHEN** `Open VS Code` is called with the executable of VSCodium
 - **THEN** the workbench is ready and Browser keywords act on it
 
 #### Scenario: Extensions for a fork
-- **WHEN** `Open VS Code` is called with the executable of VSCodium and an extension identifier in `extensions`
-- **THEN** the extension is installed into the instance with VSCodium's command-line script
+- **WHEN** `Execute VS Code CLI Command` is called with the executable of VSCodium and `--install-extension`
+- **THEN** the extension is installed with VSCodium's command-line script, from VSCodium's extension gallery
 
 ### Requirement: Earlier runs' instance directories are removed
 When a test run starts, the library SHALL remove the instance directories that earlier runs left in the run's output directory, before the run opens its first instance. Instance directories of the current run SHALL be kept.
@@ -118,25 +107,6 @@ When a test run starts, the library SHALL remove the instance directories that e
 #### Scenario: Instances of the same run
 - **WHEN** two suites of one run each open VS Code
 - **THEN** the instance directories of both suites are still there at the end of the run
-
-### Requirement: Install extensions into a running instance
-`Install VS Code Extension` SHALL install a Marketplace extension or a `.vsix` file into a running instance that `Open VS Code` started, the active one or the one with a given browser id. It SHALL install the way `Open VS Code` installs its `extensions`, and SHALL return once the installation has finished.
-
-#### Scenario: Extension in a running instance
-- **WHEN** `Install VS Code Extension` installs a `.vsix` file into a running instance
-- **THEN** the commands that the extension contributes become available in that instance without a restart
-
-#### Scenario: Isolation
-- **WHEN** `Install VS Code Extension` installs an extension into an instance
-- **THEN** the extension is not installed in the user's own VS Code or in other instances
-
-#### Scenario: Not an instance of Open VS Code
-- **WHEN** `Install VS Code Extension` is called for a browser that `Open VS Code` did not start
-- **THEN** it fails with a message that names the browser, and nothing is installed
-
-#### Scenario: Closed instance
-- **WHEN** `Install VS Code Extension` is called with the browser id of an instance that has been closed
-- **THEN** it fails with a message that names the browser, and nothing is installed
 
 ### Requirement: Video recording
 `Open VS Code` SHALL accept `record_video` and record the instance's windows as `New Electron Application` does.
@@ -169,3 +139,25 @@ The library's own keywords SHALL document every argument, their return value and
 #### Scenario: Keyword documentation
 - **WHEN** libdoc generates the documentation of `VSCode` or `VSCode.Helper`
 - **THEN** every argument of their own keywords has a description, keywords that return a value document it, and keywords that raise an exception for invalid input document it
+
+### Requirement: Given extensions directory
+`Open VS Code` SHALL accept an extensions directory and SHALL use it for the instance instead of an empty directory of its own. The instance's user-data directory SHALL stay its own.
+
+#### Scenario: Prepared extensions
+- **WHEN** `Open VS Code` is called with `extensions_dir` pointing to a directory that holds an installed extension
+- **THEN** the instance starts with that extension, and nothing is downloaded for it
+
+#### Scenario: Without extensions_dir
+- **WHEN** `Open VS Code` is called without `extensions_dir`
+- **THEN** the instance uses an empty extensions directory of its own, as before
+
+### Requirement: Instance directories
+`Get VS Code Instance Directories` SHALL return the root, user-data and extensions directories of an instance that `Open VS Code` started, the active one or the one with a given browser id. It SHALL fail for a browser that `Open VS Code` did not start or that has been closed.
+
+#### Scenario: Directories of the active instance
+- **WHEN** `Get VS Code Instance Directories` is called after `Open VS Code`
+- **THEN** it returns the directories that the instance uses, including a given `extensions_dir`
+
+#### Scenario: Not an instance of Open VS Code
+- **WHEN** `Get VS Code Instance Directories` is called for a browser that `Open VS Code` did not start
+- **THEN** it fails with a message that names the browser
