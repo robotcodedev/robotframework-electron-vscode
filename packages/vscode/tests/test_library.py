@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from Browser import playwright
-from Browser.utils.data_types import AutoClosingLevel
+from Browser.utils.data_types import AutoClosingLevel, ColorScheme
 from robot.libdoc import LibraryDocumentation
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
@@ -98,6 +98,37 @@ def test_keeps_the_error_of_the_workbench_when_closing_fails(monkeypatch, tmp_pa
     with pytest.raises(TimeoutError, match="workbench not ready"):
         vscode.open_vs_code(executable=executable)
     assert vscode._instances() == {}
+
+
+def test_passes_the_launch_options_on(monkeypatch, tmp_path):
+    executable = tmp_path / "code"
+    executable.write_text("")
+    executable.chmod(0o755)
+    vscode = import_library()
+    vscode.outputdir = str(tmp_path / "output")
+    started: dict[str, Any] = {}
+
+    def new_electron_application(*args, **kwargs):
+        started.update(kwargs)
+        return ("browser", "context", {})
+
+    monkeypatch.setattr(vscode, "new_electron_application", new_electron_application)
+    monkeypatch.setattr(vscode, "wait_for_elements_state", lambda *args, **kwargs: None)
+
+    vscode.open_vs_code(
+        executable=executable,
+        color_scheme=ColorScheme.dark,
+        locale="pt-BR",
+        timezone_id="Asia/Tokyo",
+        bypass_csp=True,
+    )
+
+    assert {key: started[key] for key in ("color_scheme", "locale", "timezone_id", "bypass_csp")} == {
+        "color_scheme": ColorScheme.dark,
+        "locale": "pt-BR",
+        "timezone_id": "Asia/Tokyo",
+        "bypass_csp": True,
+    }
 
 
 def test_converts_browser_import_arguments():

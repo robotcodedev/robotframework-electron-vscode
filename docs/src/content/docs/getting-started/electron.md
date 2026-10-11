@@ -58,6 +58,18 @@ App From Source
 - Windows that the app opens later can be selected with `Switch Page    NEW`.
 - `Close Electron Application`, `Close Browser`, `Close Context` and Browser's automatic closing all end the application.
 
+## Launch options
+
+`New Electron Application` takes some of the options that `New Context` has for a web browser. They apply from the start, so another value means starting the application again.
+
+```robotframework
+New Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=pt-BR    timezone_id=Asia/Tokyo
+```
+
+- **`color_scheme`:** by default, the application decides its color scheme, as it does outside of tests. With `light` or `dark`, its windows report that color scheme for `prefers-color-scheme`. Set it for tests that compare screenshots, so that the application looks the same on every machine.
+- **`locale` and `timezone_id`:** they set the language that the windows report, their number and date formats, and their time zone. By default, they follow the system, so a test run on your machine can differ from CI. They do not reach the main process: there, `--lang` in `args` sets the locale and `TZ` in `env` the time zone.
+- **`bypass_csp`:** the windows ignore their Content Security Policy, including Trusted Types. Browser features that add a script to the page need it in applications with a strict policy, for example `Record Selector` in VS Code. It is off by default, because it also switches off the policy of webviews and frames, and a test would then miss policy problems of the application.
+
 ## Next steps
 
 - [CI and the Linux display](../../guides/ci-and-display/) for running without a desktop.

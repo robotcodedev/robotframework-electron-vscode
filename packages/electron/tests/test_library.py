@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from Browser import Browser
-from Browser.utils.data_types import AutoClosingLevel
+from Browser.utils.data_types import AutoClosingLevel, ColorScheme
 from robot.running.arguments.typeinfo import TypeInfo
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
@@ -145,3 +145,38 @@ def test_har_options_come_from_browser(fake_launch, tmp_path):
     electron.new_electron_application(tmp_path / "bin" / "electron", record_har={"path": "network.har"})
 
     assert calls[0]["recordHar"] == {"path": str((tmp_path / "network.har").resolve())}
+
+
+def test_no_launch_options_by_default(fake_launch, tmp_path):
+    electron, calls = fake_launch
+
+    electron.new_electron_application(tmp_path / "bin" / "electron")
+
+    assert calls[0]["launchOptions"] == {}
+
+
+def test_launch_options_have_playwrights_names(fake_launch, tmp_path):
+    electron, calls = fake_launch
+
+    electron.new_electron_application(
+        tmp_path / "bin" / "electron",
+        color_scheme=ColorScheme.dark,
+        locale="de-DE",
+        timezone_id="Asia/Tokyo",
+        bypass_csp=True,
+    )
+
+    assert calls[0]["launchOptions"] == {
+        "colorScheme": "dark",
+        "locale": "de-DE",
+        "timezoneId": "Asia/Tokyo",
+        "bypassCSP": True,
+    }
+
+
+def test_null_color_scheme_leaves_it_to_the_application(fake_launch, tmp_path):
+    electron, calls = fake_launch
+
+    electron.new_electron_application(tmp_path / "bin" / "electron", color_scheme=ColorScheme["null"])
+
+    assert calls[0]["launchOptions"] == {}

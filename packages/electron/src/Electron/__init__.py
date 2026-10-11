@@ -11,7 +11,7 @@ from typing import Any, TypedDict
 
 from Browser import Browser
 from Browser.utils import logger
-from Browser.utils.data_types import NewPageDetails, RecordHar, SelectionType, ViewportDimensions
+from Browser.utils.data_types import ColorScheme, NewPageDetails, RecordHar, SelectionType, ViewportDimensions
 from robotlibcore import keyword
 
 from ._docs import browser_import_arguments, browser_sections
@@ -145,6 +145,10 @@ class Electron(Browser):
         record_video: RecordVideo | None = None,
         record_har: RecordHar | None = None,
         tracing: bool | Path | None = None,
+        color_scheme: ColorScheme | None = None,
+        locale: str | None = None,
+        timezone_id: str | None = None,
+        bypass_csp: bool = False,
     ) -> tuple[str, str, NewPageDetails]:
         """Starts an Electron application and makes its first window the active page.
 
@@ -189,6 +193,25 @@ class Electron(Browser):
                 ``True`` traces every application. The trace is saved when the
                 application closes and shows the keyword calls as groups. Open
                 it with ``rfbrowser show-trace /path/to/trace.zip``.
+          - ``color_scheme``: The color scheme that the windows report for
+                ``prefers-color-scheme``: ``light`` or ``dark``. By default,
+                and with ``null``, the application decides, as it does outside
+                of tests. Set it for tests that compare screenshots, so that
+                they look the same on every machine.
+          - ``locale``: The locale of the windows, for example ``de-DE``. It
+                sets the language that the pages report and their number and
+                date formats. Defaults to the system's. The main process keeps
+                the system's locale; ``--lang`` in ``args`` sets it there.
+          - ``timezone_id``: The time zone of the windows, for example
+                ``Europe/Berlin``. Defaults to the system's. The main process
+                keeps the system's time zone; ``TZ`` in ``env`` sets it there.
+          - ``bypass_csp``: Bypasses the Content Security Policy of the
+                windows, including Trusted Types, as ``bypassCSP`` of
+                `New Context`. Features that add scripts to a page need it in
+                applications with a strict policy, for example `Record Selector`
+                in VS Code. It also applies to webviews and frames, so that
+                policy problems of the application go unnoticed. Switch it on
+                only where a feature needs it.
 
         *Returns:*
           A tuple of browser id, context id and page details of the first
@@ -203,6 +226,7 @@ class Electron(Browser):
         | `Get Title`    ==    My App
         | `New Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
         | `New Electron Application`    /opt/my-app/my-app    tracing=True    record_har={'path': 'my-app.har'}
+        | `New Electron Application`    /opt/my-app/my-app    color_scheme=dark    locale=de-DE
         """
         found = shutil.which(str(executable_path))
         if found is None:
@@ -215,6 +239,13 @@ class Electron(Browser):
             self.init_js_extension(_JS_MODULE)
             self._electron_extension_loaded = True
         recording = self.adopted_context_options(tracing=tracing, recordVideo=record_video, recordHar=record_har)
+        # Playwright's names. Options that are not given stay out, so that electron.js's defaults apply.
+        launch_options = {
+            "colorScheme": None if color_scheme is None or color_scheme.name == "null" else color_scheme.name,
+            "locale": locale,
+            "timezoneId": timezone_id,
+            "bypassCSP": bypass_csp or None,
+        }
         adopted = self.call_js_keyword(
             "robotframeworkElectronLaunch",
             executablePath=executable,
@@ -223,6 +254,7 @@ class Electron(Browser):
             cwd=os.path.abspath(cwd or os.curdir),
             timeout=self.get_timeout(timeout),
             **recording,
+            launchOptions={name: value for name, value in launch_options.items() if value is not None},
             defaultTimeout=int(self.timeout),
         )
         logger.info(f"Started Electron application {executable} as {adopted['browserId']}")

@@ -15,6 +15,7 @@ HARNESS = """
 const { robotframeworkElectronLaunch } = require(process.argv[2]);
 const scenario = process.argv[3];
 const calls = [];
+const options = {};
 const app = {
     firstWindow: async () => {
         calls.push('firstWindow');
@@ -30,21 +31,24 @@ const app = {
 };
 const playwright = {
     _electron: {
-        launch: async () => {
+        launch: async (launchOptions) => {
             calls.push('launch');
+            options.launch = launchOptions;
             return app;
         },
     },
 };
-async function adoptContext() {
+async function adoptContext(context, adoptOptions) {
     calls.push('adoptContext');
+    options.adopt = adoptOptions.contextOptions;
     if (scenario === 'adopt-fails' || scenario === 'close-fails') throw new Error('adopt failed');
     return { browserId: 'browser', contextId: 'context', pageId: 'page' };
 }
 const hook = scenario === 'no-hook' ? 'RESERVED' : adoptContext;
-robotframeworkElectronLaunch('/electron', [], {}, '/cwd', 1000, null, null, null, 7000, playwright, hook)
+const launchOptions = scenario === 'options' ? { colorScheme: 'dark', locale: 'de-DE', bypassCSP: true } : {};
+robotframeworkElectronLaunch('/electron', [], {}, '/cwd', 1000, null, null, null, launchOptions, 7000, playwright, hook)
     .then((result) => ({ result }), (error) => ({ error: error.message }))
-    .then((outcome) => console.log(JSON.stringify({ ...outcome, calls })));
+    .then((outcome) => console.log(JSON.stringify({ ...outcome, calls, options })));
 """
 
 
@@ -63,6 +67,21 @@ def test_returns_the_adopted_context(tmp_path):
 
     assert outcome["result"] == {"browserId": "browser", "contextId": "context", "pageId": "page", "videoPath": None}
     assert outcome["calls"] == ["launch", "firstWindow", "setDefaultTimeout 7000", "adoptContext"]
+
+
+def test_application_decides_the_color_scheme_by_default(tmp_path):
+    outcome = run(tmp_path, "success")
+
+    assert outcome["options"]["launch"]["colorScheme"] is None
+    assert outcome["options"]["adopt"] == {"acceptDownloads": True, "colorScheme": None}
+
+
+def test_launch_options_reach_playwright_and_browser(tmp_path):
+    outcome = run(tmp_path, "options")
+
+    expected = {"acceptDownloads": True, "colorScheme": "dark", "locale": "de-DE", "bypassCSP": True}
+    assert {key: outcome["options"]["launch"][key] for key in expected} == expected
+    assert outcome["options"]["adopt"] == expected
 
 
 def test_starts_nothing_without_the_hook(tmp_path):

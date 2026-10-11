@@ -17,6 +17,7 @@ VS Code's windows are ordinary Browser pages, so most Browser keywords work on t
 | Copy and paste in the editor | Works | |
 | `Get Console Log`, `Get Page Errors` | Works | The workbench's console messages. |
 | `Highlight Elements`, `Set Presenter Mode` | Works | Presenter mode also serves as slow motion. |
+| `Record Selector` | Needs an option | `bypass_csp=True` of `Open VS Code`. The workbench requires Trusted Types for scripts, and the recorder adds a script to the page. |
 | A second window: `Switch Page    NEW`, `Close Page` | Works | See `windows.robot` in the example. |
 | Locator handlers (`Add Locator Handler Custom`) | Works | See below. |
 | `Start Coverage`, `Stop Coverage` | Works | JavaScript coverage of the workbench. |

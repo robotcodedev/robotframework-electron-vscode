@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from Browser.utils import logger
-from Browser.utils.data_types import ElementState, NewPageDetails, RecordHar, SelectionType
+from Browser.utils.data_types import ColorScheme, ElementState, NewPageDetails, RecordHar, SelectionType
 from robot.utils import DotDict
 from robotlibcore import keyword
 
@@ -144,6 +144,10 @@ class VSCode(Electron):
         record_video: RecordVideo | None = None,
         record_har: RecordHar | None = None,
         tracing: bool | Path | None = None,
+        color_scheme: ColorScheme | None = None,
+        locale: str | None = None,
+        timezone_id: str | None = None,
+        bypass_csp: bool = False,
     ) -> tuple[str, str, NewPageDetails]:
         """Starts an isolated VS Code instance and returns once its workbench is ready.
 
@@ -191,6 +195,19 @@ class VSCode(Electron):
                 HAR file, as for `New Electron Application`.
           - ``tracing``: Records a Playwright trace of the workbench, as for
                 `New Electron Application`.
+          - ``color_scheme``: The color scheme that the windows report for
+                ``prefers-color-scheme``, as for `New Electron Application`.
+                VS Code's theme comes from its settings, not from this option.
+          - ``locale``: The locale of the windows, as for
+                `New Electron Application`. It sets their number and date
+                formats, but not VS Code's display language, which comes from
+                ``--locale`` in ``args`` and a language pack.
+          - ``timezone_id``: The time zone of the windows, as for
+                `New Electron Application`.
+          - ``bypass_csp``: Bypasses the Content Security Policy of the
+                windows, as for `New Electron Application`. `Record Selector`
+                needs it, because the workbench requires Trusted Types for
+                scripts.
 
         *Returns:*
           A tuple of browser id, context id and page details of the workbench
@@ -221,6 +238,10 @@ class VSCode(Electron):
             record_video=record_video,
             record_har=record_har,
             tracing=tracing,
+            color_scheme=color_scheme,
+            locale=locale,
+            timezone_id=timezone_id,
+            bypass_csp=bypass_csp,
         )
         try:
             self.wait_for_elements_state(".monaco-workbench", ElementState.visible, timeout)

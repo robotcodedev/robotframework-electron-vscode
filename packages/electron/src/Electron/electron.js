@@ -2,14 +2,15 @@
 // The function name is prefixed because Browser resolves extension functions
 // by name across all loaded modules.
 
-async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, defaultTimeout, playwright, adoptContext) {
+async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, launchOptions, defaultTimeout, playwright, adoptContext) {
     // Browser releases without the hook pass a placeholder instead of a function.
     if (typeof adoptContext !== 'function') {
         throw new Error('The Browser library has no adoptContext hook, which the Electron library needs to take over the application.');
     }
     // The options of the application's browser context, as Playwright gets them.
     // Browser keeps them with the context, so that keywords such as Download work.
-    const contextOptions = { acceptDownloads: true };
+    // Without colorScheme, Playwright would emulate a light one; null leaves it to the application.
+    const contextOptions = { acceptDownloads: true, colorScheme: null, ...launchOptions };
     if (recordVideo) contextOptions.recordVideo = recordVideo;
     if (recordHar) contextOptions.recordHar = recordHar;
     const app = await playwright._electron.launch({
