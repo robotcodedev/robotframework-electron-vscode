@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: d-biehl/robotframework-browser
-          ref: adopt-context-hook
+          ref: adopted-context-recording
           path: robotframework-browser
 
       - uses: actions/setup-node@v7
@@ -68,13 +68,13 @@ jobs:
         with:
           path: robotframework-electron-vscode
 
-      # Until the adoptContext hook is in a Browser release, the workspace takes
-      # robotframework-browser from a clone next to the repository.
+      # Until a Browser release contains the adoptContext hook and its follow-up, the
+      # workspace takes robotframework-browser from a clone of the fork next to the repository.
       - name: Check out the Browser library with the adoptContext hook
         uses: actions/checkout@v7
         with:
           repository: d-biehl/robotframework-browser
-          ref: adopt-context-hook
+          ref: adopted-context-recording
           path: robotframework-browser
 
       - uses: actions/setup-node@v7
