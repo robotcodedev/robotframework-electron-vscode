@@ -12,6 +12,7 @@ Playwright offers this as `electronApplication.evaluate(pageFunction, arg)`, whi
 ## What Changes
 
 - **New keyword:** `Evaluate In Main Process    function    arg=None    browser=CURRENT` in the `Electron` library. It runs a JavaScript function in the main process of an application started by `New Electron Application`, by default the active one. The function gets the `electron` module and `arg`, and the keyword returns the function's result.
+- **The window of the active page:** the function also gets the `BrowserWindow` that shows the active page, through Playwright's `electronApplication.browserWindow(page)`. Tests size, focus or maximize the window they work with, without looking it up among all windows.
 - **VS Code:** inherits the keyword, so it works for instances started by `Open VS Code` as well.
 - **Fixture:** the Electron fixture app gets a button that opens a native file dialog through IPC and shows the chosen path, so that the tests can replace the dialog.
 - **Documentation:** the getting-started page for Electron shows how to replace a native dialog, and the guides name the keyword for native dialogs and for sizing windows without a window manager.
