@@ -222,9 +222,7 @@ class Electron(Browser):
             env=env,
             cwd=os.path.abspath(cwd or os.curdir),
             timeout=self.get_timeout(timeout),
-            recordVideo=recording.get("recordVideo"),
-            recordHar=recording.get("recordHar"),
-            tracing=recording["tracing"] or None,
+            **recording,
             defaultTimeout=int(self.timeout),
         )
         logger.info(f"Started Electron application {executable} as {adopted['browserId']}")
