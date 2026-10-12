@@ -14,7 +14,7 @@ from Browser.utils import logger
 from Browser.utils.data_types import ColorScheme, NewPageDetails, RecordHar, SelectionType, ViewportDimensions
 from robotlibcore import keyword
 
-from ._docs import browser_import_arguments, browser_sections
+from ._docs import importing, shared_sections, with_note
 
 __version__ = version("robotframework-electron")
 
@@ -23,12 +23,14 @@ _JS_MODULE = Path(__file__).with_name("electron.js")
 _INTRO = """
 Electron library is a Robot Framework library for testing Electron applications.
 
-It is built on the [https://robotframework-browser.org|Browser library] and
-contains every Browser keyword. Import ``Electron`` instead of ``Browser``. It
-takes the same import arguments, see `Importing`. Guides and examples are on the
+It is built on the [https://robotframework-browser.org|Browser library]: its
+keywords, such as `Click` and `Get Text`, act on the windows of an application.
+Import ``Electron`` instead of ``Browser``. The library hides Browser's keywords
+for browsers and contexts, see `Browser, Context and Page`. Guides and examples
+are on the
 [https://robotcodedev.github.io/robotframework-electron-vscode/|documentation site].
 
-= Starting an application =
+= Starting and closing an application =
 
 `New Electron Application` starts an application and waits for its first
 window. Pass the application's executable, or for an application that the plain
@@ -36,45 +38,44 @@ Electron binary runs, the Electron executable and the application folder in
 ``args``. ``Get Electron Executable`` of the ``Electron.Helper`` library
 downloads an Electron release and returns its executable.
 
-| `New Electron Application`    /opt/my-app/my-app
+| ${app}    ${page} =    `New Electron Application`    /opt/my-app/my-app
 | `Get Title`    ==    My App
 | `Click`    text=Settings
 
+`Close Electron Application` ends an application. Automatic closing ends it with
+the test or suite that started it, see `Automatic page and context closing`.
+
 = Windows and pages =
 
-The application becomes a browser with one context, and each of its windows is
-a page of that context, see `Browser, Context and Page`. The first window is the
-active page, and windows that the application opens later can be selected with
-`Switch Page`. `Get Browser Catalog` lists the application with the type
-``electron``.
+Each window of an application is a page, and so is each ``<webview>`` and
+``WebContentsView``. The first window is the active page. `Switch Page` selects
+windows that the application opens later, and `Get Electron Application Catalog`
+lists the pages with their titles.
 
-= Closing an application =
+= Several applications =
 
-`Close Electron Application` ends an application. `Close Browser`,
-`Close Context` and automatic closing end it as well, see
-`Automatic page and context closing`.
+Several applications can be open at once. `Switch Electron Application` makes
+another one the active application, and `Get Electron Application Ids` returns
+their ids.
+
+= The main process =
+
+Browser keywords reach the windows, but not the application's main process.
+`Evaluate In Main Process` runs a JavaScript function there, for example to
+replace a native dialog, click a menu item or size a window.
+
+= Launch options =
+
+`New Electron Application` takes some options of the Browser library's
+``New Context``: ``color_scheme``, ``locale``, ``timezone_id`` and
+``bypass_csp``. They apply from the start, so another value means starting the
+application again.
 
 = Videos, traces and HAR files =
 
 `New Electron Application` records a video of the windows with
 ``record_video``, a Playwright trace with ``tracing``, and the network traffic
 of the windows with ``record_har``. They are saved when the application closes.
-
-= Browser keywords =
-
-Browser keywords work on the windows as on any other page. The following
-sections come from the Browser library's documentation.
-"""
-
-_IMPORTING = """
-Electron library takes the same import arguments as the Browser library.
-
-They configure the Browser keywords, for example their timeout or presenter
-mode, and apply to the windows of Electron applications as to any other page.
-All arguments are named arguments.
-
-Example:
-| Library    Electron    timeout=20s    enable_presenter_mode=True
 """
 
 
@@ -98,7 +99,7 @@ class RecordVideo(TypedDict, total=False):
     """Video recording of an Electron application's windows.
 
     The keys ``dir`` and ``size`` work as for Browser's ``recordVideo`` of
-    `New Context`, ``showActions`` is Playwright's overlay of the performed
+    ``New Context``, ``showActions`` is Playwright's overlay of the performed
     actions.
 
     - ``dir``: Folder for the videos. Relative paths are relative to
@@ -121,6 +122,36 @@ class RecordVideo(TypedDict, total=False):
     showActions: ShowActions
 
 
+# Browser keywords that the library does not offer, by method name. An application is one
+# browser with one context: these keywords create, switch, list or close browsers and
+# contexts, or they fail on an application. Browser's own code still calls the methods.
+HIDDEN_KEYWORDS = frozenset(
+    {
+        "new_browser",
+        "open_browser",
+        "close_browser",
+        "switch_browser",
+        "get_browser_ids",
+        "get_browser_catalog",
+        "launch_browser_server",
+        "close_browser_server",
+        "connect_to_browser",
+        "new_context",
+        "new_persistent_context",
+        "close_context",
+        "switch_context",
+        "get_context_ids",
+        "new_page",
+        "get_device",
+        "get_devices",
+        "crawl_site",
+        "set_storage_state",
+        "tap",
+        "save_page_as_pdf",
+    }
+)
+
+
 class Electron(Browser):
     ROBOT_LIBRARY_VERSION = __version__
 
@@ -132,7 +163,21 @@ class Electron(Browser):
     # Libdoc and robotlibcore take the signature and the types of the import arguments
     # from Browser through __wrapped__. A decorator would hide __init__ from mypy.
     functools.update_wrapper(__init__, Browser.__init__)
-    __init__.__doc__ = cleandoc(_IMPORTING) + "\n\n" + browser_import_arguments()
+    __init__.__doc__ = importing("Electron")
+
+    def get_keyword_names(self) -> list[str]:
+        """Returns the keyword names without those of ``HIDDEN_KEYWORDS``.
+
+        The keywords are compared by their method, so that translated names are hidden as well.
+        """
+        names: list[str] = super().get_keyword_names()
+        return [name for name in names if self.keywords[name].__name__ not in HIDDEN_KEYWORDS]
+
+    def get_keyword_documentation(self, name: str) -> str:
+        """Returns Browser's documentation, with a note for Browser keywords that behave differently in applications."""
+        documentation: str = super().get_keyword_documentation(name)  # type: ignore[no-untyped-call]
+        method = self.keywords.get(name)
+        return with_note(method.__name__, documentation) if method is not None else documentation
 
     @keyword
     def new_electron_application(
@@ -149,14 +194,14 @@ class Electron(Browser):
         locale: str | None = None,
         timezone_id: str | None = None,
         bypass_csp: bool = False,
-    ) -> tuple[str, str, NewPageDetails]:
+    ) -> tuple[str, NewPageDetails]:
         """Starts an Electron application and makes its first window the active page.
 
-        The application becomes a new active browser with one context. Its
-        windows are pages of that context, so Browser keywords like `Click`
-        and `Get Text` work on them, and windows the application opens later
-        can be selected with `Switch Page`. `Close Electron Application`,
-        `Close Browser` and automatic closing end the application.
+        The application becomes the active application. Its windows are
+        pages, so Browser keywords like `Click` and `Get Text` work on them,
+        and windows the application opens later can be selected with
+        `Switch Page`. `Close Electron Application` and automatic closing end
+        the application.
 
         *Arguments:*
           - ``executable_path``: The Electron executable, as a path or as a
@@ -181,14 +226,15 @@ class Electron(Browser):
 
           - ``record_har``: Records the network traffic of the application's
                 windows into a [http://www.softwareishard.com/blog/har-12-spec/|HAR]
-                file, as ``recordHar`` of `New Context`: a dictionary with the
+                file, as ``recordHar`` of the Browser library's ``New Context``: a dictionary with the
                 ``path`` of the file and optionally ``omitContent``. A relative
                 path is relative to the output directory. The file is written
                 when the application closes.
           - ``tracing``: Records a Playwright trace of the application, as
-                ``tracing`` of `New Context`: ``True`` saves it as
-                ``browser/traces/trace_{contextid}.zip`` in the output directory,
-                and a ``*.zip`` path or a folder saves it there. The variable or
+                ``tracing`` of the Browser library's ``New Context``: ``True`` saves it in
+                ``browser/traces`` in the output directory, named after the
+                application's context, and a ``*.zip`` path or a folder saves it
+                there. Give a path to know the file's name. The variable or
                 environment variable ``ROBOT_FRAMEWORK_BROWSER_TRACING`` set to
                 ``True`` traces every application. The trace is saved when the
                 application closes and shows the keyword calls as groups. Open
@@ -206,23 +252,23 @@ class Electron(Browser):
                 ``Europe/Berlin``. Defaults to the system's. The main process
                 keeps the system's time zone; ``TZ`` in ``env`` sets it there.
           - ``bypass_csp``: Bypasses the Content Security Policy of the
-                windows, including Trusted Types, as ``bypassCSP`` of
-                `New Context`. Features that add scripts to a page need it in
+                windows, including Trusted Types, as ``bypassCSP`` of the
+                Browser library's ``New Context``. Features that add scripts to a page need it in
                 applications with a strict policy, for example `Record Selector`
                 in VS Code. It also applies to webviews and frames, so that
                 policy problems of the application go unnoticed. Switch it on
                 only where a feature needs it.
 
         *Returns:*
-          A tuple of browser id, context id and page details of the first
-          window, like `New Persistent Context`. The page details contain the
-          path of the video, or an empty string if no video is recorded.
+          A tuple of the application id and the page details of the first
+          window. The page details contain the page id and the path of the
+          video, or an empty string if no video is recorded.
 
         *Raises:*
           - ``ValueError``: The executable is not found.
 
         Example:
-        | ${app} =    `New Electron Application`    /opt/my-app/my-app
+        | ${app}    ${page} =    `New Electron Application`    /opt/my-app/my-app
         | `Get Title`    ==    My App
         | `New Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
         | `New Electron Application`    /opt/my-app/my-app    tracing=True    record_har={'path': 'my-app.har'}
@@ -261,11 +307,7 @@ class Electron(Browser):
             logger.info(f"The trace of {adopted['browserId']} is saved to {trace_file} when the application closes")
         video_path = self.register_adopted_context(adopted["contextId"], recording, adopted.get("videoPath"))
         page_id = self._activate_window_page(adopted["browserId"], adopted.get("pageId", ""))
-        return (
-            adopted["browserId"],
-            adopted["contextId"],
-            NewPageDetails(page_id=page_id, video_path=video_path),
-        )
+        return adopted["browserId"], NewPageDetails(page_id=page_id, video_path=video_path)
 
     def _activate_window_page(self, browser_id: str, page_id: str) -> str:
         """Makes the first window's own page the active page and returns its id.
@@ -283,31 +325,104 @@ class Electron(Browser):
         return page_id
 
     @keyword
-    def close_electron_application(self, browser: SelectionType | str = SelectionType.CURRENT) -> None:
+    def close_electron_application(self, application: SelectionType | str = SelectionType.CURRENT) -> None:
         """Ends an Electron application and removes it from the library state.
 
         The keyword returns after the application process has exited. It also
-        passes if the application has already quit on its own. The browser
-        that was active before the application becomes active again.
+        passes if the application has already quit on its own. The application
+        that was active before becomes active again. Automatic closing ends
+        applications as well, see `Automatic page and context closing`.
 
         *Arguments:*
-          - ``browser``: The browser id returned by `New Electron Application`.
-                ``CURRENT`` ends the active application, ``ALL`` closes all
-                browsers and applications.
-
-        This is the same as `Close Browser` for the application's browser id,
-        so `Close Browser`, `Close Context` and automatic closing end
-        applications as well.
+          - ``application``: The application id that `New Electron Application`
+                returned. ``CURRENT`` ends the active application, ``ALL`` ends
+                all applications.
 
         Example:
-        | ${app}    ${_}    ${_} =    `New Electron Application`    /opt/my-app/my-app
+        | ${app}    ${_} =    `New Electron Application`    /opt/my-app/my-app
         | `Close Electron Application`    ${app}
+        | `Close Electron Application`    ALL
         """
-        self.close_browser(browser)
+        self.close_browser(application)
+
+    @keyword
+    def switch_electron_application(self, application: str) -> str:
+        """Makes another open application the active one.
+
+        Browser keywords then act on the active page of that application.
+
+        *Arguments:*
+          - ``application``: The application id that `New Electron Application`
+                returned.
+
+        *Returns:*
+          The id of the application that was active before.
+
+        Example:
+        | ${first}    ${_} =    `New Electron Application`    /opt/my-app/my-app
+        | `New Electron Application`    /opt/other-app/other-app
+        | `Switch Electron Application`    ${first}
+        """
+        previous: str = self.switch_browser(application)
+        return previous
+
+    @keyword
+    def get_electron_application_ids(self, selection: SelectionType = SelectionType.ALL) -> list[str]:
+        """Returns the ids of the open applications.
+
+        *Arguments:*
+          - ``selection``: ``ALL`` for all open applications, ``ACTIVE`` or
+                ``CURRENT`` for the active one.
+
+        *Returns:*
+          A list of application ids, as `New Electron Application` returned them.
+
+        Example:
+        | ${ids} =    `Get Electron Application Ids`
+        | ${active} =    `Get Electron Application Ids`    ACTIVE
+        """
+        ids: list[str] = self.get_browser_ids(selection)
+        return ids
+
+    @keyword
+    def get_electron_application_catalog(self) -> list[dict[str, Any]]:
+        """Returns the open applications with their pages.
+
+        Every window, ``<webview>`` and ``WebContentsView`` of an application
+        is a page. The catalog helps to find the page id of one of them for
+        `Switch Page`.
+
+        *Returns:*
+          A list with one dictionary per application: its ``id``, whether it
+          is the ``active`` application, and its ``pages``. Each page has its
+          ``id``, ``title``, ``url``, and whether it is the ``active`` page of
+          its application.
+
+        Example:
+        | ${catalog} =    `Get Electron Application Catalog`
+        | FOR    ${page}    IN    @{catalog}[0][pages]
+        |     Log    ${page}[title]: ${page}[id]
+        | END
+        """
+        catalog = []
+        for browser in self.get_browser_catalog():
+            # An application has one context; Browser's catalog lists it as a level of its own.
+            pages = [
+                {
+                    "id": page["id"],
+                    "title": page["title"],
+                    "url": page["url"],
+                    "active": page["id"] == context.get("activePage"),
+                }
+                for context in browser.get("contexts", [])
+                for page in context.get("pages", [])
+            ]
+            catalog.append({"id": browser["id"], "active": browser.get("activeBrowser", False), "pages": pages})
+        return catalog
 
     @keyword
     def evaluate_in_main_process(
-        self, *function: str, arg: Any = None, browser: SelectionType | str = SelectionType.CURRENT
+        self, function: str, *lines: str, arg: Any = None, application: SelectionType | str = SelectionType.CURRENT
     ) -> Any:
         """Runs a JavaScript function in the main process of an Electron application and returns its result.
 
@@ -318,17 +433,19 @@ class Electron(Browser):
         ``electronApplication.evaluate``.
 
         *Arguments:*
-          - ``function``: A JavaScript function as text. Several arguments are
-                joined with line breaks, as for `Evaluate JavaScript`. The
-                function gets three parameters: the ``electron`` module,
+          - ``function``: A JavaScript function as text, or its first line.
+                The function gets three parameters: the ``electron`` module,
                 ``arg``, and ``window``, the ``BrowserWindow`` that shows the
                 active page. For a ``<webview>`` or a ``WebContentsView``, that
                 is the window they are shown in. ``window`` is ``null`` if the
                 active page is not one of the application's, for example while
-                another browser is active. The function may return a promise.
+                another application is active. The function may return a promise.
+          - ``lines``: Further lines of the function. They are joined to
+                ``function`` with line breaks, so that a function can span
+                several cells with ``...``.
           - ``arg``: A JSON-serialisable value that the function gets.
-          - ``browser``: ``CURRENT`` for the active application, or a browser
-                id that `New Electron Application` returned.
+          - ``application``: ``CURRENT`` for the active application, or an
+                application id that `New Electron Application` returned.
 
         *Returns:*
           The function's result, which must be JSON-serialisable. Objects of
@@ -336,8 +453,9 @@ class Electron(Browser):
           ``None`` if the function returns nothing.
 
         *Raises:*
-          - ``AssertionError``: The browser is not an application started by
-                `New Electron Application`, or the function throws an error.
+          - ``AssertionError``: No application is open, the id is not an
+                application started by `New Electron Application`, or the
+                function throws an error.
 
         Example:
         | ${name} =    `Evaluate In Main Process`    ({ app }) => app.getName()
@@ -348,15 +466,16 @@ class Electron(Browser):
         | `Evaluate In Main Process`    (electron, size, window) => window.setBounds(size)
         | ...    arg=${{ {"width": 1280, "height": 720} }}
         """
-        if SelectionType.create(browser) is SelectionType.CURRENT:
+        if SelectionType.create(application) is SelectionType.CURRENT:
             active = self.get_browser_ids(SelectionType.CURRENT)
-            browser_id = active[0] if active else "CURRENT"
+            if not active:
+                raise AssertionError("No application is open.")
+            browser_id = active[0]
         else:
-            browser_id = str(browser)
+            browser_id = str(application)
         self._load_electron_extension()
-        return self.call_js_keyword(
-            "robotframeworkElectronEvaluate", browserId=browser_id, script="\n".join(function), arg=arg
-        )
+        script = "\n".join((function, *lines))
+        return self.call_js_keyword("robotframeworkElectronEvaluate", browserId=browser_id, script=script, arg=arg)
 
     def _load_electron_extension(self) -> None:
         if not self._electron_extension_loaded:
@@ -364,6 +483,8 @@ class Electron(Browser):
             self._electron_extension_loaded = True
 
 
-Electron.__doc__ = cleandoc(_INTRO) + "\n\n" + browser_sections()
+Electron.__doc__ = (
+    cleandoc(_INTRO) + "\n\n" + shared_sections("`New Electron Application`", "`Close Electron Application`")
+)
 
-__all__ = ["Electron"]
+__all__ = ["HIDDEN_KEYWORDS", "Electron"]

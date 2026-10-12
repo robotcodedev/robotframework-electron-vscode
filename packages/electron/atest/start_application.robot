@@ -2,7 +2,7 @@
 Library             OperatingSystem
 Resource            resources/fixture.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Test Cases ***
@@ -19,10 +19,10 @@ Browser Keywords Act On The First Window With Views
     [Documentation]    With --views, the window shows a <webview> and a WebContentsView, which are pages as well.
     ...    Playwright sees the pages in a varying order, so the test starts the application three times.
     FOR    ${start}    IN RANGE    3
-        ${_}    ${_}    ${page} =    Start Fixture App    --views
+        ${_}    ${page} =    Start Fixture App    --views
         Get Title    ==    Views
         Get Page Ids    ACTIVE    ACTIVE    ACTIVE    ==    ${page}[page_id]
-        Close Browser    CURRENT
+        Close Electron Application
     END
 
 Arguments And Environment
@@ -35,7 +35,7 @@ Arguments And Environment
     Get Text    id=cwd    ==    ${TEMPDIR}
     Get Text    id=test-var    ==    from-test
     Get Text    id=run-only-var    ==    ${EMPTY}
-    [Teardown]    Run Keywords    Remove Environment Variable    ROBOT_ONLY_IN_RUN    AND    Close Browser    ALL
+    [Teardown]    Run Keywords    Remove Environment Variable    ROBOT_ONLY_IN_RUN    AND    Close Electron Application    ALL
 
 Default Working Directory
     Start Fixture App
@@ -54,14 +54,10 @@ Test Run Started From Inside VS Code
     Set Environment Variable    ELECTRON_RUN_AS_NODE    1
     Start Fixture App
     Get Text    id=run-as-node    ==    ${EMPTY}
-    [Teardown]    Run Keywords    Remove Environment Variable    ELECTRON_RUN_AS_NODE    AND    Close Browser    ALL
+    [Teardown]    Run Keywords    Remove Environment Variable    ELECTRON_RUN_AS_NODE    AND    Close Electron Application    ALL
 
 Return Value
-    ${browser_id}    ${context_id}    ${page} =    Start Fixture App
-    Get Browser Ids    ACTIVE    contains    ${browser_id}
-    Get Context Ids    ACTIVE    ACTIVE    contains    ${context_id}
-    Get Page Ids    ACTIVE    ACTIVE    ACTIVE    contains    ${page}[page_id]
-
-Browser Catalog Names The Application Electron
-    ${browser_id}    ${_}    ${_} =    Start Fixture App
-    Get Browser Catalog    validate    [b["type"] for b in value if b["id"] == "${browser_id}"] == ["electron"]
+    ${app}    ${page} =    Start Fixture App
+    ${active} =    Get Electron Application Ids    ACTIVE
+    Should Be Equal    ${active}    ${{ [$app] }}
+    Get Page Ids    ACTIVE    ACTIVE    ACTIVE    ==    ${page}[page_id]

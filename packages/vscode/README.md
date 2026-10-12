@@ -1,6 +1,6 @@
 # robotframework-vscode
 
-A [Robot Framework](https://robotframework.org) library for end-to-end testing of VS Code extensions. It is built on `robotframework-electron` and the [Browser library](https://robotframework-browser.org): `VSCode` contains every Electron and Browser keyword, downloads VS Code, and starts isolated VS Code instances with the extension under test. The workbench window is an ordinary Browser page.
+A [Robot Framework](https://robotframework.org) library for end-to-end testing of VS Code extensions. It is built on `robotframework-electron` and the [Browser library](https://robotframework-browser.org): `VSCode` contains the Electron keywords and the Browser keywords that apply to applications, downloads VS Code, and starts isolated VS Code instances with the extension under test. The workbench window is an ordinary Browser page.
 
 **Documentation:** https://robotcodedev.github.io/robotframework-electron-vscode/
 

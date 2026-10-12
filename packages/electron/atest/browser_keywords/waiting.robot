@@ -3,7 +3,7 @@ Documentation       Waiting for elements, conditions, the network and promises i
 Resource            ../resources/fixture.resource
 
 Suite Setup         Start Fixture App    --page\=keywords.html
-Suite Teardown      Close Browser    ALL
+Suite Teardown      Close Electron Application    ALL
 
 
 *** Test Cases ***
@@ -14,6 +14,11 @@ Elements And Conditions
     Wait For Condition    Element Count    id=later    ==    1
     Wait For Function    () => document.getElementById('later') !== null
     Wait For Load State    load
+
+Assertions Retry Until They Hold
+    Go To Keywords Page
+    Click    id=show-later
+    Get Text    id=later-container    ==    Here now
 
 Network
     ${url} =    Web Server Url

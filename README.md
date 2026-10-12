@@ -2,7 +2,7 @@
 
 [Robot Framework](https://robotframework.org) libraries for testing Electron applications and VS Code extensions, built on the [Browser library](https://robotframework-browser.org):
 
-- [`robotframework-electron`](packages/electron/) (`Electron`) starts Electron applications. Their windows are ordinary Browser pages, and every Browser keyword works on them.
+- [`robotframework-electron`](packages/electron/) (`Electron`) starts Electron applications. Their windows are ordinary Browser pages, and Browser's keywords work on them; the keywords for browsers and contexts are replaced by keywords for applications.
 - [`robotframework-vscode`](packages/vscode/) (`VSCode`) downloads VS Code and starts isolated instances with the extension under test, for end-to-end tests of VS Code extensions.
 
 The libraries provide the technique: starting the application and handing its windows to Browser. What to click and which locators to use belongs to your tests.

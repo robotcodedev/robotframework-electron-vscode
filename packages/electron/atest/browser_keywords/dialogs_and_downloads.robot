@@ -6,7 +6,7 @@ Library             OperatingSystem
 Resource            ../resources/fixture.resource
 
 Test Setup          Start Fixture App    --page\=keywords.html
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Test Cases ***
@@ -48,3 +48,13 @@ Download State
     Click    id=download
     ${download} =    Wait For    ${promise}
     Get Download State    ${download}    validate    value["state"] in ("inProgress", "finished")
+
+Cancel Download
+    ${url} =    Web Server Url
+    Go To    ${url}
+    ${promise} =    Promise To Wait For Download    wait_for_finished=False
+    Click    id=slow
+    ${download} =    Wait For    ${promise}
+    Get Download State    ${download}    validate    value["state"] == "in_progress"
+    Cancel Download    ${download}
+    Get Download State    ${download}    validate    value["state"] == "canceled"

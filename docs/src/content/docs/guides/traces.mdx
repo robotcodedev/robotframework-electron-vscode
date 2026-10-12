@@ -12,7 +12,7 @@ A trace records what a test did step by step: every Browser action with screensh
 
 `New Electron Application` and `Open VS Code` record a trace when they get `tracing`. It works as `tracing` of Browser's `New Context`:
 
-- `True` saves the trace as `browser/traces/trace_<context id>.zip` in the output directory.
+- `True` saves the trace in `browser/traces` in the output directory, named after the application's context. Give a path to choose the name.
 - A path ending in `.zip` saves it there, and a folder saves it in that folder. Relative paths are relative to the output directory, and folders relative to `browser/traces`.
 - Without `tracing`, the variable or environment variable `ROBOT_FRAMEWORK_BROWSER_TRACING` set to `True` traces every application and every context that Browser opens.
 
@@ -27,7 +27,7 @@ Traced Run
     Close Electron Application
 ```
 
-Browser saves the trace when the application closes, through `Close Electron Application`, `Close VS Code`, `Close Browser` or Browser's automatic closing. Open it with Browser's command line tool, or drop the file on [trace.playwright.dev](https://trace.playwright.dev):
+Browser saves the trace when the application closes, through `Close Electron Application`, `Close VS Code` or Browser's automatic closing. Open it with Browser's command line tool, or drop the file on [trace.playwright.dev](https://trace.playwright.dev):
 
 ```sh
 rfbrowser show-trace results/browser/traces/trace_context=….zip

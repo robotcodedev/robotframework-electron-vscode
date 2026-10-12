@@ -4,7 +4,7 @@ Library             OperatingSystem
 Resource            ../resources/fixture.resource
 
 Suite Setup         Start Fixture App    --page\=keywords.html
-Suite Teardown      Close Browser    ALL
+Suite Teardown      Close Electron Application    ALL
 Test Setup          Reload
 
 

@@ -5,6 +5,7 @@ import re
 import subprocess
 import tempfile
 import threading
+import time
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -44,6 +45,7 @@ def count_fixture_app_processes(marker: str) -> int:
 _PAGE = b"""<!doctype html>
 <button id="load">Load</button>
 <div id="result"></div>
+<a id="slow" href="/slow">Slow download</a>
 <script>
 document.getElementById("load").onclick = () =>
     fetch("/api")
@@ -53,14 +55,36 @@ document.getElementById("load").onclick = () =>
 """
 
 
+# The download of /slow takes 20 seconds, long enough for a test to cancel it.
+_SLOW_CHUNKS = 200
+_SLOW_CHUNK = b"x" * 1024
+
+
 class _Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
+        if self.path == "/slow":
+            self._send_slowly()
+            return
         body, content_type = (b'{"answer": 42}', "application/json") if self.path == "/api" else (_PAGE, "text/html")
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _send_slowly(self) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Disposition", 'attachment; filename="slow.bin"')
+        self.send_header("Content-Length", str(_SLOW_CHUNKS * len(_SLOW_CHUNK)))
+        self.end_headers()
+        for _ in range(_SLOW_CHUNKS):
+            try:
+                self.wfile.write(_SLOW_CHUNK)
+                self.wfile.flush()
+            except OSError:  # The download was cancelled.
+                return
+            time.sleep(0.1)
 
     def log_message(self, *args: Any) -> None:
         pass

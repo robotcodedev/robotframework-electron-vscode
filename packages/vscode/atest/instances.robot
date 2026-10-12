@@ -3,7 +3,7 @@ Name                Instances
 Library             OperatingSystem
 Resource            resources/vscode.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close VS Code    ALL
 
 
 *** Test Cases ***
@@ -30,17 +30,21 @@ Quiet Start
     Get Element Count    .monaco-dialog-box    ==    0
 
 Two Instances
-    ${first}    ${_}    ${_} =    Open Test VS Code
+    ${first}    ${_} =    Open Test VS Code
     ${first_instance} =    Newest Instance
     Open Test VS Code
     ${second_instance} =    Newest Instance
     VS Code Instance Is Running    ${first_instance}
     VS Code Instance Is Running    ${second_instance}
-    Close VS Code
-    VS Code Instance Has Exited    ${second_instance}
-    VS Code Instance Is Running    ${first_instance}
-    Switch Browser    ${first}
+    ${ids} =    Get Electron Application Ids
+    Length Should Be    ${ids}    2
+    Switch Electron Application    ${first}
     Get Element States    .monaco-workbench    contains    visible
+    Close VS Code
+    VS Code Instance Has Exited    ${first_instance}
+    VS Code Instance Is Running    ${second_instance}
+    Close VS Code    ALL
+    VS Code Instance Has Exited    ${second_instance}
 
 User's VS Code Is Unaffected
     Open Test VS Code
@@ -65,18 +69,17 @@ Directories Of The Active Instance
     Should Be Equal    ${dirs}[extensions]    ${instance}/extensions
 
 Directories With A Given Extensions Directory
-    ${vscode}    ${_}    ${_} =    Open Test VS Code    extensions_dir=${OUTPUT_DIR}/given-extensions
+    ${vscode}    ${_} =    Open Test VS Code    extensions_dir=${OUTPUT_DIR}/given-extensions
     Open Test VS Code
     ${dirs} =    Get VS Code Instance Directories    ${vscode}
     Should Be Equal    ${dirs.extensions}    ${OUTPUT_DIR}/given-extensions
 
-Directories Of A Browser Not Opened By Open VS Code
-    ${browser} =    New Browser    chromium    headless=True
-    Run Keyword And Expect Error    *Browser '${browser}' is not an open VS Code instance*
-    ...    Get VS Code Instance Directories    ${browser}
+Directories Of An Id Not Returned By Open VS Code
+    Run Keyword And Expect Error    *'browser=unknown' is not an open VS Code instance*
+    ...    Get VS Code Instance Directories    browser=unknown
 
 Directories Of A Closed Instance
-    ${vscode}    ${_}    ${_} =    Open Test VS Code
+    ${vscode}    ${_} =    Open Test VS Code
     Close VS Code    ${vscode}
-    Run Keyword And Expect Error    *Browser '${vscode}' is not an open VS Code instance*
+    Run Keyword And Expect Error    *'${vscode}' is not an open VS Code instance*
     ...    Get VS Code Instance Directories    ${vscode}

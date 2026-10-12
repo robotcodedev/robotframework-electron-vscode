@@ -26,4 +26,4 @@ When a run starts, the library removes the `vscode` folder that earlier runs lef
 
 **The command palette runs the wrong command.** The palette filters asynchronously. Wait for the command's row before pressing Enter, as in [the first VS Code test](../../getting-started/vscode/).
 
-**Every Browser keyword is ambiguous.** `Electron` and `VSCode` contain all Browser keywords. Import only one of the libraries, or use the usual Robot Framework means such as `Set Library Search Order` or full keyword names.
+**Browser keywords are ambiguous.** `Electron` and `VSCode` contain most Browser keywords. A suite that imports `Browser` beside them, or both of them, needs full keyword names such as `Browser.New Page` for the keywords they share, or the usual Robot Framework means such as `Set Library Search Order`.

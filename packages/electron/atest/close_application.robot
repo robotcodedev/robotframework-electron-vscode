@@ -1,24 +1,25 @@
 *** Settings ***
 Resource            resources/fixture.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Test Cases ***
 Close The Active Application
-    New Browser    chromium    headless=True
-    ${web_browser} =    Get Browser Ids    ACTIVE
+    ${before}    ${_} =    Start Fixture App    --previously-active
     Start Fixture App    --close-active
     Close Electron Application
     Fixture App Has Exited    --close-active
-    Get Browser Ids    ACTIVE    ==    @{web_browser}
+    ${active} =    Get Electron Application Ids    ACTIVE
+    Should Be Equal    ${active}    ${{ [$before] }}
 
 Close By Browser Id
-    ${first}    ${_}    ${_} =    Start Fixture App    --close-by-id-first
-    ${second}    ${_}    ${_} =    Start Fixture App    --close-by-id-second
+    ${first}    ${_} =    Start Fixture App    --close-by-id-first
+    ${second}    ${_} =    Start Fixture App    --close-by-id-second
     Close Electron Application    ${first}
     Fixture App Has Exited    --close-by-id-first
-    Get Browser Ids    ACTIVE    contains    ${second}
+    ${active} =    Get Electron Application Ids    ACTIVE
+    Should Be Equal    ${active}    ${{ [$second] }}
 
 Application Already Exited
     Start Fixture App    --already-exited

@@ -1,6 +1,6 @@
 # robotframework-electron
 
-A [Robot Framework](https://robotframework.org) library for testing Electron applications. It is built on the [Browser library](https://robotframework-browser.org): `Electron` contains every Browser keyword, takes the same import arguments, and adds keywords to start and close Electron applications. The windows of an application are ordinary Browser pages.
+A [Robot Framework](https://robotframework.org) library for testing Electron applications. It is built on the [Browser library](https://robotframework-browser.org): `Electron` contains the Browser keywords that apply to applications, takes the same import arguments, and adds keywords to start, switch and close Electron applications. The windows of an application are ordinary Browser pages.
 
 **Documentation:** https://robotcodedev.github.io/robotframework-electron-vscode/
 

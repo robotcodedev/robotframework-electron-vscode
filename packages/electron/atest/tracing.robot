@@ -3,7 +3,7 @@ Name                Tracing
 Library             OperatingSystem
 Resource            resources/fixture.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Test Cases ***
@@ -18,11 +18,23 @@ Trace Of An Application
 
 Tracing From The Global Setting
     VAR    ${ROBOT_FRAMEWORK_BROWSER_TRACING}    True    scope=TEST
-    ${_}    ${context}    ${_} =    Start Fixture App
+    ${before} =    Trace Files
+    Start Fixture App
     Close Electron Application
-    File Should Not Be Empty    ${OUTPUT_DIR}/browser/traces/trace_${context}.zip
+    ${after} =    Trace Files
+    Length Should Be    ${{ set($after) - set($before) }}    1
 
 No Tracing By Default
-    ${_}    ${context}    ${_} =    Start Fixture App
+    ${before} =    Trace Files
+    Start Fixture App
     Close Electron Application
-    File Should Not Exist    ${OUTPUT_DIR}/browser/traces/trace_${context}.zip
+    ${after} =    Trace Files
+    Should Be Equal    ${after}    ${before}
+
+
+*** Keywords ***
+Trace Files
+    [Documentation]    The traces in Browser's trace folder. With tracing=True, Browser names them after the context.
+    Create Directory    ${OUTPUT_DIR}/browser/traces
+    ${files} =    List Files In Directory    ${OUTPUT_DIR}/browser/traces    trace_*.zip
+    RETURN    ${files}

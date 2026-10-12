@@ -2,7 +2,7 @@
 Documentation       The windows, webviews and views of an application as Browser pages.
 Resource            ../resources/fixture.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Test Cases ***
@@ -17,10 +17,36 @@ Webview And View By Page Id
     Start Fixture App    --views
     Wait Until Keyword Succeeds    10s    200ms
     ...    Get Page Ids    ALL    ACTIVE    ACTIVE    validate    len(value) == 3
+    ${catalog} =    Get Electron Application Catalog
+    ${titles} =    Evaluate    sorted(page["title"] for page in $catalog[0]["pages"])
+    Should Be Equal    ${titles}    ${{ ["Guest", "View", "Views"] }}
     Switch To Page With Title    Guest
     Get Text    id=guest-text    ==    Inside the webview
     Switch To Page With Title    View
     Get Text    id=view-text    ==    Inside the view
+
+Close Page On A View
+    Start Fixture App    --views
+    Wait Until Keyword Succeeds    10s    200ms
+    ...    Get Page Ids    ALL    ACTIVE    ACTIVE    validate    len(value) == 3
+    Switch To Page With Title    View
+    Close Page
+    ${catalog} =    Get Electron Application Catalog
+    ${titles} =    Evaluate    sorted(page["title"] for page in $catalog[0]["pages"])
+    Should Be Equal    ${titles}    ${{ ["Guest", "Views"] }}
+    ${views} =    Evaluate In Main Process
+    ...    ({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].contentView.children.length
+    Should Be Equal    ${views}    ${0}
+
+Webview Removed From Its Page
+    [Documentation]    Close Page waits forever on a <webview>, so a test removes the element from its page instead.
+    Start Fixture App    --views
+    Wait Until Keyword Succeeds    10s    200ms
+    ...    Get Page Ids    ALL    ACTIVE    ACTIVE    validate    len(value) == 3
+    Switch To Page With Title    Views
+    Evaluate JavaScript    id=guest    (element) => element.remove()
+    Wait Until Keyword Succeeds    10s    200ms
+    ...    Get Page Ids    ALL    ACTIVE    ACTIVE    validate    len(value) == 2
 
 Frame Selector Does Not Reach Into A Webview
     Start Fixture App    --views
@@ -40,13 +66,14 @@ Window Closed By The Application
     Get Title    ==    Electron Fixture
 
 Application That Quits By Itself
-    ${app}    ${_}    ${_} =    Start Fixture App    --quits-by-itself
+    ${app}    ${_} =    Start Fixture App    --quits-by-itself
     Evaluate In Main Process    ({ app }) => { setTimeout(() => app.quit(), 100); }
     Wait Until Keyword Succeeds    10s    200ms    Fixture App Has Exited    --quits-by-itself
-    Get Browser Ids    ALL    contains    ${app}
+    ${ids} =    Get Electron Application Ids
+    Should Contain    ${ids}    ${app}
     Run Keyword And Expect Error    *No page open*    Get Title
-    Close Browser    ${app}
-    ${ids} =    Get Browser Ids    ALL
+    Close Electron Application    ${app}
+    ${ids} =    Get Electron Application Ids
     Should Not Contain    ${ids}    ${app}
 
 Last Window Closed With Close Page

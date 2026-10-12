@@ -3,7 +3,7 @@ Name                Install Into A Running Instance
 Library             OperatingSystem
 Resource            resources/vscode.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close VS Code    ALL
 
 
 *** Test Cases ***
@@ -20,7 +20,7 @@ Extension In A Running Instance
 
 Only The Given Instance Gets The Extension
     ${vsix} =    Pack Extension    ${TEST_EXTENSION}    ${OUTPUT_DIR}/test-extension.vsix
-    ${first}    ${_}    ${_} =    Open Test VS Code
+    ${first}    ${_} =    Open Test VS Code
     ${first_instance} =    Newest Instance
     Open Test VS Code
     ${second_instance} =    Newest Instance

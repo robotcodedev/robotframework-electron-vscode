@@ -3,14 +3,14 @@ title: Browser keywords in applications
 description: Which Browser keywords work on Electron applications and VS Code, which fail and why, and what Electron does differently from a web browser.
 ---
 
-`Electron` and `VSCode` contain every Browser keyword. Most of them work on an application's windows as they do on the pages of a web browser. This guide lists, for each group of keywords, what works, which keywords fail and why, and where Electron behaves differently.
+`Electron` and `VSCode` contain the Browser keywords that apply to applications. They work on an application's windows as they do on the pages of a web browser. This guide lists, for each group of keywords, what works, which keywords the libraries hide and why, which keywords fail, and where Electron behaves differently.
 
 The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser on Playwright 1.63. The acceptance tests in `packages/electron/atest/browser_keywords/` check the groups of the overview on an Electron application, except the row "Other keywords", and every keyword that this guide lists as failing.
 
 ## How an application looks to Browser
 
 - **One browser, one context.** `New Electron Application` and `Open VS Code` make the application a browser with one context. Each window of the application is a page of that context, and so are its `<webview>`s and `WebContentsView`s.
-- **The application creates its pages.** `New Page` and `New Context` cannot create pages or contexts in an application. Together with `New Browser`, they create a web browser beside the application, which works as usual.
+- **The application creates its pages.** The libraries hide `New Page`, `New Context` and the other keywords for browsers and contexts, and offer keywords for applications instead, see [Compared with the Browser library](#compared-with-the-browser-library).
 - **Settings mean a restart.** Options such as the color scheme or the locale apply from the start, see [launch options](../../getting-started/electron/#launch-options). Another value means starting the application again.
 - **The main process is outside the pages.** Native dialogs, menus and the tray belong to the main process, which Browser keywords do not reach. `Evaluate In Main Process` runs code there, see [the main process](../../getting-started/electron/#the-main-process).
 
@@ -22,27 +22,56 @@ The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser o
 | Reading content | Works | `Get Text`, `Get Attribute`, `Get Property`, `Get Style`, the table keywords, `Evaluate JavaScript`, `Get Console Log` and `Get Page Errors`. `Get Aria Snapshot` lists roles and names, which helps to find locators. |
 | Input | Works | Typing, `Fill Secret`, checkboxes and selects, file uploads with `Upload File By Selector` and `Promise To Upload File`, keyboard, mouse, `Drag And Drop` and scrolling. Shortcuts with `ControlOrMeta` work on every platform, but they reach only the page, not the application's menu, see [Shortcuts and menus](#shortcuts-and-menus). |
 | Waiting and navigation | Works | `Wait For Elements State`, `Wait For Condition`, `Wait For Function`, `Wait For Request`, `Wait For Response`, promises with `Promise To` and `Wait For`, `Http`, `Go To`, `Go Back` and `Go Forward`, and the timeouts and retries of `Set Browser Timeout` and `Set Retry Assertions For`. |
-| Context state | Works | Cookies, local and session storage, `Grant Permissions`, `Set Geolocation`, `Set Offline`, `Emulate Media`, `Set Viewport Size` and the clock keywords `Set Time`, `Pause At` and `Advance Clock`. `Get Viewport Size` returns `None` until `Set Viewport Size` emulates a size; the window keeps its own size. `Save Storage State` works only while every http and https origin that the application has visited is open in a window, and it leaves out the storage of `file://` pages. `Set Storage State` fails, see [Keywords that fail](#keywords-that-fail). |
+| Context state | Works | Cookies, local and session storage, `Grant Permissions`, `Set Geolocation`, `Set Offline`, `Emulate Media`, `Set Viewport Size` and the clock keywords `Set Time`, `Pause At` and `Advance Clock`. `Get Viewport Size` returns `None` until `Set Viewport Size` emulates a size; the window keeps its own size. `Save Storage State` works only while every http and https origin that the application has visited is open in a window, and it leaves out the storage of `file://` pages. `Set Storage State` is hidden. |
 | Dialogs | Works | `alert` and `confirm` with `Handle Future Dialogs`, `Wait For Alert` and `Wait For Alerts`. Without a handler, Playwright dismisses them. Electron has no `prompt()`, see [Behaviour of Electron](#behaviour-of-electron). Both kinds of handler on the same page crash Browser's Node process, and so does a `beforeunload` handler, see [Known crashes](#known-crashes). Native dialogs need the main process. |
-| Downloads | Works | `Promise To Wait For Download` after a click, also with `wait_for_finished=False` and `Get Download State`, and `Download` from a page loaded from a URL. The libraries tell Browser that the application accepts downloads, as Electron does. `Cancel Download` was not checked. |
-| Pages and windows | Works | Windows that the application opens later: `Switch Page    NEW`. `<webview>`s and `WebContentsView`s are pages too, but select them by page id, see [Pages and windows](#pages-and-windows). A window that the application closes leaves `Get Page Ids`. `Close Page` on the last window ends most applications, through their `window-all-closed` handler. |
+| Downloads | Works | `Promise To Wait For Download` after a click, also with `wait_for_finished=False` and `Get Download State`, and `Download` from a page loaded from a URL. `Cancel Download` cancels a running download. The libraries tell Browser that the application accepts downloads, as Electron does. |
+| Pages and windows | Works | Windows that the application opens later: `Switch Page    NEW`. `<webview>`s and `WebContentsView`s are pages too, but select them by page id, see [Pages and windows](#pages-and-windows). A window that the application closes leaves `Get Page Ids`. `Close Page` closes windows and `WebContentsView`s, but waits forever on a `<webview>`. On the last window, it ends most applications, through their `window-all-closed` handler. |
 | Screenshots, recordings and coverage | Works | `Take Screenshot` of the window or an element; screenshots have the window's size. Videos, traces and HAR files come from `record_video`, `tracing` and `record_har` of `New Electron Application`, see [Videos and slow motion](../videos/) and [Traces and HAR files](../traces/). `Start Coverage`, `Highlight Elements`, `Add Style Tag` and presenter mode work. Playwright has no `slowMo` for Electron; presenter mode slows a test down instead. |
-| Browsers, contexts and pages | Beside the application | `New Browser`, `New Context`, `New Page` and `New Persistent Context` create a web browser beside the application, which works as usual. On the application, `New Page` and `New Context` fail, see [Keywords that fail](#keywords-that-fail). |
+| Applications | Own keywords | `Switch Electron Application`, `Get Electron Application Ids` and `Get Electron Application Catalog` replace Browser's keywords for browsers and contexts, see [Compared with the Browser library](#compared-with-the-browser-library). |
 | Other keywords | Works | From the audit: locator handlers, WebAuthn credentials (`Create Credential` and the related keywords), `Register Keyword To Run On Failure`, `Show Keyword Banner` and `Set Strict Mode`. |
+
+## Compared with the Browser library
+
+`Electron` and `VSCode` hide the Browser keywords for browsers and contexts, because an application is one browser with one context, and the keywords that cannot work on an application. They offer these keywords instead:
+
+| Browser keyword | In `Electron` and `VSCode` | Why |
+|---|---|---|
+| `New Browser`, `New Persistent Context`, `Open Browser` | `New Electron Application`, `Open VS Code` | A test starts an application. |
+| `Close Browser`, `Close Context` | `Close Electron Application`, `Close VS Code` | The application ends with its only context. |
+| `Switch Browser` | `Switch Electron Application` | Several applications can be open at once. |
+| `Get Browser Ids` | `Get Electron Application Ids` | It returns the ids of the open applications. |
+| `Get Browser Catalog` | `Get Electron Application Catalog` | It leaves out the context level. |
+| `New Context`, `Switch Context`, `Get Context Ids` | – | An application has exactly one context. |
+| `New Page` | – | The application opens its windows; Electron does not let Playwright open one. |
+| `Launch Browser Server`, `Close Browser Server`, `Connect To Browser` | – | For browsers only. |
+| `Get Device`, `Get Devices` | – | Devices are options for `New Context`. |
+| `Crawl Site` | – | It opens pages of its own. |
+| `Set Storage State` | – | Playwright opens a page of its own to write the storage. |
+| `Tap` | – | Playwright's Electron launch has no touch support. |
+| `Save Page As Pdf` | – | Electron, and with it VS Code, does not provide Chromium's PDF printing over the DevTools protocol. |
+
+A test that needs a web browser as well imports the Browser library beside `Electron` or `VSCode`. Keywords that both libraries have then need the library name:
+
+```robotframework
+*** Settings ***
+Library    Electron
+Library    Browser
+
+*** Test Cases ***
+Web Page Beside An Application
+    New Electron Application    /opt/my-app/my-app
+    Browser.New Browser    chromium    headless=True
+    Browser.New Page    https://example.com/
+    Electron.Get Title    ==    My App
+```
 
 ## Keywords that fail
 
-These keywords fail on an application, with the following errors. The acceptance tests expect each of these errors, so an upgrade that lifts one of the limitations is noticed.
+These visible keywords fail on an application under some conditions. The acceptance tests expect the error, so an upgrade that lifts the limitation is noticed.
 
 | Keyword | Error | Cause |
 |---|---|---|
-| `New Page` | `Protocol error (Target.createTarget): Not supported` | The application creates its windows, and Electron does not let Playwright open one. |
-| `New Context` | `Trying to create a new context when a persistentContext is active` | The application's context is its only one. |
-| `Crawl Site` | `Protocol error (Target.createTarget): Not supported` | It opens pages of its own, as `New Page` does. |
-| `Set Storage State` | `Protocol error (Target.createTarget): Not supported` | Playwright opens a page of its own to write the local storage of an origin. |
 | `Save Storage State` | `Protocol error (Target.createTarget): Not supported` | Only when an http or https origin that the application has visited is no longer open in a window: Playwright then opens a page of its own to read its storage. |
-| `Tap` | `The page does not support tap. Use hasTouch context option to enable touch support.` | Playwright's Electron launch has no `hasTouch` option. |
-| `Save Page As Pdf` | `'Page.printToPDF' wasn't found` | Electron, and with it VS Code, does not provide Chromium's PDF printing over the DevTools protocol. |
 
 ## Locators
 
@@ -95,7 +124,14 @@ Switch To Page With Title
 ```
 
 - **`>>>` and `<webview>`:** a `<webview>` is not an iframe, so `>>>` does not reach into it; it fails with "<iframe> was expected". Switch to the `<webview>`'s page instead.
-- **An application that quits by itself** stays in Browser's catalog with an empty context. Keywords then fail with "No page open." until `Close Browser` or `Close Electron Application`, which also pass for an application that has already quit.
+- **Closing a `<webview>`:** `Close Page` waits forever on a `<webview>`'s page, because the `<webview>` element in its host page keeps it. Remove the element instead; its page then goes away:
+
+  ```robotframework
+  Evaluate JavaScript    id=guest    (element) => element.remove()
+  ```
+
+  `Close Page` on a `WebContentsView`'s page closes it and removes the view from its window.
+- **An application that quits by itself** stays in Browser's catalog with an empty context. Keywords then fail with "No page open." until `Close Electron Application`, which also passes for an application that has already quit.
 
 ## Behaviour of Electron
 

@@ -4,11 +4,11 @@ from typing import Any
 
 import pytest
 from Browser import Browser
-from Browser.utils.data_types import AutoClosingLevel, ColorScheme
+from Browser.utils.data_types import AutoClosingLevel, ColorScheme, SelectionType
 from robot.running.arguments.typeinfo import TypeInfo
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
-from Electron import Electron, RecordVideo, ShowActions, __version__
+from Electron import HIDDEN_KEYWORDS, Electron, RecordVideo, ShowActions, __version__
 
 
 @pytest.fixture(autouse=True)
@@ -22,10 +22,24 @@ def import_library(*args: str) -> Electron:
     return electron
 
 
-def test_contains_every_browser_keyword():
-    electron = import_library()
+def test_contains_every_browser_keyword_except_the_hidden_ones():
+    names = set(import_library().get_keyword_names())
 
-    assert set(Browser().get_keyword_names()) <= set(electron.get_keyword_names())
+    assert set(Browser().get_keyword_names()) - HIDDEN_KEYWORDS <= names
+    assert not names & HIDDEN_KEYWORDS
+
+
+def test_hidden_keywords_are_browser_keywords():
+    browser = Browser()
+
+    assert {name for name in HIDDEN_KEYWORDS if name not in browser.keywords} == set()
+
+
+def test_hides_translated_keyword_names():
+    electron = import_library()
+    electron.keywords["Uusi Konteksti"] = electron.keywords["new_context"]
+
+    assert "Uusi Konteksti" not in electron.get_keyword_names()
 
 
 def test_converts_browser_import_arguments():
@@ -106,9 +120,9 @@ def test_application_runs_in_the_working_directory_by_default(fake_launch, tmp_p
 def test_first_window_closed_during_the_start(fake_launch, tmp_path):
     electron, _ = fake_launch
 
-    browser_id, context_id, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+    application, page = electron.new_electron_application(tmp_path / "bin" / "electron")
 
-    assert (browser_id, context_id, page["page_id"]) == ("browser", "context", "")
+    assert (application, page["page_id"]) == ("browser", "")
 
 
 def test_no_recording_by_default(fake_launch, tmp_path):
@@ -191,10 +205,19 @@ def test_evaluates_in_the_main_process_of_the_active_application(fake_launch, mo
     assert calls[0] == {"browserId": "browser=app", "script": "({ app }) =>\napp.getName()", "arg": None}
 
 
+def test_evaluating_without_an_open_application_fails(fake_launch, monkeypatch):
+    electron, calls = fake_launch
+    monkeypatch.setattr(electron, "get_browser_ids", lambda browser: [])
+
+    with pytest.raises(AssertionError, match=r"No application is open\."):
+        electron.evaluate_in_main_process("() => 1")
+    assert calls == []
+
+
 def test_evaluates_in_the_main_process_of_a_given_application(fake_launch):
     electron, calls = fake_launch
 
-    electron.evaluate_in_main_process("(electron, arg) => arg", arg={"answer": 42}, browser="browser=other")
+    electron.evaluate_in_main_process("(electron, arg) => arg", arg={"answer": 42}, application="browser=other")
 
     assert calls[0] == {"browserId": "browser=other", "script": "(electron, arg) => arg", "arg": {"answer": 42}}
 
@@ -224,7 +247,7 @@ def pages(fake_launch, monkeypatch):
 def test_switches_to_the_window_page_when_a_view_is_active(pages, tmp_path):
     electron, _, switches = pages
 
-    _, _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+    _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
 
     assert page["page_id"] == "page=window"
     assert switches == ["page=guest", "page=window"]
@@ -234,7 +257,75 @@ def test_keeps_the_active_page_when_it_is_the_window(pages, tmp_path):
     electron, active, switches = pages
     active[0] = "page=window"
 
-    _, _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+    _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
 
     assert page["page_id"] == "page=window"
     assert switches == []
+
+
+@pytest.fixture
+def two_applications(monkeypatch):
+    """Fakes Browser's state with two applications, the second one active, and records switches."""
+    electron = import_library()
+    switches: list[str] = []
+    catalog = [
+        {
+            "id": "browser=first",
+            "type": "electron",
+            "activeBrowser": False,
+            "contexts": [
+                {
+                    "id": "context=first",
+                    "activePage": "page=window",
+                    "pages": [
+                        {"id": "page=window", "title": "Window", "url": "file:///window.html", "type": "page"},
+                        {"id": "page=view", "title": "View", "url": "file:///view.html", "type": "page"},
+                    ],
+                }
+            ],
+        },
+        {"id": "browser=second", "type": "electron", "activeBrowser": True, "contexts": []},
+    ]
+
+    def switch_browser(application):
+        switches.append(application)
+        return "browser=second"
+
+    def get_browser_ids(selection):
+        return ["browser=second"] if selection.name in ("ACTIVE", "CURRENT") else ["browser=first", "browser=second"]
+
+    monkeypatch.setattr(electron, "switch_browser", switch_browser)
+    monkeypatch.setattr(electron, "get_browser_ids", get_browser_ids)
+    monkeypatch.setattr(electron, "get_browser_catalog", lambda *args: catalog)
+    return electron, switches
+
+
+def test_switches_to_another_application(two_applications):
+    electron, switches = two_applications
+
+    previous = electron.switch_electron_application("browser=first")
+
+    assert (previous, switches) == ("browser=second", ["browser=first"])
+
+
+def test_returns_the_ids_of_the_applications(two_applications):
+    electron, _ = two_applications
+
+    assert electron.get_electron_application_ids() == ["browser=first", "browser=second"]
+    assert electron.get_electron_application_ids(SelectionType.ACTIVE) == ["browser=second"]
+
+
+def test_returns_the_applications_with_their_pages(two_applications):
+    electron, _ = two_applications
+
+    assert electron.get_electron_application_catalog() == [
+        {
+            "id": "browser=first",
+            "active": False,
+            "pages": [
+                {"id": "page=window", "title": "Window", "url": "file:///window.html", "active": True},
+                {"id": "page=view", "title": "View", "url": "file:///view.html", "active": False},
+            ],
+        },
+        {"id": "browser=second", "active": True, "pages": []},
+    ]

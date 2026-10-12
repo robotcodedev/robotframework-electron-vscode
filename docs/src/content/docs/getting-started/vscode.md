@@ -44,7 +44,7 @@ The example project in the repository goes further, with its own keywords for th
 
 ## Opening VS Code
 
-`Open VS Code` starts VS Code and returns once the workbench is ready. It returns the browser id, the context id and the page details of the workbench window, like `New Electron Application`.
+`Open VS Code` starts VS Code and returns once the workbench is ready. It returns the instance's id and the page details of the workbench window, like `New Electron Application`.
 
 - **Which VS Code:** `version` is `stable` (the default), `insiders` or a fixed version such as `1.141.0`. Alternatively, `executable` starts an installed VS Code or a [fork](../../guides/vscode-forks/) and downloads nothing.
 - **Extensions:**
@@ -53,7 +53,7 @@ The example project in the repository goes further, with its own keywords for th
   - [Extensions](../../guides/extensions/) shows these and other ways, such as installing into the running instance.
 - **Settings:** `settings` are written to the instance's user settings. The defaults switch off the welcome page, release notes, update checks, telemetry and workspace trust. They also switch off the screen reader mode, which VS Code otherwise turns on under Playwright, and hide the secondary side bar. Given settings override the defaults.
 - **Isolation:** every instance gets its own user-data and extensions directories under the output directory. Neither the user's own VS Code nor other instances affect it. `VSCODE_*` variables and `ELECTRON_RUN_AS_NODE` are removed from its environment.
-- **Closing:** `Close VS Code`, `Close Browser` and Browser's automatic closing end the instance.
+- **Closing:** `Close VS Code` and Browser's automatic closing end the instance.
 
 ## Next steps
 

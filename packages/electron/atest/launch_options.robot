@@ -2,7 +2,7 @@
 Name                Launch Options
 Resource            resources/fixture.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Variables ***

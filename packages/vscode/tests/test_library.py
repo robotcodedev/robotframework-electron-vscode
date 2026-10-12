@@ -11,7 +11,7 @@ from Browser.utils.data_types import AutoClosingLevel, ColorScheme
 from robot.libdoc import LibraryDocumentation
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
-from Electron import Electron
+from Electron import HIDDEN_KEYWORDS, Electron
 from VSCode import Instance, VSCode, __version__
 from VSCode.instance import InstanceDirectories
 
@@ -37,6 +37,10 @@ def test_contains_every_electron_and_browser_keyword():
     vscode = import_library()
 
     assert set(Electron().get_keyword_names()) <= set(vscode.get_keyword_names())
+
+
+def test_hides_the_keywords_that_electron_hides():
+    assert not set(import_library().get_keyword_names()) & HIDDEN_KEYWORDS
 
 
 def test_adds_only_its_own_keywords_to_electron():
@@ -91,7 +95,7 @@ def test_keeps_the_error_of_the_workbench_when_closing_fails(monkeypatch, tmp_pa
     def close_fails(*args, **kwargs):
         raise RuntimeError("closing failed")
 
-    monkeypatch.setattr(vscode, "new_electron_application", lambda *args, **kwargs: ("browser", "context", {}))
+    monkeypatch.setattr(vscode, "new_electron_application", lambda *args, **kwargs: ("browser", {}))
     monkeypatch.setattr(vscode, "wait_for_elements_state", not_ready)
     monkeypatch.setattr(vscode, "close_browser", close_fails)
 
@@ -110,7 +114,7 @@ def test_passes_the_launch_options_on(monkeypatch, tmp_path):
 
     def new_electron_application(*args, **kwargs):
         started.update(kwargs)
-        return ("browser", "context", {})
+        return ("browser", {})
 
     monkeypatch.setattr(vscode, "new_electron_application", new_electron_application)
     monkeypatch.setattr(vscode, "wait_for_elements_state", lambda *args, **kwargs: None)
@@ -152,23 +156,33 @@ def test_libdoc_reports_own_version_without_starting_a_process(monkeypatch):
     assert LibraryDocumentation("VSCode").version == __version__
 
 
-def test_has_no_unresolved_links_beyond_browser():
-    assert unresolved_links("VSCode") <= unresolved_links("Browser")
+def test_has_no_unresolved_links_beyond_browser_and_hidden_keywords():
+    # Browser's keyword documentation links to keywords that the library hides; Libdoc shows them as names.
+    hidden = {name.replace("_", " ") for name in HIDDEN_KEYWORDS}
+    unresolved = {link.lower() for link in unresolved_links("VSCode") - unresolved_links("Browser")}
+
+    assert unresolved <= hidden
 
 
-def test_intro_is_the_librarys_own_followed_by_browsers_sections():
+BROWSER_DOCUMENTATION = "https://marketsquare.github.io/robotframework-browser/Browser.html"
+
+
+def test_intro_is_the_librarys_own_and_points_to_browsers_documentation():
     doc = LibraryDocumentation("VSCode").doc
 
     assert doc.startswith("VSCode library is a Robot Framework library for end-to-end testing of VS Code extensions.")
     assert "Browser library is a browser automation library" not in doc
-    assert "= Assertions =" in doc
+    assert "Keywords that act on an element take a ``selector`` argument." not in doc
+    assert f"{BROWSER_DOCUMENTATION}#Assertions" in doc
+    assert "| ``Close Browser``, ``Close Context`` | `Close VS Code` |" in doc
 
 
-def test_import_is_documented_with_browsers_arguments():
+def test_import_documentation_points_to_browsers_arguments():
     init = LibraryDocumentation("VSCode").inits[0]
+    text = " ".join(init.doc.split())
 
-    assert init.doc.startswith("VSCode library takes the same import arguments as the Browser library.")
-    assert init.args.docs["timeout"].startswith("Timeout for keywords that operate on elements.")
+    assert text.startswith("VSCode library takes the same import arguments as the Browser library")
+    assert f"{BROWSER_DOCUMENTATION}#Importing" in init.doc
     assert [arg.name for arg in init.args] == [arg.name for arg in LibraryDocumentation("Browser").inits[0].args]
 
 
@@ -201,3 +215,10 @@ def test_keywords_document_the_exceptions_for_invalid_input(library, name, excep
     keyword = next(kw for kw in own_keywords(library) if kw.name == name)
 
     assert exceptions <= set(keyword.args.raises)
+
+
+def test_browser_keywords_that_behave_differently_have_a_note():
+    keywords = {kw.name: kw.doc for kw in LibraryDocumentation("VSCode").keywords}
+
+    assert "*In Electron applications:*" in keywords["Close Page"]
+    assert "*In Electron applications:*" not in keywords["Click"]

@@ -2,7 +2,7 @@
 Name                Main Process
 Resource            resources/fixture.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Test Cases ***
@@ -24,7 +24,10 @@ Not An Electron Application
     Start Fixture App
     Run Keyword And Expect Error
     ...    *Browser 'browser=unknown' is not an application started by 'New Electron Application'.
-    ...    Evaluate In Main Process    () => 1    browser=browser=unknown
+    ...    Evaluate In Main Process    () => 1    application=browser=unknown
+
+No Application Open
+    Run Keyword And Expect Error    No application is open.    Evaluate In Main Process    () => 1
 
 Window Sized From The Main Process
     Start Fixture App
@@ -41,8 +44,7 @@ Window Of The Active Page
     Should Be Equal    ${title}    Second Window
 
 Active Page Of Another Browser
-    ${app}    ${_}    ${_} =    Start Fixture App
-    New Browser    chromium    headless=True
-    New Page    about:blank
-    ${no_window} =    Evaluate In Main Process    (electron, arg, window) => window === null    browser=${app}
+    ${app}    ${_} =    Start Fixture App
+    Start Fixture App    --page\=second.html
+    ${no_window} =    Evaluate In Main Process    (electron, arg, window) => window === null    application=${app}
     Should Be True    ${no_window}

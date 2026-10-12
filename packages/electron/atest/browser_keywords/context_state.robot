@@ -4,7 +4,7 @@ Library             OperatingSystem
 Resource            ../resources/fixture.resource
 
 Suite Setup         Start Fixture App    --page\=keywords.html
-Suite Teardown      Close Browser    ALL
+Suite Teardown      Close Electron Application    ALL
 
 
 *** Test Cases ***
@@ -26,6 +26,17 @@ Storage
     LocalStorage Get Item    colour    ==    blue
     SessionStorage Set Item    size    large
     SessionStorage Get Item    size    ==    large
+    LocalStorage Set Item    shape    round
+    LocalStorage Remove Item    colour
+    LocalStorage Get Item    colour    ==    ${None}
+    LocalStorage Get Item    shape    ==    round
+    LocalStorage Clear
+    LocalStorage Get Item    shape    ==    ${None}
+    SessionStorage Remove Item    size
+    SessionStorage Get Item    size    ==    ${None}
+    SessionStorage Set Item    weight    heavy
+    SessionStorage Clear
+    SessionStorage Get Item    weight    ==    ${None}
 
 Saved Storage State
     [Documentation]    Playwright saves the storage of the http and https origins the context has visited. Each of

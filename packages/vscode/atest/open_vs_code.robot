@@ -3,7 +3,7 @@ Name                Open VS Code
 Library             OperatingSystem
 Resource            resources/vscode.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close VS Code    ALL
 
 
 *** Test Cases ***
@@ -46,7 +46,7 @@ Trace And HAR Of The Workbench
     File Should Not Be Empty    ${OUTPUT_DIR}/har/workbench.har
 
 Video Of The Workbench
-    ${_}    ${_}    ${page} =    Open Test VS Code
+    ${_}    ${page} =    Open Test VS Code
     ...    extension_development_path=${TEST_EXTENSION}    record_video=${{ {"size": {"width": 1280, "height": 800}} }}
     Should Start With    ${page}[video_path]    ${OUTPUT_DIR}${/}browser${/}video${/}
     Set Viewport Size    1280    800

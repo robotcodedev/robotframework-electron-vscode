@@ -3,7 +3,7 @@ Name                HAR
 Library             OperatingSystem
 Resource            resources/fixture.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close Electron Application    ALL
 
 
 *** Test Cases ***

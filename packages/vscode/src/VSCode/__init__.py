@@ -14,7 +14,7 @@ from robot.utils import DotDict
 from robotlibcore import keyword
 
 from Electron import Electron, RecordVideo
-from Electron._docs import browser_import_arguments, browser_sections
+from Electron._docs import importing, shared_sections
 
 from .download import select_build
 from .instance import (
@@ -32,10 +32,11 @@ _INTRO = """
 VSCode library is a Robot Framework library for end-to-end testing of VS Code extensions.
 
 It is built on the Electron library and the
-[https://robotframework-browser.org|Browser library] and contains every
-Electron and Browser keyword. Import ``VSCode`` instead of ``Browser`` or
-``Electron``. It takes Browser's import arguments, see `Importing`. Guides and
-an example project are on the
+[https://robotframework-browser.org|Browser library]: Browser keywords, such as
+`Click` and `Get Text`, act on the workbench, and the keywords of the Electron
+library work for VS Code instances. Import ``VSCode`` instead of ``Browser`` or
+``Electron``. The library hides Browser's keywords for browsers and contexts,
+see `Browser, Context and Page`. Guides and an example project are on the
 [https://robotcodedev.github.io/robotframework-electron-vscode/|documentation site].
 
 = Opening VS Code =
@@ -46,52 +47,46 @@ VS Code version into a cache if needed, or starts an installed VS Code or a
 fork. Each instance gets its own user data and extensions directories under the
 output directory, so neither your own VS Code nor other instances affect it.
 
-| `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+| ${vscode}    ${_} =    `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+
+= Extensions =
 
 Extensions that the extension under test depends on come from an extensions
 directory given as ``extensions_dir``, which ``Execute VS Code CLI Command``
-from ``VSCode.Helper`` has filled. The guide on extensions shows this and other
-ways, such as installing into a running instance.
+from ``VSCode.Helper`` has filled. `Get VS Code Instance Directories` returns
+the directories of a running instance. The guide on extensions shows these and
+other ways, such as installing into a running instance.
 
 = The workbench =
 
-The workbench window is an ordinary Browser page, and windows that VS Code
-opens later are pages too. The library has no keywords for the command palette,
-notifications or other parts of the workbench. Their DOM changes with VS Code
-releases and differs between forks, so these keywords and their locators belong
-to your project. The documentation site shows how to write them.
+The workbench window is a page, and windows that VS Code opens later are pages
+too. The library has no keywords for the command palette, notifications or
+other parts of the workbench. Their DOM changes with VS Code releases and
+differs between forks, so these keywords and their locators belong to your
+project. The documentation site shows how to write them.
+
+= Several instances =
+
+Several instances can be open at once. `Switch Electron Application` makes
+another one the active instance, and `Get Electron Application Ids` returns
+their ids.
 
 = Closing VS Code =
 
-`Close VS Code` ends an instance. `Close Browser` and automatic closing end it
-as well, see `Automatic page and context closing`.
+`Close VS Code` ends an instance. Automatic closing ends it with the test or
+suite that opened it, see `Automatic page and context closing`.
 
-= Videos, traces and HAR files =
+= The main process, videos, traces and HAR files =
 
-`Open VS Code` takes ``record_video``, ``tracing`` and ``record_har`` as
-`New Electron Application` does.
+`Evaluate In Main Process` runs a JavaScript function in VS Code's main
+process. `Open VS Code` takes ``record_video``, ``tracing`` and ``record_har``,
+and the launch options ``color_scheme``, ``locale``, ``timezone_id`` and
+``bypass_csp``, as `New Electron Application` does.
 
 = VS Code without starting it =
 
 ``Get VS Code Executable`` of the ``VSCode.Helper`` library downloads VS Code
 and returns its executable, for example in a setup step of a CI job.
-
-= Electron and Browser keywords =
-
-`New Electron Application` starts other Electron applications. Browser keywords
-work on the workbench as on any other page. The following sections come from
-the Browser library's documentation.
-"""
-
-_IMPORTING = """
-VSCode library takes the same import arguments as the Browser library.
-
-They configure the Browser keywords, for example their timeout or presenter
-mode, and apply to the windows of VS Code as to any other page. All arguments
-are named arguments.
-
-Example:
-| Library    VSCode    timeout=20s    enable_presenter_mode=True
 """
 
 
@@ -111,7 +106,7 @@ class VSCode(Electron):
     # Libdoc and robotlibcore take the signature and the types of the import arguments
     # from Browser through __wrapped__. A decorator would hide __init__ from mypy.
     functools.update_wrapper(__init__, Electron.__init__)
-    __init__.__doc__ = cleandoc(_IMPORTING) + "\n\n" + browser_import_arguments()
+    __init__.__doc__ = importing("VSCode")
 
     def _start_suite(self, name: str, attrs: dict[str, Any]) -> None:
         super()._start_suite(name, attrs)
@@ -121,7 +116,7 @@ class VSCode(Electron):
             remove_instance_directories(Path(self.outputdir))
 
     def _instances(self) -> dict[str, Instance]:
-        """The instances of `Open VS Code` that are still open, by browser id."""
+        """The instances of `Open VS Code` that are still open, by id."""
         instances: dict[str, Instance] = self.__dict__.setdefault("_vscode_instances", {})
         if instances:
             for closed in instances.keys() - set(self.get_browser_ids(SelectionType.ALL)):
@@ -148,7 +143,7 @@ class VSCode(Electron):
         locale: str | None = None,
         timezone_id: str | None = None,
         bypass_csp: bool = False,
-    ) -> tuple[str, str, NewPageDetails]:
+    ) -> tuple[str, NewPageDetails]:
         """Starts an isolated VS Code instance and returns once its workbench is ready.
 
         Each instance gets its own user-data and extensions directories in
@@ -160,8 +155,8 @@ class VSCode(Electron):
 
         The instance is an application as started by `New Electron
         Application`: its workbench window is the active page, Browser
-        keywords work on it, and `Close VS Code`, `Close Browser` and
-        automatic closing end it.
+        keywords work on it, and `Close VS Code` and automatic closing end
+        it.
 
         *Arguments:*
           - ``path``: A folder to open as workspace, or a file to open in an editor.
@@ -210,8 +205,8 @@ class VSCode(Electron):
                 scripts.
 
         *Returns:*
-          A tuple of browser id, context id and page details of the workbench
-          window, like `New Electron Application`.
+          A tuple of the instance's id and the page details of the workbench
+          window, as `New Electron Application` returns them.
 
         *Raises:*
           - ``ValueError``: The version does not exist for the current
@@ -219,7 +214,7 @@ class VSCode(Electron):
                 executable is not found.
 
         Example:
-        | `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+        | ${vscode}    ${_} =    `Open VS Code`    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
         | `Open VS Code`    version=1.141.0    settings=${{ {"window.title": "robot-test"} }}
         """
         executable, product = select_build(version, executable, cache_dir)
@@ -230,7 +225,7 @@ class VSCode(Electron):
             extension_development_path = [extension_development_path]
         arguments = launch_arguments(directories, extension_development_path or [], args or [], path)
         logger.info(f"Starting VS Code {product or executable} with instance directory {directories.root}")
-        ids: tuple[str, str, NewPageDetails] = self.new_electron_application(
+        instance, page = self.new_electron_application(
             executable,
             args=arguments,
             env=env,
@@ -247,33 +242,34 @@ class VSCode(Electron):
             self.wait_for_elements_state(".monaco-workbench", ElementState.visible, timeout)
         except Exception:
             try:
-                self.close_browser(ids[0])
+                self.close_browser(instance)
             except Exception as error:  # noqa: BLE001 - the error of the workbench is the one to report
-                logger.warn(f"Closing the VS Code instance {ids[0]} failed: {error}")
+                logger.warn(f"Closing the VS Code instance {instance} failed: {error}")
             raise
-        self._instances()[ids[0]] = Instance(Path(executable), directories)
-        return ids
+        self._instances()[instance] = Instance(Path(executable), directories)
+        return instance, page
 
     @keyword("Close VS Code")
-    def close_vs_code(self, browser: SelectionType | str = SelectionType.CURRENT) -> None:
+    def close_vs_code(self, instance: SelectionType | str = SelectionType.CURRENT) -> None:
         """Ends a VS Code instance started with `Open VS Code`.
 
         The keyword returns after the VS Code process has exited. It behaves
         like `Close Electron Application`.
 
         *Arguments:*
-          - ``browser``: The browser id returned by `Open VS Code`. ``CURRENT``
-                ends the active instance, ``ALL`` closes all browsers and
+          - ``instance``: The id that `Open VS Code` returned. ``CURRENT``
+                ends the active instance, ``ALL`` ends all instances and
                 applications.
 
         Example:
-        | ${vscode}    ${_}    ${_} =    `Open VS Code`
+        | ${vscode}    ${_} =    `Open VS Code`
         | `Close VS Code`    ${vscode}
+        | `Close VS Code`    ALL
         """
-        self.close_electron_application(browser)
+        self.close_electron_application(instance)
 
     @keyword("Get VS Code Instance Directories")
-    def get_vs_code_instance_directories(self, browser: SelectionType | str = SelectionType.CURRENT) -> DotDict:
+    def get_vs_code_instance_directories(self, instance: SelectionType | str = SelectionType.CURRENT) -> DotDict:
         """Returns the directories of a VS Code instance started with `Open VS Code`.
 
         Pass them to ``Execute VS Code CLI Command`` from ``VSCode.Helper`` to
@@ -283,8 +279,8 @@ class VSCode(Electron):
         directory; the guide on extensions shows how to wait until it does.
 
         *Arguments:*
-          - ``browser``: ``CURRENT`` for the active instance, or a browser id
-                that `Open VS Code` returned.
+          - ``instance``: ``CURRENT`` for the active instance, or an id that
+                `Open VS Code` returned.
 
         *Returns:*
           A dictionary with the instance's folder as ``root``, its user-data
@@ -294,31 +290,31 @@ class VSCode(Electron):
           work.
 
         *Raises:*
-          - ``ValueError``: The browser is not an open VS Code instance
-                started with `Open VS Code`.
+          - ``ValueError``: The id is not an open VS Code instance started
+                with `Open VS Code`.
 
         Example:
         | ${dirs} =    `Get VS Code Instance Directories`
         | ${list} =    Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --list-extensions
         """
-        directories = self._instance(browser).directories
+        directories = self._instance(instance).directories
         return DotDict(
             root=str(directories.root), user_data=str(directories.user_data), extensions=str(directories.extensions)
         )
 
-    def _instance(self, browser: SelectionType | str) -> Instance:
-        """The instance of `Open VS Code` with the browser id ``browser``, or the active one for ``CURRENT``."""
-        if SelectionType.create(browser) is SelectionType.CURRENT:
+    def _instance(self, instance: SelectionType | str) -> Instance:
+        """The instance of `Open VS Code` with the id ``instance``, or the active one for ``CURRENT``."""
+        if SelectionType.create(instance) is SelectionType.CURRENT:
             active = self.get_browser_ids(SelectionType.CURRENT)
-            browser_id = active[0] if active else "CURRENT"
+            instance_id = active[0] if active else "CURRENT"
         else:
-            browser_id = str(browser)
-        instance = self._instances().get(browser_id)
-        if instance is None:
-            raise ValueError(f"Browser '{browser_id}' is not an open VS Code instance started by 'Open VS Code'.")
-        return instance
+            instance_id = str(instance)
+        found = self._instances().get(instance_id)
+        if found is None:
+            raise ValueError(f"'{instance_id}' is not an open VS Code instance started by 'Open VS Code'.")
+        return found
 
 
-VSCode.__doc__ = cleandoc(_INTRO) + "\n\n" + browser_sections()
+VSCode.__doc__ = cleandoc(_INTRO) + "\n\n" + shared_sections("`Open VS Code`", "`Close VS Code`")
 
 __all__ = ["VSCode"]

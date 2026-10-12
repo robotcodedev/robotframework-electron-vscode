@@ -2,7 +2,7 @@
 Name                Main Process
 Resource            resources/vscode.resource
 
-Test Teardown       Close Browser    ALL
+Test Teardown       Close VS Code    ALL
 
 
 *** Test Cases ***

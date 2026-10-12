@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-`Electron` is the [Browser library](https://robotframework-browser.org) plus keywords to start and close Electron applications. It contains every Browser keyword and takes the same import arguments. The windows of an application are ordinary Browser pages.
+`Electron` is the [Browser library](https://robotframework-browser.org) plus keywords to start, switch and close Electron applications. It contains the Browser keywords that apply to applications and takes the same import arguments. The windows of an application are ordinary Browser pages.
 
 ## Installation
 
@@ -54,9 +54,11 @@ App From Source
 
 ## Windows and closing
 
-- `New Electron Application` returns the browser id, the context id and the details of the first window's page, like `New Persistent Context`.
+- `New Electron Application` returns the application id and the details of the first window's page: `${app}    ${page} =    New Electron Application    …`.
 - Windows that the app opens later can be selected with `Switch Page    NEW`.
-- `Close Electron Application`, `Close Browser`, `Close Context` and Browser's automatic closing all end the application.
+- `Close Electron Application` and Browser's automatic closing end the application.
+- Several applications can be open at once. `Switch Electron Application` switches between them.
+- The library hides Browser's keywords for browsers and contexts, such as `New Page` and `Close Browser`. [Browser keywords in applications](../../guides/browser-keywords/#compared-with-the-browser-library) compares the two libraries.
 
 ## The main process
 
@@ -83,7 +85,7 @@ Evaluate In Main Process    (electron, size, window) => window.setBounds(size)  
 
 ## Launch options
 
-`New Electron Application` takes some of the options that `New Context` has for a web browser. They apply from the start, so another value means starting the application again.
+`New Electron Application` takes some of the options that the Browser library's `New Context` has for a web browser. They apply from the start, so another value means starting the application again.
 
 ```robotframework
 New Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=pt-BR    timezone_id=Asia/Tokyo
