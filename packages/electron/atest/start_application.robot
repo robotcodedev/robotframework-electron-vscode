@@ -36,7 +36,8 @@ Relative Executable Path
     ${relative} =    Evaluate    os.path.relpath(shutil.which($electron))    modules=os,shutil
     Should Not Be Equal    ${relative}    ${{ os.path.abspath($relative) }}
     ${app} =    Get Fixture App
-    New Electron Application    ${relative}    args=${{ [$app] }}
+    ${user_data} =    New User Data Dir    ${OUTPUT_DIR}
+    New Electron Application    ${relative}    args=${{ [$app, "--user-data-dir=" + $user_data] }}
     Get Title    ==    Electron Fixture
 
 Test Run Started From Inside VS Code

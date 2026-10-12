@@ -3,11 +3,16 @@
 import json
 import re
 import subprocess
+import tempfile
 import threading
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
+
+from robot.libraries.BuiltIn import BuiltIn
+
+from Electron import Electron
 
 FIXTURE_APP = Path(__file__).resolve().parent.parent / "fixtures" / "app"
 
@@ -15,6 +20,13 @@ FIXTURE_APP = Path(__file__).resolve().parent.parent / "fixtures" / "app"
 def get_fixture_app() -> str:
     """Return the path of the Electron fixture app."""
     return str(FIXTURE_APP)
+
+
+def new_user_data_dir(output_dir: str) -> str:
+    """Create a new, empty user-data directory for one start of the fixture app under ``output_dir``."""
+    base = Path(output_dir) / "electron-user-data"
+    base.mkdir(parents=True, exist_ok=True)
+    return tempfile.mkdtemp(dir=base)
 
 
 def count_fixture_app_processes(marker: str) -> int:
@@ -64,6 +76,13 @@ def web_server_url() -> str:
         _server = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
         threading.Thread(target=_server.serve_forever, daemon=True).start()
     return f"http://127.0.0.1:{_server.server_address[1]}/"
+
+
+def register_tag_selector_engine() -> None:
+    """Register the custom selector engine ``tag`` of ``selector_engine.js`` in Browser's Node process."""
+    electron = cast(Electron, BuiltIn().get_library_instance("Electron"))
+    electron.init_js_extension(str(Path(__file__).with_name("selector_engine.js")))
+    electron.call_js_keyword("fixtureRegisterTagEngine")
 
 
 def read_trace(path: str) -> dict[str, list[str]]:

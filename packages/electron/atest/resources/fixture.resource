@@ -15,7 +15,9 @@ Start Fixture App
     [Arguments]    @{extra_args}    &{options}
     ${electron} =    Get Electron Executable    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}    ${ELECTRON_CACHE}
     ${app} =    Get Fixture App
-    ${ids} =    New Electron Application    ${electron}    args=${{ [$app, *$extra_args] }}    &{options}
+    ${user_data} =    New User Data Dir    ${OUTPUT_DIR}
+    ${ids} =    New Electron Application    ${electron}
+    ...    args=${{ [$app, "--user-data-dir=" + $user_data, *$extra_args] }}    &{options}
     RETURN    ${ids}
 
 Fixture App Is Running

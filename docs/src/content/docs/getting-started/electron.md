@@ -95,5 +95,6 @@ New Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=pt
 
 ## Next steps
 
+- [Browser keywords in applications](../../guides/browser-keywords/) for what works on an application's windows and what does not.
 - [CI and the Linux display](../../guides/ci-and-display/) for running without a desktop.
 - [Logs and troubleshooting](../../guides/logs/) if an app does not start.

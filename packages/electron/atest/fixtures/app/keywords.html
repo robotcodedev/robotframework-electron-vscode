@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Keywords</title>
+    <style>
+        .box { width: 120px; height: 40px; margin: 4px; border: 1px solid #888; }
+        #scroller { height: 80px; overflow: auto; }
+        #scroller div { height: 400px; }
+    </style>
+</head>
+<body>
+    <h1 id="heading" class="title main" style="color: rgb(0, 0, 255)">Keywords</h1>
+    <p id="text" title="Paragraph title">Some <b>bold</b> text.</p>
+
+    <section aria-label="Locators">
+        <button id="locate-me" data-testid="by-testid" data-test-id="by-test-id" data-test="by-test">Locate me</button>
+        <label for="name">Name</label>
+        <input id="name" placeholder="Your name">
+        <img id="logo" alt="Fixture logo" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+        <div id="host"></div>
+        <iframe id="frame" src="frame.html" title="Frame"></iframe>
+    </section>
+
+    <section aria-label="Form">
+        <textarea id="notes"></textarea>
+        <input id="agree" type="checkbox">
+        <label for="agree">Agree</label>
+        <select id="color">
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+        </select>
+        <select id="sizes" multiple>
+            <option>S</option>
+            <option>M</option>
+            <option>L</option>
+        </select>
+        <input id="upload" type="file">
+        <div id="uploaded"></div>
+        <input id="secret" type="password">
+        <input id="keys">
+        <div id="key"></div>
+        <button id="counter">Clicks: 0</button>
+        <div id="hover-target" class="box">Hover me</div>
+        <div id="hovered"></div>
+        <div id="drag-source" class="box" draggable="true">Drag me</div>
+        <div id="drop-target" class="box">Drop here</div>
+        <div id="dropped"></div>
+        <div id="scroller"><div>Scroll me</div></div>
+    </section>
+
+    <table id="table">
+        <tr><th>Name</th><th>Version</th></tr>
+        <tr><td>Electron</td><td>44</td></tr>
+        <tr><td>Playwright</td><td>1.63</td></tr>
+    </table>
+
+    <section aria-label="Waiting">
+        <button id="show-later">Show later</button>
+        <div id="later-container"></div>
+    </section>
+
+    <section aria-label="Dialogs">
+        <button id="alert">Alert</button>
+        <button id="confirm">Confirm</button>
+        <button id="prompt">Prompt</button>
+        <div id="dialog-result"></div>
+        <a id="download" href="data:text/plain,Hello%20from%20the%20fixture" download="hello.txt">Download</a>
+    </section>
+
+    <script>
+        const byId = (id) => document.getElementById(id);
+        byId('host').attachShadow({ mode: 'open' }).innerHTML = '<span id="in-shadow">Inside the shadow root</span>';
+        byId('upload').addEventListener('change', (event) => {
+            byId('uploaded').textContent = [...event.target.files].map((file) => file.name).join(', ');
+        });
+        byId('keys').addEventListener('keydown', (event) => {
+            byId('key').textContent = event.key;
+        });
+        let clicks = 0;
+        byId('counter').addEventListener('click', (event) => {
+            clicks += 1;
+            event.target.textContent = `Clicks: ${clicks}`;
+        });
+        byId('hover-target').addEventListener('mouseenter', () => {
+            byId('hovered').textContent = 'Hovered';
+        });
+        byId('drag-source').addEventListener('dragstart', (event) => event.dataTransfer.setData('text/plain', 'drag'));
+        byId('drop-target').addEventListener('dragover', (event) => event.preventDefault());
+        byId('drop-target').addEventListener('drop', (event) => {
+            event.preventDefault();
+            byId('dropped').textContent = 'Dropped';
+        });
+        byId('show-later').addEventListener('click', () => {
+            setTimeout(() => {
+                byId('later-container').innerHTML = '<div id="later">Here now</div>';
+            }, 500);
+        });
+        byId('alert').addEventListener('click', () => {
+            alert('Hello from the fixture');
+            byId('dialog-result').textContent = 'Alerted';
+        });
+        byId('confirm').addEventListener('click', () => {
+            byId('dialog-result').textContent = confirm('Sure?') ? 'Confirmed' : 'Dismissed';
+        });
+        byId('prompt').addEventListener('click', () => {
+            try {
+                byId('dialog-result').textContent = `Prompted: ${prompt('Your name?')}`;
+            } catch (error) {
+                byId('dialog-result').textContent = error.message;
+            }
+        });
+    </script>
+</body>
+</html>

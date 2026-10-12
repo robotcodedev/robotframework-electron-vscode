@@ -71,6 +71,7 @@ The guide names the versions its results come from, as the old one does.
   - `electron_behaviour.robot`;
   - `limitations.robot`.
 - **Tests:** one test per part of a group, with several keywords each, for example "Form Input" or "Cookies".
+- **No duplicates:** the color scheme, the locale and the time zone are tested in `launch_options.robot` and the viewport in `context_state.robot`, so `electron_behaviour.robot` covers the menu and `prompt()`.
 - **Starting the app:** a suite starts the fixture app once, in its suite setup. A suite whose tests leave state behind that the next test would see, such as dialog handlers, starts it per test.
 - **Limitations:** `limitations.robot` runs each failing keyword with `Run Keyword And Expect Error` and the error that the guide quotes. Each test's documentation says what to do when it fails after an upgrade: update the guide, and turn the test into one that uses the keyword.
 
