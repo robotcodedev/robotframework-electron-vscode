@@ -23,7 +23,7 @@ The `Electron` library SHALL provide the Browser library's keywords that apply t
 - **THEN** it fails because no such keyword exists, and the library's documentation does not list it
 
 ### Requirement: Library documentation
-The library documentation SHALL be the `Electron` library's own: an introduction about applications, their windows and their main process, and import documentation with a link to the Browser library's import arguments. The sections that Browser keywords link to SHALL exist with short texts that point to the Browser library's documentation. The documentation SHALL report the version of the `Electron` library, not that of Browser.
+The library documentation SHALL be the `Electron` library's own, with import documentation that links to the Browser library's import arguments. The sections that Browser keywords link to SHALL exist with short texts that point to the Browser library's documentation. Browser keywords that behave differently in applications SHALL have a note on it. The documentation SHALL report the version of the `Electron` library, not that of Browser.
 
 #### Scenario: Generated documentation
 - **WHEN** libdoc generates the documentation of `Electron`
@@ -40,6 +40,10 @@ The library documentation SHALL be the `Electron` library's own: an introduction
 #### Scenario: Comparison with the Browser library
 - **WHEN** someone looks up `New Context` in the documentation of `Electron`
 - **THEN** the section `Browser, Context and Page` says that the library hides it, why, and what to use instead
+
+#### Scenario: Note on a Browser keyword
+- **WHEN** someone looks up `Close Page` in the documentation of `Electron`
+- **THEN** it says, after Browser's text, that `Close Page` waits forever on the page of a `<webview>` and how to remove the `<webview>` instead
 
 ### Requirement: Windows are Browser pages
 A started application SHALL be a browser in Browser's state with one context. Each of its windows SHALL be a page of that context, and its first window SHALL be the active page when `New Electron Application` returns, also when the application shows `WebContentsView`s or `<webview>`s, which are pages of the context as well.
@@ -87,7 +91,7 @@ An application SHALL end whenever Browser closes it: through `Close Electron App
 - **THEN** the application process ends
 
 ### Requirement: Evaluate in the main process
-`Evaluate In Main Process` SHALL run a JavaScript function in the main process of an application started by `New Electron Application`, the active one or the one with a given application id. The function SHALL get the `electron` module and the keyword's `arg`, and the keyword SHALL return the function's result. For an id that is not such an application, it SHALL fail with a message that names it.
+`Evaluate In Main Process` SHALL run a JavaScript function in the main process of an application started by `New Electron Application`, the active one or the one with a given application id. The function SHALL be a required argument; further arguments continue it. It SHALL get the `electron` module and the keyword's `arg`, and the keyword SHALL return the function's result. Without an open application, or for an id that is not such an application, it SHALL fail with a message that says so.
 
 #### Scenario: Value from the main process
 - **WHEN** a test evaluates `({ app }) => app.getName()` in the main process of the fixture app
@@ -100,6 +104,14 @@ An application SHALL end whenever Browser closes it: through `Close Electron App
 #### Scenario: Not an Electron application
 - **WHEN** `Evaluate In Main Process` is called with an application id that `New Electron Application` did not return
 - **THEN** it fails with a message that names the id
+
+#### Scenario: No application open
+- **WHEN** `Evaluate In Main Process` is called while no application is open
+- **THEN** it fails with "No application is open."
+
+#### Scenario: Call without a function
+- **WHEN** a test calls `Evaluate In Main Process` without a function
+- **THEN** Robot Framework, and RobotCode's analysis, report the missing argument
 
 ### Requirement: Window of the active page
 The function that `Evaluate In Main Process` runs SHALL get, after `arg`, the `BrowserWindow` that shows the active page. If the active page is not one of that application's, it SHALL get `null` instead.

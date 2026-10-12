@@ -6,12 +6,12 @@ Opens VS Code instances for end-to-end tests that are isolated from the user's o
 
 ## Requirements
 
-### Requirement: Drop-in replacement for Electron and Browser
-The `VSCode` library SHALL provide every keyword of the `Electron` library, and therefore every Browser keyword, with Browser's import arguments, in addition to its own keywords. It SHALL add no import arguments of its own. Importing it, generating its documentation or analysing it in an editor SHALL NOT download VS Code, start the Playwright process or launch an application.
+### Requirement: Keywords of Electron and Browser
+The `VSCode` library SHALL provide every keyword of the `Electron` library, and with it the Browser keywords that `Electron` provides, with Browser's import arguments, in addition to its own keywords. It SHALL hide the same Browser keywords as `Electron`. It SHALL add no import arguments of its own. Importing it, generating its documentation or analysing it in an editor SHALL NOT download VS Code, start the Playwright process or launch an application.
 
 #### Scenario: Browser and Electron keywords
 - **WHEN** a suite imports only `VSCode`
-- **THEN** Browser keywords such as `Click` and Electron keywords such as `New Electron Application` can be called without a library prefix
+- **THEN** Browser keywords such as `Click` and Electron keywords such as `New Electron Application` and `Switch Electron Application` can be called without a library prefix, and `New Context` cannot
 
 #### Scenario: Generating documentation
 - **WHEN** libdoc generates the documentation of `VSCode`
@@ -80,7 +80,7 @@ The instance directories, including VS Code's logs, SHALL be created under the o
 - **THEN** the VS Code logs of that instance can be found under the run's output directory
 
 ### Requirement: Close VS Code
-`Close VS Code` SHALL end the active instance, or the instance whose browser id is given, with the same behaviour as `Close Electron Application`.
+`Close VS Code` SHALL end the active instance, all instances, or the instance whose id is given, with the same behaviour as `Close Electron Application`.
 
 #### Scenario: Instance ends
 - **WHEN** `Close VS Code` is called
@@ -123,15 +123,15 @@ When a test run starts, the library SHALL remove the instance directories that e
 - **THEN** both the trace file and the HAR file exist and are not empty
 
 ### Requirement: Library documentation
-The library documentation SHALL start with an introduction of the `VSCode` library's own, which describes opening VS Code, the workbench, closing it, recording it and the helper library, followed by the Browser library's sections that Browser keywords link to, without Browser's opening text. The import documentation SHALL be the library's own and SHALL show Browser's import arguments with their types, defaults and descriptions.
+The library documentation SHALL be the `VSCode` library's own: an introduction about opening VS Code, its instances, the workbench, extensions, closing, recording and the helper library, and import documentation with a link to the Browser library's import arguments. The sections that Browser keywords link to SHALL exist with short texts that point to the Browser library's documentation, as in `Electron`.
 
 #### Scenario: Own introduction
 - **WHEN** libdoc generates the documentation of `VSCode`
-- **THEN** the introduction starts with the `VSCode` library's own text and sections, contains the Browser library's section `Assertions`, and does not contain Browser's opening text
+- **THEN** the introduction consists of the `VSCode` library's own text, its section `Assertions` links to the Browser library's documentation, and its section `Browser, Context and Page` compares the library with the Browser library
 
 #### Scenario: Own import documentation
 - **WHEN** libdoc generates the documentation of `VSCode`
-- **THEN** the import documentation starts with the `VSCode` library's own text, and the import arguments are Browser's, with Browser's description of each argument
+- **THEN** the import documentation is the `VSCode` library's own text with a link to the Browser library's import arguments, and the import arguments are Browser's, with their types and defaults
 
 ### Requirement: Keyword documentation
 The library's own keywords SHALL document every argument, their return value and the exceptions they raise for invalid input, so that Libdoc shows them with the arguments, the return type and the exceptions.
@@ -152,15 +152,15 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** the instance uses an empty extensions directory of its own, as before
 
 ### Requirement: Instance directories
-`Get VS Code Instance Directories` SHALL return the root, user-data and extensions directories of an instance that `Open VS Code` started, the active one or the one with a given browser id. It SHALL fail for a browser that `Open VS Code` did not start or that has been closed.
+`Get VS Code Instance Directories` SHALL return the root, user-data and extensions directories of an instance that `Open VS Code` started, the active one or the one with a given id. It SHALL fail for an id that `Open VS Code` did not start or whose instance has been closed.
 
 #### Scenario: Directories of the active instance
 - **WHEN** `Get VS Code Instance Directories` is called after `Open VS Code`
 - **THEN** it returns the directories that the instance uses, including a given `extensions_dir`
 
 #### Scenario: Not an instance of Open VS Code
-- **WHEN** `Get VS Code Instance Directories` is called for a browser that `Open VS Code` did not start
-- **THEN** it fails with a message that names the browser
+- **WHEN** `Get VS Code Instance Directories` is called with an id that `Open VS Code` did not return
+- **THEN** it fails with a message that names the id
 
 ### Requirement: Launch options
 `Open VS Code` SHALL accept `color_scheme`, `locale`, `timezone_id` and `bypass_csp` and start VS Code with them as `New Electron Application` does.

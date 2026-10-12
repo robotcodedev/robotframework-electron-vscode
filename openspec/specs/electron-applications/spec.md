@@ -6,16 +6,20 @@ Lets Robot Framework tests start Electron applications, drive their windows with
 
 ## Requirements
 
-### Requirement: Drop-in replacement for Browser
-The `Electron` library SHALL provide every keyword of the Browser library it is built on, together with Browser's import arguments and their behaviour, in addition to its own keywords. It SHALL add no import arguments of its own.
+### Requirement: Browser keywords for applications
+The `Electron` library SHALL provide the Browser library's keywords that apply to an application, together with Browser's import arguments and their behaviour, in addition to its own keywords. It SHALL hide Browser's keywords that create, switch, list or close browsers and contexts, and those that cannot work on an application, and its documentation SHALL name them. It SHALL add no import arguments of its own.
 
 #### Scenario: Browser keywords without Browser
 - **WHEN** a suite imports `Electron` and does not import `Browser`
-- **THEN** Browser keywords such as `New Page`, `Click` and `Get Text` can be called without a library prefix
+- **THEN** Browser keywords such as `Click` and `Get Text` can be called without a library prefix
 
 #### Scenario: Browser import arguments
 - **WHEN** a suite imports `Electron    timeout=5s    auto_closing_level=SUITE`
 - **THEN** both settings take effect exactly as they do for `Browser    timeout=5s    auto_closing_level=SUITE`
+
+#### Scenario: Hidden keyword
+- **WHEN** a suite that imports only `Electron` calls `New Context`
+- **THEN** it fails because no such keyword exists, and the library's documentation does not list it
 
 ### Requirement: Import starts nothing
 Importing the `Electron` library, including generating its documentation or analysing it in an editor, SHALL NOT start the Playwright process or an application.
@@ -25,7 +29,7 @@ Importing the `Electron` library, including generating its documentation or anal
 - **THEN** no Node.js process and no application process is started
 
 ### Requirement: Library documentation
-The library documentation SHALL start with an introduction of the `Electron` library's own, followed by the Browser library's sections that Browser keywords link to, without Browser's opening text. The import documentation SHALL be the library's own and SHALL show Browser's import arguments with their types, defaults and descriptions. The documentation SHALL report the version of the `Electron` library, not that of Browser.
+The library documentation SHALL be the `Electron` library's own, with import documentation that links to the Browser library's import arguments. The sections that Browser keywords link to SHALL exist with short texts that point to the Browser library's documentation. Browser keywords that behave differently in applications SHALL have a note on it. The documentation SHALL report the version of the `Electron` library, not that of Browser.
 
 #### Scenario: Generated documentation
 - **WHEN** libdoc generates the documentation of `Electron`
@@ -33,11 +37,19 @@ The library documentation SHALL start with an introduction of the `Electron` lib
 
 #### Scenario: Own introduction
 - **WHEN** libdoc generates the documentation of `Electron`
-- **THEN** the introduction starts with the `Electron` library's own text and sections, contains the Browser library's section `Assertions`, and does not contain Browser's opening text
+- **THEN** the introduction consists of the `Electron` library's own text, and its section `Assertions` links to the Browser library's documentation instead of repeating it
 
 #### Scenario: Own import documentation
 - **WHEN** libdoc generates the documentation of `Electron`
-- **THEN** the import documentation starts with the `Electron` library's own text, and the import arguments are Browser's, with Browser's description of each argument
+- **THEN** the import documentation is the `Electron` library's own text with a link to the Browser library's import arguments, and the import arguments are Browser's, with their types and defaults
+
+#### Scenario: Comparison with the Browser library
+- **WHEN** someone looks up `New Context` in the documentation of `Electron`
+- **THEN** the section `Browser, Context and Page` says that the library hides it, why, and what to use instead
+
+#### Scenario: Note on a Browser keyword
+- **WHEN** someone looks up `Close Page` in the documentation of `Electron`
+- **THEN** it says, after Browser's text, that `Close Page` waits forever on the page of a `<webview>` and how to remove the `<webview>` instead
 
 ### Requirement: Start an application
 `New Electron Application` SHALL start the Electron application at a given executable path, or a command on `PATH`, and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. A relative executable path and a relative working directory SHALL be relative to the test run's working directory, and without a working directory the application SHALL run in the test run's working directory. If no environment variables are given, the application SHALL inherit the environment of the test run without `ELECTRON_RUN_AS_NODE`.
@@ -75,7 +87,7 @@ A started application SHALL be a browser in Browser's state with one context. Ea
 
 #### Scenario: Return value
 - **WHEN** an application has been started
-- **THEN** the keyword returns the browser id, the context id and the details of the first window's page, in the same form as `New Persistent Context`
+- **THEN** the keyword returns the application id and the details of the first window's page
 
 #### Scenario: Views at the start
 - **WHEN** an application shows a `WebContentsView` and a `<webview>` in its first window when it starts
@@ -92,30 +104,23 @@ Windows that the application opens later SHALL become pages of its context witho
 - **WHEN** `Close Page` is called while a window of the application is the active page
 - **THEN** that window closes
 
-### Requirement: Applications and browsers side by side
-Each started application SHALL be a separate browser in Browser's state. Applications and ordinary browsers SHALL be usable in the same test, and `Switch Browser` SHALL switch between them.
-
-#### Scenario: Application and web browser
-- **WHEN** a test starts an application and then opens a web page with `New Browser` and `New Page`
-- **THEN** `Switch Browser` with the application's browser id makes the application's window the active page again
-
 ### Requirement: Close an application
-`Close Electron Application` SHALL end the active application, or the application whose browser id is given, and SHALL remove it from Browser's state. It SHALL return only after the application process has exited. It SHALL also succeed if the application has already exited.
+`Close Electron Application` SHALL end the active application, all applications, or the application whose id is given, and SHALL remove it from Browser's state. It SHALL return only after the application process has exited. It SHALL also succeed if the application has already exited.
 
 #### Scenario: Close the active application
-- **WHEN** `Close Electron Application` is called while an application is the active browser
-- **THEN** the application process has exited when the keyword returns, and the browser that was active before becomes active again
+- **WHEN** `Close Electron Application` is called while another application was active before the closed one
+- **THEN** the application process has exited when the keyword returns, and the application that was active before becomes active again
 
 #### Scenario: Close by browser id
-- **WHEN** the keyword is called with the browser id of an application that is not the active browser
-- **THEN** that application ends and the active browser stays active
+- **WHEN** the keyword is called with the id of an application that is not the active one
+- **THEN** that application ends and the active application stays active
 
 #### Scenario: Application already exited
 - **WHEN** the application has quit on its own and `Close Electron Application` is called
 - **THEN** the keyword passes
 
 ### Requirement: Browser's closing ends the application
-An application SHALL end whenever Browser closes its browser or context: through `Close Browser`, through `Close Context`, through automatic closing at the end of the test or suite that started it, and at the end of the run.
+An application SHALL end whenever Browser closes it: through `Close Electron Application`, through automatic closing at the end of the test or suite that started it, and at the end of the run.
 
 #### Scenario: Started in a test
 - **WHEN** a test starts an application and the library uses the default automatic closing level
@@ -225,7 +230,7 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** adding the script fails with an error about Trusted Types
 
 ### Requirement: Evaluate in the main process
-`Evaluate In Main Process` SHALL run a JavaScript function in the main process of an application started by `New Electron Application`, the active one or the one with a given browser id. The function SHALL get the `electron` module and the keyword's `arg`, and the keyword SHALL return the function's result. For a browser that is not such an application, it SHALL fail with a message that names it.
+`Evaluate In Main Process` SHALL run a JavaScript function in the main process of an application started by `New Electron Application`, the active one or the one with a given application id. The function SHALL be a required argument; further arguments continue it. It SHALL get the `electron` module and the keyword's `arg`, and the keyword SHALL return the function's result. Without an open application, or for an id that is not such an application, it SHALL fail with a message that says so.
 
 #### Scenario: Value from the main process
 - **WHEN** a test evaluates `({ app }) => app.getName()` in the main process of the fixture app
@@ -236,8 +241,16 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** no dialog opens, and the page shows the fixed path
 
 #### Scenario: Not an Electron application
-- **WHEN** `Evaluate In Main Process` is called with a browser id that `New Electron Application` did not return
-- **THEN** it fails with a message that names the browser id
+- **WHEN** `Evaluate In Main Process` is called with an application id that `New Electron Application` did not return
+- **THEN** it fails with a message that names the id
+
+#### Scenario: No application open
+- **WHEN** `Evaluate In Main Process` is called while no application is open
+- **THEN** it fails with "No application is open."
+
+#### Scenario: Call without a function
+- **WHEN** a test calls `Evaluate In Main Process` without a function
+- **THEN** Robot Framework, and RobotCode's analysis, report the missing argument
 
 ### Requirement: Window of the active page
 The function that `Evaluate In Main Process` runs SHALL get, after `arg`, the `BrowserWindow` that shows the active page. If the active page is not one of that application's, it SHALL get `null` instead.
@@ -251,7 +264,7 @@ The function that `Evaluate In Main Process` runs SHALL get, after `arg`, the `B
 - **THEN** the keyword returns the second window's title
 
 #### Scenario: Active page of another browser
-- **WHEN** a browser page is active beside the fixture app, and a test evaluates `(electron, arg, window) => window === null` in the fixture app's main process with its browser id
+- **WHEN** another application is active, and a test evaluates `(electron, arg, window) => window === null` in the fixture app's main process with the fixture app's id
 - **THEN** the keyword returns `True`
 
 ### Requirement: Browser keywords on application windows
@@ -262,8 +275,8 @@ Browser's keywords for locating elements, reading and input, waiting, context st
 - **THEN** each selector finds its element
 
 #### Scenario: Context state
-- **WHEN** a test adds a cookie and an entry in local storage in a window of the fixture app
-- **THEN** `Get Cookie` and `LocalStorage Get Item` return them
+- **WHEN** a test adds a cookie and entries in local and session storage in a window of the fixture app, and removes and clears them again
+- **THEN** `Get Cookie`, `LocalStorage Get Item` and `SessionStorage Get Item` return what is there at each step
 
 #### Scenario: Dialogs
 - **WHEN** a test accepts an `alert` and a `confirm` of the fixture app with `Handle Future Dialogs`
@@ -275,14 +288,18 @@ Browser's keywords for locating elements, reading and input, waiting, context st
 
 #### Scenario: Pages without a window
 - **WHEN** the fixture app shows a `<webview>` and a `WebContentsView`
-- **THEN** both are pages in `Get Browser Catalog`, and after `Switch Page` with their page ids, Browser keywords act on them
+- **THEN** both are pages in `Get Electron Application Catalog`, and after `Switch Page` with their page ids, Browser keywords act on them
+
+#### Scenario: Cancelled download
+- **WHEN** a test starts a download that a web server sends slowly, and cancels it with `Cancel Download`
+- **THEN** `Get Download State` reports it as canceled
 
 ### Requirement: Guide on Browser keywords
-The documentation site SHALL have a guide that says, for each group of Browser keywords, what works on an application, which keywords fail and why, and which behaviours of Electron tests need to know. For each keyword that the guide lists as failing, an acceptance test SHALL expect its error.
+The documentation site SHALL have a guide that says, for each group of Browser keywords, what works on an application, which Browser keywords the libraries hide and what to use instead, which keywords fail and why, and which behaviours of Electron tests need to know. For each visible keyword that the guide lists as failing, an acceptance test SHALL expect its error.
 
 #### Scenario: A keyword that fails
 - **WHEN** someone looks up `Save Page As PDF` in the guide
-- **THEN** the guide says that it fails on applications and why
+- **THEN** the guide says that the libraries hide it, because it fails on applications, and why
 
 #### Scenario: A behaviour of Electron
 - **WHEN** someone looks up why `Press Keys` does not trigger a menu item's accelerator
@@ -291,3 +308,18 @@ The documentation site SHALL have a guide that says, for each group of Browser k
 #### Scenario: A limitation lifted by an upgrade
 - **WHEN** a Browser or Playwright upgrade makes a keyword work that the guide lists as failing
 - **THEN** the acceptance test for that keyword fails
+
+### Requirement: Several applications
+Several applications SHALL be open at the same time, each a browser of its own in Browser's state. `Switch Electron Application` SHALL make another application the active one, `Get Electron Application Ids` SHALL return the ids of the open applications, and `Get Electron Application Catalog` SHALL return the open applications with their pages.
+
+#### Scenario: Switch between applications
+- **WHEN** a test starts two applications and calls `Switch Electron Application` with the id of the first
+- **THEN** the first application's window is the active page
+
+#### Scenario: Ids of the open applications
+- **WHEN** two applications are open
+- **THEN** `Get Electron Application Ids` returns both ids, and with `ACTIVE` only the id of the active one
+
+#### Scenario: Catalog of the applications
+- **WHEN** an application with a second window is open
+- **THEN** `Get Electron Application Catalog` returns the application with both pages and their titles

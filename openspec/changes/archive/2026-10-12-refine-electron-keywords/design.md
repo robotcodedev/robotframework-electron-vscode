@@ -39,8 +39,12 @@ See proposal.md for the motivation and the spec deltas for the requirements.
 - New keywords are thin methods that call Browser's methods:
   - `Switch Electron Application    application` calls `switch_browser` and returns the id of the application that was active before.
   - `Get Electron Application Ids    selection=ALL` calls `get_browser_ids`; `ACTIVE` returns the active one.
-  - `Get Electron Application Catalog` returns Browser's catalog without the context level, which always has one entry: a list of applications with `id`, `activeApplication` and `pages`, each page with `id`, `title`, `url` and `activePage`.
+  - `Get Electron Application Catalog` returns Browser's catalog without the context level, which always has one entry: a list of applications with `id`, `active` and `pages`, each page with `id`, `title`, `url` and `active`.
 - **Alternative:** a second keyword name for Browser's methods. Rejected: robotlibcore registers one name per method, and the argument names should change as well.
+
+### `Evaluate In Main Process` requires its function
+
+Found in the review: with `*function`, as Browser's `Evaluate JavaScript` has it, a call without any argument was valid for Robot Framework and RobotCode, and failed only at run time, with Browser's message "No Browser is open but needed for this operation." when the application was closed. The keyword now takes `function` as a required argument and `*lines` for further lines, which keeps multi-line functions with `...`. Without an open application, it fails with "No application is open."
 
 ### Argument names and return value
 
@@ -59,6 +63,8 @@ See proposal.md for the motivation and the spec deltas for the requirements.
 - `VSCode`'s introduction covers opening VS Code, instances, extensions, the workbench and the helper library, and uses the shared sections.
 - **Import documentation:** each library's own short text with a link to Browser's `Importing`. Libdoc still shows Browser's import arguments with their types and defaults, without Browser's descriptions.
 - **Libdoc test:** the unresolved links of `Electron` and `VSCode` may be those of Browser, plus the names of hidden keywords.
+- **Notes on Browser keywords** (added in the review): Browser keywords that behave differently in applications keep Browser's documentation, followed by a note *In Electron applications*. `Electron` overrides `get_keyword_documentation` and adds the note by method name from `KEYWORD_NOTES` in `_docs.py`: `Close Page`, `Switch Page`, `Get Page Ids`, `Save Storage State`, `Handle Future Dialogs`, `Press Keys` and `Keyboard Key`. Each note says only what an acceptance test checks. Unit tests check the notes and their links in the generated Libdoc.
+  - **Alternative:** overriding these keywords with own methods and documentation. Rejected: Browser's own code calls some of them, for example `close_page` during automatic closing, with Browser's arguments.
 
 ### Tests
 
@@ -76,6 +82,7 @@ See proposal.md for the motivation and the spec deltas for the requirements.
 - [Browser's keyword documentation mentions hidden keywords] → They show as plain names. The section `Browser, Context and Page` explains what to use instead.
 - [Two Browser-based libraries in one suite] → `Browser` and `Electron` each start a Node process, and their keywords need the library prefix. The acceptance test shows that it works.
 - [Links to the Browser documentation point to its latest version, which may differ from the installed one] → Acceptable for the sections we link to, which change rarely.
+- [`Close Page` on the page of a `<webview>` waits forever (found in the review on 2026-10-12): the `<webview>` element in its host page keeps the guest] → The documentation says so and shows how to remove the element; acceptance tests cover both, and `Close Page` on a `WebContentsView`.
 
 ## Migration Plan
 
