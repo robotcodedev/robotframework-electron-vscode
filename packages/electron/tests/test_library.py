@@ -197,3 +197,44 @@ def test_evaluates_in_the_main_process_of_a_given_application(fake_launch):
     electron.evaluate_in_main_process("(electron, arg) => arg", arg={"answer": 42}, browser="browser=other")
 
     assert calls[0] == {"browserId": "browser=other", "script": "(electron, arg) => arg", "arg": {"answer": 42}}
+
+
+@pytest.fixture
+def pages(fake_launch, monkeypatch):
+    """Fakes an application whose active page after the start is a view, and records the page switches."""
+    electron, _ = fake_launch
+    active = ["page=view"]
+    switches: list[str] = []
+
+    def call_js_keyword(name, **arguments):
+        if name == "robotframeworkElectronIsWindowPage":
+            return active[0] == "page=window"
+        return {"browserId": "browser", "contextId": "context", "pageId": active[0]}
+
+    def switch_page(page_id, *args):
+        switches.append(page_id)
+        active[0] = page_id
+
+    monkeypatch.setattr(electron, "call_js_keyword", call_js_keyword)
+    monkeypatch.setattr(electron, "get_page_ids", lambda *args: ["page=guest", "page=window", "page=view"])
+    monkeypatch.setattr(electron, "switch_page", switch_page)
+    return electron, active, switches
+
+
+def test_switches_to_the_window_page_when_a_view_is_active(pages, tmp_path):
+    electron, _, switches = pages
+
+    _, _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+
+    assert page["page_id"] == "page=window"
+    assert switches == ["page=guest", "page=window"]
+
+
+def test_keeps_the_active_page_when_it_is_the_window(pages, tmp_path):
+    electron, active, switches = pages
+    active[0] = "page=window"
+
+    _, _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+
+    assert page["page_id"] == "page=window"
+    assert switches == []

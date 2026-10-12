@@ -260,11 +260,27 @@ class Electron(Browser):
             trace_file = recording["tracing"]
             logger.info(f"The trace of {adopted['browserId']} is saved to {trace_file} when the application closes")
         video_path = self.register_adopted_context(adopted["contextId"], recording, adopted.get("videoPath"))
+        page_id = self._activate_window_page(adopted["browserId"], adopted.get("pageId", ""))
         return (
             adopted["browserId"],
             adopted["contextId"],
-            NewPageDetails(page_id=adopted.get("pageId", ""), video_path=video_path),
+            NewPageDetails(page_id=page_id, video_path=video_path),
         )
+
+    def _activate_window_page(self, browser_id: str, page_id: str) -> str:
+        """Makes the first window's own page the active page and returns its id.
+
+        Browser makes the page that Playwright saw first the active page. When the application shows
+        a WebContentsView or a <webview> from the start, that can be one of them.
+        """
+        if not page_id or self.call_js_keyword("robotframeworkElectronIsWindowPage", browserId=browser_id):
+            return page_id
+        for candidate in self.get_page_ids(SelectionType.ALL, SelectionType.ACTIVE, SelectionType.ACTIVE):
+            self.switch_page(candidate)
+            if self.call_js_keyword("robotframeworkElectronIsWindowPage", browserId=browser_id):
+                return str(candidate)
+        self.switch_page(page_id)
+        return page_id
 
     @keyword
     def close_electron_application(self, browser: SelectionType | str = SelectionType.CURRENT) -> None:

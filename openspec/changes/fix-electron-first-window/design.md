@@ -53,7 +53,7 @@ See proposal.md for the motivation.
 
 - **Acceptance test** in `start_application.robot`, "Browser Keywords Act On The First Window With Views":
   - It starts the fixture app with `--views` three times, because the order varies. Each time, the active page's title is the window's and the returned page id is the active page's.
-  - It is written and run before the fix, and must fail there.
+  - It is written and run before the fix, and must fail there. On 2026-10-12, it failed with "Title 'View' (str) should be 'Views' (str)": the view was the active page.
 - **`pages.robot`:** the test with `>>>` no longer switches to the window by title.
 - **Unit tests:**
   - `test_electron_js.py`: the launch waits for a window page after a view, returns the window page's video path, and goes on when the first page has closed.

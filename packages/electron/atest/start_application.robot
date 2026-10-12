@@ -15,6 +15,16 @@ Browser Keywords Act On The First Window
     Click    id=change
     Get Text    id=change    ==    Clicked
 
+Browser Keywords Act On The First Window With Views
+    [Documentation]    With --views, the window shows a <webview> and a WebContentsView, which are pages as well.
+    ...    Playwright sees the pages in a varying order, so the test starts the application three times.
+    FOR    ${start}    IN RANGE    3
+        ${_}    ${_}    ${page} =    Start Fixture App    --views
+        Get Title    ==    Views
+        Get Page Ids    ACTIVE    ACTIVE    ACTIVE    ==    ${page}[page_id]
+        Close Browser    CURRENT
+    END
+
 Arguments And Environment
     Set Environment Variable    ROBOT_ONLY_IN_RUN    visible-to-the-run
     ${env} =    Evaluate

@@ -25,7 +25,7 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
         ...contextOptions,
     });
     try {
-        const window = await app.firstWindow({ timeout });
+        const window = await firstWindowPage(app, await app.firstWindow({ timeout }), timeout);
         // The library timeout, as the contexts that Browser creates get it.
         app.context().setDefaultTimeout(defaultTimeout);
         let browserId;
@@ -40,6 +40,47 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
         await app.close().catch(() => app.process().kill());
         throw error;
     }
+}
+
+// Whether `page` shows the own contents of a BrowserWindow, and not a WebContentsView
+// or a <webview> inside one. A page that has closed is none.
+async function isWindowPage(app, page) {
+    if (page.isClosed()) return false;
+    try {
+        const session = await page.context().newCDPSession(page);
+        const { targetInfo } = await session.send('Target.getTargetInfo');
+        await session.detach();
+        return await app.evaluate(({ BrowserWindow, webContents }, targetId) => {
+            const contents = webContents.fromDevToolsTargetId(targetId);
+            return contents !== undefined && BrowserWindow.fromWebContents(contents)?.webContents === contents;
+        }, targetInfo.targetId);
+    } catch (error) {
+        if (page.isClosed()) return false;
+        throw error;
+    }
+}
+
+// The page of the application's first window. Views and <webview>s are pages too, and
+// Playwright may see one of them first; then this waits for the window's own page.
+async function firstWindowPage(app, first, timeout) {
+    if (first.isClosed() || (await isWindowPage(app, first))) return first;
+    const deadline = Date.now() + timeout;
+    for (;;) {
+        for (const page of app.windows()) {
+            if (await isWindowPage(app, page)) return page;
+        }
+        if (timeout && Date.now() > deadline) {
+            throw new Error(`The application showed no window of its own within ${timeout} ms, only views.`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+}
+
+// Whether the active `page` is a window's own page of the application with the browser id `browserId`.
+async function robotframeworkElectronIsWindowPage(browserId, page) {
+    const application = applications.get(browserId);
+    if (!application || !page || page.context() !== application.context()) return false;
+    return isWindowPage(application, page);
 }
 
 // Runs the function text `script` in the main process of the application with
@@ -66,3 +107,4 @@ async function robotframeworkElectronEvaluate(browserId, script, arg, page) {
 exports.__esModule = true;
 exports.robotframeworkElectronLaunch = robotframeworkElectronLaunch;
 exports.robotframeworkElectronEvaluate = robotframeworkElectronEvaluate;
+exports.robotframeworkElectronIsWindowPage = robotframeworkElectronIsWindowPage;

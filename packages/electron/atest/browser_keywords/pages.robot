@@ -24,7 +24,6 @@ Webview And View By Page Id
 
 Frame Selector Does Not Reach Into A Webview
     Start Fixture App    --views
-    Wait Until Keyword Succeeds    10s    200ms    Switch To Page With Title    Views
     Wait For Elements State    id=guest    attached
     Run Keyword And Expect Error    *<iframe> was expected*    Get Element Count    id=guest >>> id=guest-text
 
