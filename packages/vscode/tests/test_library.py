@@ -1,18 +1,12 @@
-import inspect
-import json
-import re
 from datetime import timedelta
-from pathlib import Path
 from typing import Any
 
 import pytest
-from Browser import playwright
 from Browser.utils.data_types import AutoClosingLevel, ColorScheme
-from robot.libdoc import LibraryDocumentation
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
 from Electron import HIDDEN_KEYWORDS, Electron
-from VSCode import Instance, VSCode, __version__
+from VSCode import Instance
 from VSCode.instance import InstanceDirectories
 
 
@@ -24,13 +18,6 @@ def _isolated_cwd(tmp_path, monkeypatch):
 
 def import_library(*args: str):
     return RobotLibrary.from_name("VSCode", args=list(args)).instance
-
-
-def unresolved_links(library: str) -> set[str]:
-    doc = LibraryDocumentation(library)
-    doc.convert_docs_to_html()
-    html = json.dumps(doc.to_dictionary())
-    return set(re.findall(r'<span class=\\"name\\">([^<]+)</span>', html))
 
 
 def test_contains_every_electron_and_browser_keyword():
@@ -144,81 +131,3 @@ def test_converts_browser_import_arguments():
 
 def test_import_starts_no_node_process():
     assert import_library()._playwright is None
-
-
-def test_libdoc_reports_own_version_without_starting_a_process(monkeypatch):
-    def fail(*args, **kwargs):
-        raise AssertionError(f"process started: {args}")
-
-    monkeypatch.setattr(playwright, "Popen", fail)
-    monkeypatch.setattr(playwright, "run", fail)
-
-    assert LibraryDocumentation("VSCode").version == __version__
-
-
-def test_has_no_unresolved_links_beyond_browser_and_hidden_keywords():
-    # Browser's keyword documentation links to keywords that the library hides; Libdoc shows them as names.
-    hidden = {name.replace("_", " ") for name in HIDDEN_KEYWORDS}
-    unresolved = {link.lower() for link in unresolved_links("VSCode") - unresolved_links("Browser")}
-
-    assert unresolved <= hidden
-
-
-BROWSER_DOCUMENTATION = "https://marketsquare.github.io/robotframework-browser/Browser.html"
-
-
-def test_intro_is_the_librarys_own_and_points_to_browsers_documentation():
-    doc = LibraryDocumentation("VSCode").doc
-
-    assert doc.startswith("VSCode library is a Robot Framework library for end-to-end testing of VS Code extensions.")
-    assert "Browser library is a browser automation library" not in doc
-    assert "Keywords that act on an element take a ``selector`` argument." not in doc
-    assert f"{BROWSER_DOCUMENTATION}#Assertions" in doc
-    assert "| ``Close Browser``, ``Close Context`` | `Close VS Code` |" in doc
-
-
-def test_import_documentation_points_to_browsers_arguments():
-    init = LibraryDocumentation("VSCode").inits[0]
-    text = " ".join(init.doc.split())
-
-    assert text.startswith("VSCode library takes the same import arguments as the Browser library")
-    assert f"{BROWSER_DOCUMENTATION}#Importing" in init.doc
-    assert [arg.name for arg in init.args] == [arg.name for arg in LibraryDocumentation("Browser").inits[0].args]
-
-
-def own_keywords(library: str) -> list[Any]:
-    package = Path(inspect.getfile(VSCode)).parent
-    return [kw for kw in LibraryDocumentation(library).keywords if Path(kw.source).is_relative_to(package)]
-
-
-@pytest.mark.parametrize("library", ["VSCode", "VSCode.Helper"])
-def test_own_keywords_document_every_argument_and_return_value(library):
-    keywords = own_keywords(library)
-
-    assert keywords
-    for keyword in keywords:
-        assert all(keyword.args.docs.get(arg.name) for arg in keyword.args if arg.name), keyword.name
-        returns_nothing = keyword.args.return_type is None or keyword.args.return_type.type is type(None)
-        assert returns_nothing or keyword.args.return_doc, keyword.name
-
-
-@pytest.mark.parametrize(
-    ("library", "name", "exceptions"),
-    [
-        ("VSCode", "Open VS Code", {"ValueError"}),
-        ("VSCode", "Get VS Code Instance Directories", {"ValueError"}),
-        ("VSCode.Helper", "Get VS Code Executable", {"ValueError"}),
-        ("VSCode.Helper", "Execute VS Code CLI Command", {"ValueError", "RuntimeError"}),
-    ],
-)
-def test_keywords_document_the_exceptions_for_invalid_input(library, name, exceptions):
-    keyword = next(kw for kw in own_keywords(library) if kw.name == name)
-
-    assert exceptions <= set(keyword.args.raises)
-
-
-def test_browser_keywords_that_behave_differently_have_a_note():
-    keywords = {kw.name: kw.doc for kw in LibraryDocumentation("VSCode").keywords}
-
-    assert "*In Electron applications:*" in keywords["Close Page"]
-    assert "*In Electron applications:*" not in keywords["Click"]

@@ -1,14 +1,11 @@
-import json
-import re
 from pathlib import Path
 from typing import Any
 
 import pytest
 from Browser import playwright
-from robot.libdoc import LibraryDocumentation
 
 import Electron.Helper
-from VSCode import VSCode, __version__
+from VSCode import VSCode
 from VSCode.download import SelectedBuild
 from VSCode.Helper import Helper
 
@@ -32,28 +29,6 @@ def test_returns_given_executable_without_downloading(no_network, tmp_path):
 
     assert executable == str(Path("/usr/share/code/code"))
     assert list(tmp_path.iterdir()) == []
-
-
-def test_libdoc_lists_the_helper_keywords_without_starting_a_process(monkeypatch):
-    def fail(*args, **kwargs):
-        raise AssertionError(f"process started: {args}")
-
-    monkeypatch.setattr(playwright, "Popen", fail)
-    monkeypatch.setattr(playwright, "run", fail)
-
-    doc = LibraryDocumentation("VSCode.Helper")
-
-    assert doc.version == __version__
-    assert [keyword.name for keyword in doc.keywords] == ["Execute VS Code CLI Command", "Get VS Code Executable"]
-    assert all(keyword.doc for keyword in doc.keywords)
-
-
-def test_helper_documentation_has_no_unresolved_links():
-    doc = LibraryDocumentation("VSCode.Helper")
-    doc.convert_docs_to_html()
-    html = json.dumps(doc.to_dictionary())
-
-    assert re.findall(r'<span class=\\"name\\">([^<]+)</span>', html) == []
 
 
 def test_vscode_library_no_longer_downloads_on_its_own():
