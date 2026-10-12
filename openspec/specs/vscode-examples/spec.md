@@ -133,11 +133,15 @@ The example's tests SHALL take screenshots at their important steps. A script SH
 - **THEN** the site's screenshots show the workbench as the example's tests see it now
 
 ### Requirement: Guide on Browser features
-The documentation site SHALL have a guide that lists which Browser features work with VS Code, which need a setting, and which do not work.
+The guide on Browser keywords in applications SHALL have a section on VS Code. It SHALL list the Browser features that need a setting in VS Code, and those that work differently in VS Code than in other Electron applications.
 
 #### Scenario: A feature that does not work
 - **WHEN** someone looks up `Save Page As PDF` in the guide
 - **THEN** the guide says that it does not work with VS Code and why
+
+#### Scenario: A feature that needs a setting
+- **WHEN** someone looks up `Drag And Drop` in the explorer
+- **THEN** the section on VS Code names the setting `explorer.confirmDragAndDrop`
 
 ### Requirement: Video of a test
 The example SHALL have a test that records a video of VS Code while it demonstrates the extension, and one that records a video while it creates a Python script and runs it with the Python extension, both with the video's size taken from the screen size of the display profiles. A third test SHALL record the Python script without presenter mode, creating the file in the explorer. The video guide SHALL include these tests from the example.
