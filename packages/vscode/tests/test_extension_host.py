@@ -19,6 +19,8 @@ from VSCode import extension_host
 from VSCode.extension_host import (
     HELPER_EXTENSION,
     HELPER_ID,
+    HELPER_VSIX,
+    LIBRARY_VERSION,
     ExtensionHost,
     PageNotReadyError,
     UnknownWorkspaceError,
@@ -46,6 +48,7 @@ class FakeHelper:
         workspace: str | None,
         workspace_id: str | None,
         probe: bytes | None = None,
+        version: str | None = LIBRARY_VERSION,
     ):
         helper = self
 
@@ -83,7 +86,7 @@ class FakeHelper:
         self.server.handle_error = lambda request, client_address: None  # type: ignore[method-assign]
         threading.Thread(target=self.server.serve_forever, args=(0.01,), daemon=True).start()
         self.file = directory / f"{name}.json"
-        endpoint = {"port": self.server.server_address[1], "token": TOKEN, "pid": 1}
+        endpoint = {"port": self.server.server_address[1], "token": TOKEN, "pid": 1, "version": version}
         self.file.write_text(json.dumps({**endpoint, "workspace": workspace, "workspaceId": workspace_id}))
 
 
@@ -109,9 +112,10 @@ def add_helper(user_data) -> Iterator[Callable[..., FakeHelper]]:
         workspace_id: str | None = None,
         answer: Answer | None = None,
         probe: bytes | None = None,
+        version: str | None = LIBRARY_VERSION,
     ) -> FakeHelper:
         directory = endpoint_directory(user_data)
-        helper = FakeHelper(directory, name, answer or answer_with(name), workspace, workspace_id, probe)
+        helper = FakeHelper(directory, name, answer or answer_with(name), workspace, workspace_id, probe, version)
         helpers.append(helper)
         return helper
 
@@ -264,9 +268,15 @@ def test_names_the_workspace_and_the_open_workspaces_after_the_timeout(user_data
     )
 
 
-def test_fails_after_the_timeout_without_an_extension_host(user_data):
-    with pytest.raises(AssertionError, match=r"^No extension host of the VS Code instance answered within 200"):
+def test_names_both_ways_to_load_the_helper_after_the_timeout_without_an_extension_host(user_data):
+    with pytest.raises(AssertionError, match=r"^No extension host of the VS Code instance answered") as error:
         run(user_data, timeout=0.2)
+
+    message = str(error.value)
+    assert "answered within 200 milliseconds." in message
+    assert "helper extension may not be loaded" in message
+    assert f"'{HELPER_EXTENSION}' to Open VS Code in extension_development_path" in message
+    assert f"install '{HELPER_VSIX}' into the extensions directory" in message
 
 
 def test_fails_after_the_timeout_without_the_extension_host_of_the_active_page(user_data, add_helper):
@@ -351,7 +361,7 @@ def test_waits_for_the_next_extension_host_when_one_ends_before_it_gets_the_func
     ended = endpoint_directory(user_data) / "ended.json"
     ended.write_text("{}")
     add_helper("next")
-    probes = [[ExtensionHost(ended, 1, free_port(), TOKEN, None, None)]]
+    probes = [[ExtensionHost(ended, 1, free_port(), TOKEN, None, None, LIBRARY_VERSION)]]
 
     def live(user_data: Path) -> list[ExtensionHost]:
         return probes.pop() if probes else live_extension_hosts(user_data)
@@ -409,3 +419,34 @@ def test_names_a_busy_extension_host_of_the_workspace_after_the_timeout(user_dat
         "The extension host of the workspace '/work/busy' did not answer within 300 milliseconds. "
         "A function that has not finished may keep it busy."
     )
+
+
+def test_evaluates_with_a_helper_of_the_librarys_version(user_data, add_helper):
+    add_helper("only", workspace="/work/a", workspace_id="id-a", version=LIBRARY_VERSION)
+
+    assert run(user_data, page=lambda: "id-a")[0] == "only"
+
+
+def test_evaluates_with_a_helper_whose_semantic_version_is_the_librarys_development_release(
+    user_data, add_helper, monkeypatch
+):
+    monkeypatch.setattr(extension_host, "LIBRARY_VERSION", "0.2.0.dev12")
+    add_helper("only", workspace="/work/a", workspace_id="id-a", version="0.2.0-dev.12")
+
+    assert run(user_data, page=lambda: "id-a")[0] == "only"
+
+
+@pytest.mark.parametrize(("version", "shown"), [("0.0.9", "0.0.9"), (None, "unknown")])
+def test_fails_at_once_with_a_helper_of_another_or_no_version(user_data, add_helper, version, shown):
+    helper = add_helper("only", workspace="/work/a", workspace_id="id-a", version=version)
+    started = time.monotonic()
+
+    with pytest.raises(AssertionError) as error:
+        run(user_data, page=lambda: "id-a", timeout=5)
+
+    assert str(error.value).startswith(
+        f"The helper extension in this VS Code has the version {shown}, but the library has {LIBRARY_VERSION}."
+    )
+    assert f"Install '{HELPER_VSIX}' of this version" in str(error.value)
+    assert time.monotonic() - started < 1
+    assert helper.requests == []

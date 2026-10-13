@@ -52,7 +52,7 @@ ${dirs} =    Get VS Code Instance Directories
 Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ms-python.python
 ```
 
-When the script returns, the extension is on disk, but VS Code has not necessarily taken it in yet. Its extension host knows: once `vscode.extensions.getExtension` finds the extension there, the window has it. [`Evaluate In Extension Host`](../extension-host/) asks it, and `Wait Until Keyword Succeeds` repeats the question:
+When the script returns, the extension is on disk, but VS Code has not necessarily taken it in yet. Its extension host knows: once `vscode.extensions.getExtension` finds the extension there, the window has it. [`Evaluate In Extension Host`](../extension-host/) asks it, with the library's helper extension, which the example loads next to its own extension. `Wait Until Keyword Succeeds` repeats the question:
 
 ```robotframework
 ${known} =    Evaluate In Extension Host    (vscode, id) => vscode.extensions.getExtension(id) !== undefined

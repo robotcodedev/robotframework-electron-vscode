@@ -9,11 +9,21 @@ authors = [
 license = "MPL-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
-dependencies = ["robotframework-electron==0.1.0"]
+dependencies = ["robotframework-electron==0.1.0", "packaging>=24"]
 
+# hatchling instead of uv_build, because the build packs the helper extension's .vsix in hatch_build.py.
 [build-system]
-requires = ["uv_build>=0.12.23,<0.13.0"]
-build-backend = "uv_build"
+requires = ["hatchling>=1.32,<2"]
+build-backend = "hatchling.build"
 
-[tool.uv.build-backend]
-module-name = "VSCode"
+[tool.hatch.build.hooks.custom]
+
+# The .vsix is ignored by git, so both targets name it as an artifact.
+[tool.hatch.build.targets.wheel]
+packages = ["src/VSCode"]
+artifacts = ["src/VSCode/extension-host.vsix"]
+
+# Without the npm files, so that building the wheel from the sdist needs no Node.
+[tool.hatch.build.targets.sdist]
+only-include = ["src/VSCode", "hatch_build.py", "README.md", "LICENSE"]
+artifacts = ["src/VSCode/extension-host.vsix"]

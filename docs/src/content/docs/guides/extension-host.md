@@ -15,6 +15,59 @@ Use the API to prepare a test and to wait for a state:
 
 Check the outcome through the workbench, as a user sees it. A test that checks only through the API no longer tests what the user gets.
 
+## Loading the helper extension
+
+The keyword works through a small helper extension of the library. It listens on `127.0.0.1` with a random port, and accepts only requests with a token, which it writes into the instance's user-data directory.
+
+The library does not load the helper: like the extensions under test, it is part of the test environment, which is set before VS Code starts. The `VSCode` package contains it twice, next to the library's `__init__.py`: as the folder `extension` and as the file `extension-host.vsix`. A test loads it in one of two ways. The helper is not in the Marketplace: it runs any function that a test sends, and it belongs to its version of the library.
+
+### As a development extension
+
+Give the folder to `Open VS Code` in `extension_development_path`, after your own extensions. Inline Python finds the folder in the installed package, also in a `*** Variables ***` section:
+
+```robotframework
+*** Variables ***
+${HELPER_EXTENSION}    ${{ pathlib.Path(VSCode.__file__).parent / 'extension' }}
+
+*** Test Cases ***
+Refresh Command
+    VAR    @{development}    ${EXECDIR}    ${HELPER_EXTENSION}
+    Open VS Code    ${EXECDIR}/tests/workspace    extension_development_path=${development}
+    Evaluate In Extension Host    (vscode) => vscode.commands.executeCommand('myExtension.refresh')
+```
+
+Nothing is installed, so this works with the fresh directories of every instance, and the folder always fits the installed library. The window becomes an "Extension Development Host": its title starts with `[Extension Development Host]`, also without an extension of your own, and `vscode.extensions.all` lists the helper, as `robotframework-vscode.extension-host`.
+
+### Installed from the .vsix
+
+Install `extension-host.vsix` into an extensions directory before VS Code starts, and give the directory to `Open VS Code` as `extensions_dir`. VS Code then runs without development mode. In Robot Framework, `Execute VS Code CLI Command` of the `VSCode.Helper` library installs it:
+
+```robotframework
+*** Settings ***
+Library    VSCode
+Library    VSCode.Helper
+
+*** Variables ***
+${HELPER_VSIX}    ${{ pathlib.Path(VSCode.__file__).parent / 'extension-host.vsix' }}
+${PREPARED}       ${OUTPUT_DIR}/prepared
+
+*** Test Cases ***
+Installed Helper
+    Execute VS Code CLI Command    ${PREPARED}/extensions    ${PREPARED}/user-data
+    ...    --install-extension    ${HELPER_VSIX}
+    Open VS Code    extensions_dir=${PREPARED}/extensions
+    ${version} =    Evaluate In Extension Host    (vscode) => vscode.version
+```
+
+In a shell, for example in a CI step that prepares the extensions directory before the tests, Python prints the path of the `.vsix`. Run it outside VS Code's integrated terminal, where `code` would talk to the VS Code that the terminal belongs to. `${vsix:?}` stops the command when Python does not find the library: with an empty value, `code` ignores `--install-extension` and opens a VS Code window instead.
+
+```bash
+vsix=$(python -c "import pathlib, VSCode; print(pathlib.Path(VSCode.__file__).parent / 'extension-host.vsix')")
+code --extensions-dir prepared/extensions --user-data-dir prepared/user-data --install-extension "${vsix:?}"
+```
+
+The helper has the version of the library. After an update of the library, install the `.vsix` again, which replaces the old helper: until then, `Evaluate In Extension Host` fails at once with a message that names both versions.
+
 ## The function
 
 The function gets the `vscode` module and `arg`, a value from the test. The keyword waits for a promise that the function returns, and returns its result:
@@ -104,22 +157,6 @@ ${name} =    Evaluate In Extension Host    (vscode) => vscode.workspace.name    
 - **Editors in windows of their own** belong to the workbench window that they came from, and use its extension host.
 - **Windows without a workspace** cannot be named by `workspace`. The keyword finds such a window through its page, but with several of them it cannot tell them apart and fails. Right after a second one opens, only the first one's extension host answers, and the keyword runs the function there. For tests with several windows, open folders.
 - **Several instances:** the keyword works on the active instance; `Switch Electron Application` changes it.
-
-## The helper extension
-
-The keyword works through a small helper extension of the library. `Open VS Code` loads it as an additional development extension. The helper listens on `127.0.0.1` with a random port, and accepts only requests with a token, which it writes into the instance's user-data directory.
-
-The helper has two effects that a test can notice:
-
-- The window is an "Extension Development Host", and its title starts with `[Extension Development Host]`, also without an extension of your own in `extension_development_path`.
-- `vscode.extensions.all` lists the helper, as `robotframework-vscode.extension-host`.
-
-Where that matters, the import argument `enable_extension_host_evaluation` switches the helper off. `Evaluate In Extension Host` then fails with a message that names the argument:
-
-```robotframework
-*** Settings ***
-Library    VSCode    enable_extension_host_evaluation=False
-```
 
 ## Timeout
 

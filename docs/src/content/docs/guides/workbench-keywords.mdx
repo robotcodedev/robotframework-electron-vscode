@@ -30,6 +30,7 @@ The example project `examples/vscode-extension` in the repository shows how to w
 - **Version:** the variables select the VS Code version and default to a download into the user's cache, so a copied project runs without any setup. A personal `.robot.toml` or the command line can point them to an installed VS Code, see [Downloads and cache](../downloads-and-cache/).
 - **Workspace:** VS Code opens a fresh copy of `tests/workspace` in the output directory, so tests can change files. `Example Workspace` returns its path, computed when it is needed instead of stored in a suite variable.
 - **Settings:** VS Code opens maximised, which fills the screen when a window manager runs, see [CI and the Linux display](../ci-and-display/). VS Code's own file dialog replaces the native one, and the terminal runs `sh`, so that personal shell configuration does not show up in tests and screenshots. VS Code has no built-in profile `sh`, so the settings define it.
+- **Helper extension:** next to the project's extension, VS Code loads the library's helper extension from the installed package, for `Evaluate In Extension Host`. See [The extension host](../extension-host/).
 - **Options:** named arguments of `Open VS Code`, such as `extensions_dir`, are passed on.
 
 <Code code={vscodeResource} lang="robotframework" title="tests/resources/vscode.resource" />

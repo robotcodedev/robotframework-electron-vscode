@@ -44,7 +44,7 @@ pre_bump_hooks = [
     "uv run scripts/update_versions.py",
     "uv run git-cliff --tag v$CZ_PRE_NEW_VERSION -o CHANGELOG.md",
     "uv lock --offline",
-    "git add CHANGELOG.md uv.lock pyproject.toml packages/electron/pyproject.toml packages/vscode/pyproject.toml",
+    "git add CHANGELOG.md uv.lock pyproject.toml packages/electron/pyproject.toml packages/vscode/pyproject.toml packages/vscode/src/VSCode/extension/package.json",
 ]
 
 [tool.pytest.ini_options]

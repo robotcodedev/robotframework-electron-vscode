@@ -1,0 +1,15 @@
+{
+    "name": "robotframework-vscode-build",
+    "description": "Packs the helper extension of the VSCode library into a .vsix while the package is built",
+    "private": true,
+    "license": "MPL-2.0",
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "package-helper": "cd src/VSCode/extension && vsce package --no-dependencies --allow-star-activation --skip-license --out ../extension-host.vsix"
+    },
+    "devDependencies": {
+        "@vscode/vsce": "4.0.0"
+    }
+}

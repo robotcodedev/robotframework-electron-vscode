@@ -3,13 +3,14 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
 
-from VSCode.extension_host import endpoint_directory
+from VSCode.extension_host import HELPER_EXTENSION, endpoint_directory
 from VSCode.instance import instance_environment
 
 
@@ -108,3 +109,14 @@ def process_should_have_exited(pid: int) -> None:
     except ProcessLookupError:
         return
     raise AssertionError(f"Process {pid} is still running.")
+
+
+def copy_helper_with_version(target: str, version: str) -> str:
+    """Copy the library's helper extension to ``target``, with ``version`` in its ``package.json``."""
+    shutil.rmtree(target, ignore_errors=True)
+    shutil.copytree(HELPER_EXTENSION, target)
+    manifest = Path(target) / "package.json"
+    package = json.loads(manifest.read_text(encoding="utf-8"))
+    package["version"] = version
+    manifest.write_text(json.dumps(package, indent=4), encoding="utf-8")
+    return target

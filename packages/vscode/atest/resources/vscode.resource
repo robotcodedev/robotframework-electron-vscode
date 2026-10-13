@@ -13,6 +13,16 @@ Open Test VS Code
     ...    version=${VSCODE_VERSION}    executable=${VSCODE_EXECUTABLE}    cache_dir=${VSCODE_CACHE}    &{options}
     RETURN    ${ids}
 
+Open Test VS Code With Helper
+    [Documentation]    Opens VS Code with the library's helper extension after the given development extensions.
+    [Arguments]    @{args}    ${extension_development_path}=${NONE}    &{options}
+    VAR    @{development}    ${HELPER_EXTENSION}
+    IF    $extension_development_path is not None
+        VAR    @{development}    ${extension_development_path}    ${HELPER_EXTENSION}
+    END
+    ${ids} =    Open Test VS Code    @{args}    extension_development_path=${development}    &{options}
+    RETURN    ${ids}
+
 Execute Test VS Code CLI Command
     [Arguments]    ${extensions_dir}    ${user_data_dir}    @{args}
     ${output} =    Execute VS Code CLI Command    ${extensions_dir}    ${user_data_dir}    @{args}

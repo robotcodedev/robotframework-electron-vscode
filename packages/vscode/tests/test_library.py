@@ -9,7 +9,7 @@ from robot.running.testlibraries import TestLibrary as RobotLibrary
 import VSCode
 from Electron import HIDDEN_KEYWORDS, Electron
 from VSCode import Instance
-from VSCode.extension_host import HELPER_EXTENSION, PAGE_WORKSPACE_ID, PageNotReadyError, UnknownWorkspaceError
+from VSCode.extension_host import PAGE_WORKSPACE_ID, PageNotReadyError, UnknownWorkspaceError
 from VSCode.instance import InstanceDirectories
 
 
@@ -107,12 +107,12 @@ def test_keeps_the_error_of_the_workbench_when_closing_fails(monkeypatch, tmp_pa
     assert vscode._instances() == {}
 
 
-def recording_start(monkeypatch, tmp_path, *import_args: str) -> tuple[Any, Path, dict[str, Any]]:
+def recording_start(monkeypatch, tmp_path) -> tuple[Any, Path, dict[str, Any]]:
     """Imports the library with a fake start that records the arguments of `New Electron Application`."""
     executable = tmp_path / "code"
     executable.write_text("")
     executable.chmod(0o755)
-    vscode = import_library(*import_args)
+    vscode = import_library()
     vscode.outputdir = str(tmp_path / "output")
     started: dict[str, Any] = {}
 
@@ -148,33 +148,22 @@ def development_paths(arguments: list[str]) -> list[str]:
     return [arg.split("=", 1)[1] for arg in arguments if arg.startswith("--extensionDevelopmentPath=")]
 
 
-def test_loads_the_helper_extension_after_the_extensions_under_test(monkeypatch, tmp_path):
+def test_loads_only_the_given_development_extensions(monkeypatch, tmp_path):
     vscode, executable, started = recording_start(monkeypatch, tmp_path)
 
+    vscode.open_vs_code(executable=executable)
+    without = development_paths(started["args"])
     vscode.open_vs_code(executable=executable, extension_development_path=tmp_path / "extension")
 
-    assert development_paths(started["args"]) == [str(tmp_path / "extension"), str(HELPER_EXTENSION)]
-    assert (HELPER_EXTENSION / "package.json").is_file()
-
-
-def test_leaves_the_helper_extension_out_when_switched_off(monkeypatch, tmp_path):
-    vscode, executable, started = recording_start(monkeypatch, tmp_path, "enable_extension_host_evaluation=False")
-
-    vscode.open_vs_code(executable=executable, extension_development_path=tmp_path / "extension")
-
+    assert without == []
     assert development_paths(started["args"]) == [str(tmp_path / "extension")]
 
 
 def test_converts_browser_import_arguments():
-    vscode = import_library("timeout=5s", "auto_closing_level=SUITE", "enable_extension_host_evaluation=False")
+    vscode = import_library("timeout=5s", "auto_closing_level=SUITE")
 
     assert vscode.timeout == timedelta(seconds=5).total_seconds() * 1000
     assert vscode._auto_closing_level is AutoClosingLevel.SUITE
-    assert vscode._extension_host_evaluation is False
-
-
-def test_evaluates_in_the_extension_host_by_default():
-    assert import_library()._extension_host_evaluation is True
 
 
 def test_import_starts_no_node_process():
@@ -213,15 +202,6 @@ def test_evaluates_in_the_extension_host_of_the_active_instance(open_instance, t
         5.0,
     )
     assert page_workspace_id == vscode._page_workspace_id
-
-
-def test_evaluating_in_the_extension_host_fails_while_the_helper_is_switched_off(open_instance, monkeypatch):
-    vscode, calls = open_instance
-    monkeypatch.setattr(vscode, "_extension_host_evaluation", False)
-
-    with pytest.raises(AssertionError, match="enable_extension_host_evaluation=False switches off"):
-        vscode.evaluate_in_extension_host("() => 1")
-    assert calls == []
 
 
 def test_evaluating_in_the_extension_host_of_another_application_fails(open_instance, monkeypatch):

@@ -4,11 +4,13 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
-from scripts.update_versions import git_version, write_version
+from scripts.update_versions import HELPER_MANIFEST, git_version, semantic_version, write_version
 
 ROOT = Path(__file__).resolve().parents[2]
 PYPROJECTS = ["pyproject.toml", "packages/electron/pyproject.toml", "packages/vscode/pyproject.toml"]
+FILES = [*PYPROJECTS, HELPER_MANIFEST.as_posix()]
 
 
 def git(repo: Path, *args: str) -> None:
@@ -25,14 +27,14 @@ def tag(repo: Path, name: str) -> None:
 
 @pytest.fixture
 def repo(tmp_path, monkeypatch):
-    """A git repository with the workspace's pyproject.toml files, outside the user's git configuration."""
+    """A git repository with the workspace's versioned files, outside the user's git configuration."""
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
     for variable in ("GIT_AUTHOR", "GIT_COMMITTER"):
         monkeypatch.setenv(f"{variable}_NAME", "Robot")
         monkeypatch.setenv(f"{variable}_EMAIL", "robot@example.org")
     repo = tmp_path / "repo"
-    for name in PYPROJECTS:
+    for name in FILES:
         (repo / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(ROOT / name, repo / name)
     git(repo, "init", "-b", "main")
@@ -90,4 +92,19 @@ def test_writes_the_version_into_every_pyproject_and_the_pin(repo):
     texts = {name: (repo / name).read_text(encoding="utf-8") for name in PYPROJECTS}
     assert all('\nversion = "0.2.0.dev3"\n' in text for text in texts.values())
     assert 'name = "robotframework-electron"\n' in texts["packages/electron/pyproject.toml"]
-    assert 'dependencies = ["robotframework-electron==0.2.0.dev3"]' in texts["packages/vscode/pyproject.toml"]
+    assert '"robotframework-electron==0.2.0.dev3"' in texts["packages/vscode/pyproject.toml"]
+
+
+def test_writes_the_version_into_the_helper_extension_as_a_semantic_version(repo):
+    write_version(repo, "0.2.0.dev3")
+
+    assert '"version": "0.2.0-dev.3",' in (repo / HELPER_MANIFEST).read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [("0.2.0", "0.2.0"), ("0.2.0.dev12", "0.2.0-dev.12"), ("0.2.0rc1", "0.2.0-rc.1"), ("0.2.0a1", "0.2.0-a.1")],
+)
+def test_semantic_version_reads_as_the_same_version(version, expected):
+    assert semantic_version(version) == expected
+    assert Version(semantic_version(version)) == Version(version)

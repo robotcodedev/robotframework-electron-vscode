@@ -118,6 +118,11 @@ jobs:
       - name: Install the workspace
         run: uv sync ${{ matrix.sync }}
 
+      # The build packs the helper extension's .vsix into the source tree, where
+      # the acceptance tests install it, and checks the build in each cell.
+      - name: Build the VSCode package
+        run: uv build --package robotframework-vscode -o dist
+
       - name: Unit tests
         run: uv run pytest
 
@@ -155,6 +160,11 @@ jobs:
           fetch-depth: 0
 
       - uses: astral-sh/setup-uv@v10.3.0
+
+      # The build of robotframework-vscode packs its helper extension with vsce.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
 
       - name: Write the version from git
         run: uv run scripts/update_versions.py

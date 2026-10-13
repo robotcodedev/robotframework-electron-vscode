@@ -177,7 +177,7 @@ Welcome to your first code contribution! Here's how to set up your development e
 1. **Prerequisites** (see each project's site for install instructions):
    - [Python](https://www.python.org/) 3.10 or newer
    - [uv](https://docs.astral.sh/uv/)
-   - [Node.js](https://nodejs.org/), for the Browser library and the documentation site
+   - [Node.js](https://nodejs.org/) 22 or newer, for the Browser library, the documentation site and the helper extension of the VSCode library
    - [Git](https://git-scm.com/)
    - On Linux, for the display profiles: Xvfb (`xvfb` on Debian and Ubuntu, `xorg-server-xvfb` on Arch Linux), Xephyr (`xserver-xephyr` or `xorg-server-xephyr`) and the window manager Openbox (`openbox`)
 
@@ -300,6 +300,7 @@ uv run robotcode -r . -p xvfb robot -bl "<longname>"         # a single suite or
 
 - The display profile `xvfb` also works on a Wayland desktop and without any desktop; `xephyr` opens a separate window on your desktop. Both start Openbox if it is installed, so that windows can be maximised. Prefer `-p xvfb`: the tests do not open windows on your desktop and do not depend on its size.
 - The tests download Electron and VS Code into the repository's `.cache/`. To use local executables instead, set `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` in `.robot.toml`.
+- The acceptance tests of the VSCode library's helper extension install its `.vsix`. Build it once, and again after changing the helper, with `uv build --package robotframework-vscode`: the build packs it into `packages/vscode/src/VSCode/` with `@vscode/vsce`. `uv sync` does not.
 - Other versions: `-p electron-previous` runs the Electron tests against an older Electron major, and `-p vscode-insiders` the VS Code tests against the newest VS Code Insiders build. Combine them with a display profile, for example `-p xvfb -p vscode-insiders`.
 - For individual tests, the Test Explorer of VS Code with RobotCode is the most convenient way to run and debug a single test.
 
@@ -318,6 +319,7 @@ uv run robotcode -r examples/vscode-extension -p xvfb robot -e network   # witho
 - `uv run ruff check --fix` and `uv run ruff format` — Fix lint findings and format the Python code.
 - `uv run mypy` — Type-check the packages and their tests.
 - `uv run robotcode -r . repl` — Run keywords one by one against a running application, for example to find locators.
+- `uv build --package robotframework-vscode` — Build the VSCode package, and with it the helper extension's `.vsix`. `npm ci --ignore-scripts` and `npm run package-helper` in `packages/vscode` pack only the `.vsix`.
 - `uv run python docs/scripts/update_screenshots.py` — Run the example project with `-p xvfb` and copy its screenshots into the documentation site. Run it after changing the example or its VS Code version, and commit the images. It needs Xvfb, Openbox and network access.
 
 #### Versions and Releases
@@ -325,7 +327,7 @@ uv run robotcode -r examples/vscode-extension -p xvfb robot -e network   # witho
 Both packages always have the same version, and `robotframework-vscode` requires exactly the `robotframework-electron` of its own version. The version comes from git:
 
 - A release is a tag `v<version>`, such as `v0.1.0`. The [commit messages](#commit-messages) since the last release decide the next version: a `feat` raises the minor version, and a `fix`, `refactor` or `perf` the patch version. While the version is 0.x, a breaking change raises the minor version as well.
-- The `pyproject.toml` files contain the version of the last release. Before CI builds the wheels, it writes the version of the commit into them: `<next version>.dev<commits since the last release>`, for example `0.2.0.dev5`. `uv run scripts/update_versions.py` does the same locally; do not commit its changes.
+- The `pyproject.toml` files and the `package.json` of the VSCode library's helper extension contain the version of the last release; the helper's is a semantic version, such as `0.2.0-dev.5` for `0.2.0.dev5`. Before CI builds the wheels, it writes the version of the commit into them: `<next version>.dev<commits since the last release>`, for example `0.2.0.dev5`. `uv run scripts/update_versions.py` does the same locally; do not commit its changes.
 - `CHANGELOG.md` is generated from the commit messages by [git-cliff](https://git-cliff.org), configured in `cliff.toml`. `uv run git-cliff -o CHANGELOG.md` regenerates it. Commits of the types `chore`, `ci`, `build`, `style` and `test`, and `docs(openspec)` commits, are left out. The others appear with their subject and body, so write them for the readers of the changelog.
 
 Releases are made by the maintainers with [commitizen](https://commitizen-tools.github.io/commitizen/):
@@ -336,7 +338,7 @@ uv run cz bump             # write the version and the changelog, commit and tag
 git push --follow-tags
 ```
 
-`cz bump` writes the version into the `pyproject.toml` files, regenerates `CHANGELOG.md`, updates `uv.lock`, and creates a signed release commit and a signed, annotated tag. Publishing to PyPI is not set up yet.
+`cz bump` writes the version into the `pyproject.toml` files and the helper extension's `package.json`, regenerates `CHANGELOG.md`, updates `uv.lock`, and creates a signed release commit and a signed, annotated tag. Publishing to PyPI is not set up yet.
 
 #### Troubleshooting Development Setup
 

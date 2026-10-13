@@ -12,11 +12,14 @@ ${VSCODE_VERSION}       1.141.0
 ${VSCODE_EXECUTABLE}    ${NONE}
 # Where downloaded VS Code builds are cached; ${NONE} is the user's cache directory.
 ${VSCODE_CACHE}         ${NONE}
+# The library's helper extension for Evaluate In Extension Host, from the installed package.
+${HELPER_EXTENSION}     ${{ pathlib.Path(VSCode.__file__).parent / 'extension' }}
 
 
 *** Keywords ***
 Open Example VS Code
-    [Documentation]    Opens an isolated VS Code with the extension of this folder loaded from source.
+    [Documentation]    Opens an isolated VS Code with the extension of this folder loaded from source,
+    ...    next to the library's helper extension for `Evaluate In Extension Host`.
     ...
     ...    VS Code opens a fresh copy of `tests/workspace`, see `Example Workspace`, so
     ...    that tests can change files. It opens maximised, so that it fills the screen;
@@ -38,11 +41,12 @@ Open Example VS Code
     ...    terminal.integrated.profiles.osx=${terminal_profiles}
     ...    terminal.integrated.defaultProfile.linux=sh
     ...    terminal.integrated.defaultProfile.osx=sh
+    VAR    @{development}    ${EXECDIR}    ${HELPER_EXTENSION}
     Open VS Code    ${workspace}
     ...    version=${VSCODE_VERSION}
     ...    executable=${VSCODE_EXECUTABLE}
     ...    cache_dir=${VSCODE_CACHE}
-    ...    extension_development_path=${EXECDIR}
+    ...    extension_development_path=${development}
     ...    settings=${settings}
     ...    &{options}
 

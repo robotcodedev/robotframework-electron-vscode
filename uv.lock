@@ -1423,11 +1423,15 @@ name = "robotframework-vscode"
 version = "0.1.0"
 source = { editable = "packages/vscode" }
 dependencies = [
+    { name = "packaging" },
     { name = "robotframework-electron" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "robotframework-electron", editable = "packages/electron" }]
+requires-dist = [
+    { name = "packaging", specifier = ">=24" },
+    { name = "robotframework-electron", editable = "packages/electron" },
+]
 
 [[package]]
 name = "ruff"

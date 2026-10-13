@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["commitizen>=4.19.2"]
+# dependencies = ["commitizen>=4.19.2", "packaging"]
 # ///
 """Write the version that git describes into every ``pyproject.toml`` of the workspace.
 
@@ -8,6 +8,9 @@ A tagged commit gets the version of its tag. A later commit gets the version tha
 ``cz bump`` would release next, as a development release:
 ``<next version>.dev<commits since the tag>``. ``cz bump`` sets ``CZ_PRE_NEW_VERSION``
 for its hooks, which is written as it is.
+
+The VSCode library's helper extension gets the same version, in the form of semantic
+versioning that VS Code and vsce expect.
 """
 
 import os
@@ -16,7 +19,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from packaging.version import Version
+
 ROOT = Path(__file__).resolve().parent.parent
+HELPER_MANIFEST = Path("packages/vscode/src/VSCode/extension/package.json")
 
 
 def git(root: Path, *args: str) -> str:
@@ -56,13 +62,32 @@ def git_version(root: Path) -> str:
     return f"{next_version(root, current)}.dev{commits}"
 
 
+def semantic_version(version: str) -> str:
+    """Return ``version`` as a semantic version, such as ``0.2.0-dev.12`` for ``0.2.0.dev12``.
+
+    ``packaging`` reads the result as the same version again.
+    """
+    parsed = Version(version)
+    labels: list[str] = []
+    if parsed.pre is not None:
+        labels += [parsed.pre[0], str(parsed.pre[1])]
+    if parsed.dev is not None:
+        labels += ["dev", str(parsed.dev)]
+    release = ".".join(str(part) for part in (*parsed.release, 0, 0)[:3])
+    return f"{release}-{'.'.join(labels)}" if labels else release
+
+
 def write_version(root: Path, version: str) -> None:
-    """Write ``version`` into the workspace and its packages, and into the exact pins between them."""
+    """Write ``version`` into the workspace and its packages, the exact pins between them, and the helper extension."""
     for pyproject in [root / "pyproject.toml", *sorted(root.glob("packages/*/pyproject.toml"))]:
         text = pyproject.read_text(encoding="utf-8")
         text = re.sub(r'^version = "[^"]*"$', f'version = "{version}"', text, count=1, flags=re.MULTILINE)
         text = re.sub(r'"(robotframework-electron)==[^"]*"', rf'"\1=={version}"', text)
         pyproject.write_text(text, encoding="utf-8")
+    manifest = root / HELPER_MANIFEST
+    text = manifest.read_text(encoding="utf-8")
+    text = re.sub(r'^(\s*"version": )"[^"]*"', rf'\1"{semantic_version(version)}"', text, count=1, flags=re.MULTILINE)
+    manifest.write_text(text, encoding="utf-8")
 
 
 def main() -> None:

@@ -87,6 +87,8 @@ async function activate(context) {
         port: server.address().port,
         token,
         pid: process.pid,
+        // The library compares it with its own version.
+        version: context.extension.packageJSON.version,
         workspace: workspacePath(),
         workspaceId: workspaceId(context),
     };

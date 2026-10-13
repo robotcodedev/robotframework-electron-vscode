@@ -2,6 +2,7 @@
 
 import functools
 import http.client
+import importlib.metadata
 import json
 import os
 import sys
@@ -12,15 +13,20 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, NamedTuple
 
+from packaging.version import InvalidVersion, Version
 from robot.api import logger
 from robot.utils import secs_to_timestr
 
-# The helper extension that `Open VS Code` loads as a development extension.
+# The helper extension, which a test loads as a development extension, or installs from its .vsix.
 HELPER_EXTENSION = Path(__file__).with_name("extension")
+# The package's build packs it; a source checkout has it only after `uv build`.
+HELPER_VSIX = Path(__file__).with_name("extension-host.vsix")
 
 _PACKAGE = json.loads((HELPER_EXTENSION / "package.json").read_text(encoding="utf-8"))
 # VS Code's id of the helper, which names its folder in the global storage.
 HELPER_ID = f"{_PACKAGE['publisher']}.{_PACKAGE['name']}"
+# The helper has the library's version, as a semantic version such as 0.2.0-dev.12 for 0.2.0.dev12.
+LIBRARY_VERSION = importlib.metadata.version("robotframework-vscode")
 
 # Reads VS Code's id of the workspace of the active page's workbench window. A window into
 # which an editor was moved belongs to the workbench window that opened it. A window that has
@@ -67,6 +73,7 @@ class ExtensionHost(NamedTuple):
     token: str
     workspace: str | None
     workspace_id: str | None
+    version: str | None = None
 
     def send(self, method: str, body: bytes | None, timeout: float) -> Any:
         request = urllib.request.Request(
@@ -98,6 +105,7 @@ def read_extension_hosts(user_data: Path) -> list[ExtensionHost]:
                     endpoint["token"],
                     endpoint["workspace"],
                     endpoint["workspaceId"],
+                    endpoint.get("version"),
                 )
             )
         except (OSError, ValueError, KeyError, TypeError):
@@ -195,11 +203,29 @@ def _not_found(
     if page_error is not None:
         return f"The active page's window could not be read {within}: {page_error}"
     if not hosts:
-        return f"No extension host of the VS Code instance answered {within}."
+        return (
+            f"No extension host of the VS Code instance answered {within}. The library's helper extension may not "
+            f"be loaded: give its folder '{HELPER_EXTENSION}' to Open VS Code in extension_development_path, or "
+            f"install '{HELPER_VSIX}' into the extensions directory before the start."
+        )
     return (
         f"The extension host of the active page's window did not answer {within}. Open workspaces: "
         f"{_workspaces(hosts)}. 'workspace' selects a window by its workspace."
     )
+
+
+def _check_version(host: ExtensionHost) -> None:
+    """Fail when the helper in ``host`` comes from another version of the library, such as an old installed one."""
+    try:
+        same = host.version is not None and Version(host.version) == Version(LIBRARY_VERSION)
+    except InvalidVersion:
+        same = False
+    if not same:
+        raise AssertionError(
+            f"The helper extension in this VS Code has the version {host.version or 'unknown'}, but the library has "
+            f"{LIBRARY_VERSION}. Install '{HELPER_VSIX}' of this version of the library into the extensions directory "
+            f"again, or load its folder '{HELPER_EXTENSION}' as a development extension."
+        )
 
 
 def send_function(host: ExtensionHost, body: bytes, timeout: float) -> Any:
@@ -251,6 +277,7 @@ def run_in_extension_host(
         except PageNotReadyError as error:
             host, page_error = None, error
         if host is not None:
+            _check_version(host)
             where = f"workspace '{host.workspace}'" if host.workspace else "a window without a workspace path"
             logger.info(f"Running the function in the extension host of process {host.pid}, {where}.")
             try:

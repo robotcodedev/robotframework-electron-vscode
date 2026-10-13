@@ -44,6 +44,7 @@ Module._load = function (request, ...rest) {
 };
 const extension = require(extensionPath);
 const context = {
+    extension: { packageJSON: { version: '0.2.0-dev.12' } },
     globalStorageUri: { fsPath: storage },
     storageUri: workspace.storageUri && { fsPath: workspace.storageUri },
 };
@@ -170,6 +171,7 @@ def test_writes_the_endpoint_with_the_workspace(outcomes, scenario, workspace, w
         "port": "number",
         "token": "string",
         "pid": outcome["endpoint"]["pid"],
+        "version": "0.2.0-dev.12",
         "workspace": workspace,
         "workspaceId": workspace_id,
     }

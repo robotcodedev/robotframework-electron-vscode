@@ -10,7 +10,7 @@ Test Teardown       Close VS Code    ALL
 Extension In A Running Instance
     ${vsix} =    Pack Extension    ${TEST_EXTENSION}    ${OUTPUT_DIR}/test-extension.vsix
     ${before} =    List User Extensions
-    Open Test VS Code
+    Open Test VS Code With Helper
     Install Into Running Instance    ${vsix}    robot.test-extension
     # An open palette does not refresh, so the command is looked up in a fresh one.
     Wait Until Keyword Succeeds    20s    1s    Run Command From A Fresh Palette    Robot Test: Say Hello

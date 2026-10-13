@@ -18,6 +18,10 @@ results/
 .vscode/
 *.code-workspace
 
+# The helper extension's .vsix, which the build packs with vsce
+packages/vscode/node_modules/
+packages/vscode/src/VSCode/extension-host.vsix
+
 # Documentation site
 docs/node_modules/
 docs/dist/

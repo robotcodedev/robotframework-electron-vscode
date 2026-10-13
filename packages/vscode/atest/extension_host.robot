@@ -5,7 +5,7 @@ Documentation       Evaluate In Extension Host runs functions with VS Code's ext
 ...                 their own.
 Resource            resources/vscode.resource
 
-Suite Setup         Open Test VS Code    ${TEST_WORKSPACE}    extension_development_path=${TEST_EXTENSION}
+Suite Setup         Open Test VS Code With Helper    ${TEST_WORKSPACE}    extension_development_path=${TEST_EXTENSION}
 Suite Teardown      Close VS Code    ALL
 
 
@@ -68,7 +68,7 @@ Evaluation Does Not Finish
     Run Keyword And Expect Error    The function did not finish within 1 second.*
     ...    Evaluate In Extension Host    () => new Promise(() => {})
 
-Next To The Extension Under Test
+As A Development Extension Next To The Extension Under Test
     ${commands} =    Evaluate In Extension Host    async (vscode) => {
     ...        const commands = await vscode.commands.getCommands(true);
     ...        return commands.includes('robotTest.sayHello');
@@ -94,13 +94,13 @@ Workspace That No Window Has Open
     ...    Evaluate In Extension Host    () => 1    workspace=${nowhere}
 
 Right After The Start
-    ${vscode}    ${_} =    Open Test VS Code    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
     ${name} =    Evaluate In Extension Host    (vscode) => vscode.env.appName
     Should Not Be Empty    ${name}
     [Teardown]    Close VS Code    ${vscode}
 
 Without An Extension Under Test
-    ${vscode}    ${_} =    Open Test VS Code
+    ${vscode}    ${_} =    Open Test VS Code With Helper
     ${helper} =    Evaluate In Extension Host
     ...    (vscode) => vscode.extensions.all.filter((extension) => !extension.packageJSON.isBuiltin).map((e) => e.id)
     Should Be Equal    ${helper}    ${{ ["robotframework-vscode.extension-host"] }}
@@ -108,7 +108,7 @@ Without An Extension Under Test
     [Teardown]    Close VS Code    ${vscode}
 
 After The Window Reloads
-    ${vscode}    ${_} =    Open Test VS Code    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
     ${before} =    Evaluate In Extension Host    () => process.pid
     Evaluate In Extension Host
     ...    (vscode) => { void vscode.commands.executeCommand('workbench.action.reloadWindow'); }
@@ -119,7 +119,7 @@ After The Window Reloads
     [Teardown]    Close VS Code    ${vscode}
 
 Window By Its Workspace
-    ${vscode}    ${_} =    Open Test VS Code    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
     Open Folder In New Window    ${SECOND_WORKSPACE}
     ${folder} =    Evaluate In Extension Host    (vscode) => vscode.workspace.workspaceFolders[0].uri.fsPath
     ...    workspace=${SECOND_WORKSPACE}
@@ -127,7 +127,7 @@ Window By Its Workspace
     [Teardown]    Close VS Code    ${vscode}
 
 Window Of The Active Page
-    ${vscode}    ${first} =    Open Test VS Code    ${TEST_WORKSPACE}
+    ${vscode}    ${first} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
     Open Folder In New Window    ${SECOND_WORKSPACE}
     Wait Until The Extension Host Answers    ${SECOND_WORKSPACE}
     Folder Of The Active Pages Window Should Be    ${TEST_WORKSPACE}
@@ -141,14 +141,14 @@ Window Of The Active Page
     [Teardown]    Close VS Code    ${vscode}
 
 Window That Has Just Opened
-    ${vscode}    ${_} =    Open Test VS Code    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
     Open Folder In New Window    ${SECOND_WORKSPACE}
     Switch Page    NEW
     Folder Of The Active Pages Window Should Be    ${SECOND_WORKSPACE}
     [Teardown]    Close VS Code    ${vscode}
 
 Editor Moved Into Its Own Window
-    ${vscode}    ${_} =    Open Test VS Code    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
     Evaluate In Extension Host    async (vscode, path) => {
     ...        await vscode.window.showTextDocument(vscode.Uri.file(path));
     ...        void vscode.commands.executeCommand('workbench.action.moveEditorToNewWindow');
@@ -162,7 +162,7 @@ Editor Moved Into Its Own Window
     [Teardown]    Close VS Code    ${vscode}
 
 Several Windows Without A Workspace
-    ${vscode}    ${_} =    Open Test VS Code
+    ${vscode}    ${_} =    Open Test VS Code With Helper
     Evaluate In Extension Host    (vscode) => { void vscode.commands.executeCommand('workbench.action.newWindow'); }
     Switch Page    NEW
     # Until the new window's extension host answers, the first one is the only one.

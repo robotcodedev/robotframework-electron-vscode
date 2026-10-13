@@ -1,15 +1,22 @@
 {
     "name": "extension-host",
     "displayName": "VSCode Library for Robot Framework",
-    "description": "Runs the functions of 'Evaluate In Extension Host'. 'Open VS Code' of the robotframework-vscode library loads it as a development extension.",
+    "description": "Runs the functions of 'Evaluate In Extension Host' of the robotframework-vscode library. Tests load it as a development extension or install its .vsix.",
     "publisher": "robotframework-vscode",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "private": true,
     "license": "MPL-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/robotcodedev/robotframework-electron-vscode"
+    },
     "engines": {
         "vscode": "^1.60.0"
     },
     "main": "./extension.js",
+    "files": [
+        "extension.js"
+    ],
     "activationEvents": [
         "*"
     ]
