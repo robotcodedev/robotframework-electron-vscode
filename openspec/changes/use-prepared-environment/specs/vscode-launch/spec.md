@@ -139,7 +139,7 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** every argument of its own keywords has a description, keywords that return a value document it, and keywords that raise an exception for invalid input document it
 
 ### Requirement: Given directories
-`Start VS Code` SHALL accept an extensions directory and a user-data directory, and SHALL use each given directory for the instance as it is, instead of a fresh one of its own. A directory that is not given SHALL be the instance's own, fresh one.
+`Start VS Code` SHALL accept an extensions directory and a user-data directory, and SHALL use each given directory for the instance as it is, instead of a fresh one of its own. A given directory that does not exist yet SHALL be created. A directory that is not given SHALL be the instance's own, fresh one.
 
 #### Scenario: Prepared extensions
 - **WHEN** `Start VS Code` is called with `extensions_dir` pointing to a directory that holds an installed extension

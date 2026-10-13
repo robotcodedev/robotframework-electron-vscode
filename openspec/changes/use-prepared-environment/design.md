@@ -51,7 +51,7 @@ The motivation is in proposal.md, and the behaviour is in the specs. The current
 ### One rule for the directories
 
 `instance.py` gets one function that `Start VS Code` and `Execute VS Code CLI Command` both use. It creates the next folder `<output>/vscode/<n>`:
-- **Given directories** are used in place, as absolute paths. The library writes nothing into them.
+- **Given directories** are used in place, as absolute paths, and created if they do not exist yet. The library writes nothing into them.
 - **Directories that are not given** are created fresh in the folder: `user-data` and `extensions`, as today.
 
 The library records the executable and the directories of each instance, as today. `Get VS Code Instance Directories` returns them, given ones included.
@@ -73,10 +73,10 @@ The quiet-start arguments, such as `--skip-welcome` and `--disable-workspace-tru
 `Execute VS Code CLI Command    *args    executable=None    user_data_dir=None    extensions_dir=None`
 
 The environment arguments are named-only, after the script's arguments. There are two cases:
-- **None of the three:** the keyword uses the active instance: its recorded executable, its directories and the environment that the instance got. Without an open instance, it fails with a message that names `executable`.
+- **None of the three:** the keyword uses the active instance: its recorded executable and its directories, with the cleaned environment of the test run. Without any instance, it does not ask Browser for the active one, which would start the Playwright process. Without an open instance, it fails with a message that names `executable`.
 - **`executable`:** the keyword resolves the directories by the rule above. It is the environment that `Start VS Code` gets with the same arguments. Missing directories are created fresh in a folder of their own, which keeps the script's logs like an instance folder. `user_data_dir` or `extensions_dir` without `executable` fail, so that a call never mixes a given directory with the active instance.
 
-`cli_path` finds the script, `run_cli` runs it, and the keyword still refuses `--extensions-dir` and `--user-data-dir` in `args`. The keyword touches neither Playwright nor Browser's state, so a suite setup can call it before any start.
+`cli_path` finds the script, `run_cli` runs it, and the keyword refuses `--extensions-dir` and `--user-data-dir` in `args` before it creates any directory. With `executable`, the keyword touches neither Playwright nor Browser's state, so a suite setup can call it before any start.
 
 **Alternatives:**
 - **Only the same arguments, without the instance case:** every call on a running VS Code would first read its directories with `Get VS Code Instance Directories`, as today.
@@ -87,7 +87,7 @@ The environment arguments are named-only, after the script's arguments. There ar
 
 VS Code's script runs a command, such as `--install-extension`, and returns. Without a command, it starts VS Code's window instead and returns at once, with success. An empty value makes it ignore an option: in a manual check on 2026-10-13, `--install-extension ""` opened a window on the user's desktop.
 - **Arguments:** the keyword fails before it runs the script when it gets no arguments for the script or an empty one.
-- **Linux:** the script runs without `DISPLAY` and `WAYLAND_DISPLAY`. A window then cannot start, while the commands need no display. The keyword cannot tell such a call from a command without output, so it returns as usual.
+- **Linux:** the script runs without `DISPLAY`, `WAYLAND_DISPLAY` and `XDG_SESSION_TYPE`; with `XDG_SESSION_TYPE=wayland`, VS Code connects to the default Wayland socket `wayland-0` even without `WAYLAND_DISPLAY`, which a check with a fake socket showed. A window then cannot start, while the commands need no display. The keyword cannot tell such a call from a command without output, so it returns as usual.
 - **macOS and Windows:** only the check of the arguments applies.
 
 **Alternatives:**
@@ -106,7 +106,7 @@ VS Code's script runs a command, such as `--install-extension`, and returns. Wit
   - `electron` 44.7.0;
   - `electron-previous` as `npm:electron@42.11.12`.
 - Its script `prepare-tests` runs `scripts/prepare_tests.mjs`, which does three things:
-  - downloads VS Code 1.141.0 with `@vscode/test-electron` into `.cache/vscode`, and also Insiders when it is given the argument `insiders`;
+  - downloads VS Code 1.141.0 with `@vscode/test-electron` into `.cache/vscode`, and also Insiders when it is given the argument `insiders`. It creates the folder first: `@vscode/test-electron` creates only the last folder of its cache path, which a fresh checkout showed;
   - sets `electron_config_cache` to `.cache/electron` and requires both Electron packages, which downloads their binaries there and not into the user's cache directory;
   - prints the executables' paths.
 
@@ -116,13 +116,13 @@ The packaging of the helper extension keeps its own `packages/vscode/package.jso
 - `VSCODE_EXECUTABLE` and `ELECTRON_EXECUTABLE` point to the Linux x64 paths of these builds, relative to the repository root.
 - The profiles `vscode-insiders` and `electron-previous` point them to the other builds.
 - On other platforms, a personal `.robot.toml` sets the paths that the script prints. RobotCode's analysis knows the variables from `robot.toml`.
-- `VSCODE_VERSION`, `VSCODE_CACHE`, `ELECTRON_VERSION` and `ELECTRON_CACHE` go away from the variable resources.
+- `VSCODE_CACHE`, `ELECTRON_VERSION` and `ELECTRON_CACHE` go away from the variable resources. `VSCODE_VERSION` moves into `robot.toml`.
 - Tests that compare a version, such as `1.141.0` from the main process, read the expected version from a variable that the profiles change together with the executable.
 
 **CI:** the test job runs `npm ci` and `npm run prepare-tests` in the repository before the acceptance tests. It does not cache the builds, like today.
 
 **The example:**
-- Its `package.json` gets `@vscode/test-electron` 3.1.0, with a lock file, and a script `download-vscode` that downloads VS Code 1.141.0 into its `.cache/vscode`.
+- Its `package.json` gets `@vscode/test-electron` 3.1.0, with a lock file, and a script `download-vscode` that downloads VS Code 1.141.0 into `.vscode-test`, the default cache folder of `@vscode/test-electron`, which needs no folder created first.
 - Its `robot.toml` sets `VSCODE_EXECUTABLE` to that VS Code.
 - It refers to nothing outside its folder.
 - Its prepared extensions are kept per VS Code version, read with `Execute VS Code CLI Command    --version`.
@@ -149,11 +149,11 @@ The packaging of the helper extension keeps its own `packages/vscode/package.jso
 - [Every existing test changes, because of the renamed keywords and the required executable] → The libraries are in their pilot phase. The commits and the changelog name the renames.
 - [A given user-data directory gets no default settings] → The keyword's documentation lists them. The quiet-start arguments still apply.
 - [Given directories are used in place, so parallel runs on the same directories share them] → Documented. The example copies its prepared extensions for each VS Code, as today.
-- [On the active instance, a call without a command may reach the running VS Code through its IPC socket, which then opens a window on its own display] → Task 4.2 checks it. Such a window belongs to the test's VS Code, not to the user's desktop session.
+- [On the active instance, a call without a command might reach the running VS Code through its IPC socket, which would then open a window on its own display] → Checked on 2026-10-13 with VS Code 1.141 under Xvfb: after `Execute VS Code CLI Command    --disable-extensions` on the active instance, it still had its one window five seconds later.
 - [`Execute VS Code CLI Command` with `executable` creates a folder for directories that are not given] → It is kept with the script's logs, and the next run removes it, like an instance folder.
 
 ## Migration Plan
 
 1. Apply and archive `add-vscode-extension-host-evaluate`.
-2. Apply this change. After its archive, edit the purposes of `vscode-examples`, `vscode-command-line` and `vscode-extension-host` in `openspec/specs/`, which still name downloads or the old keywords. A delta cannot change a purpose.
+2. Apply this change. After its archive, edit the purposes of `vscode-launch`, `vscode-examples`, `vscode-command-line` and `vscode-extension-host` in `openspec/specs/`, which still name downloads, explicit directories or the old keywords. A delta cannot change a purpose.
 3. A change of its own follows: VS Code's portable mode, so that instances stop writing to the user's home directory.
