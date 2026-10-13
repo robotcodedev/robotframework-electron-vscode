@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-13
+# The change removes every requirement of vscode-download and electron-download; archiving deletes their specs.
+retire_capabilities: true
