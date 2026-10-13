@@ -22,6 +22,7 @@ The test environment belongs to the person who runs the tests, and it is set bef
 - **The command-line script with the instance:** `Execute VS Code CLI Command` moves into the `VSCode` library and takes the same environment arguments as `Start VS Code`:
   - Without `executable`, `user_data_dir` and `extensions_dir`, it uses the active VS Code instance: its executable, its directories and its environment.
   - With them, it uses the environment that `Start VS Code` would get with the same arguments, for example to prepare an extensions directory before the start.
+  - It refuses a call without arguments for the script or with an empty one, and on Linux it runs the script without `DISPLAY` and `WAYLAND_DISPLAY`. VS Code's script opens a VS Code window when it gets no command, which happened in a manual check with an empty path.
 - **This repository:** the acceptance tests, the CI and the example get VS Code from `@vscode/test-electron` and Electron from the npm package `electron`, through npm scripts. `robot.toml` variables and profiles point to the executables.
 - **Documentation:**
   - the guide "Downloads and cache" goes away;

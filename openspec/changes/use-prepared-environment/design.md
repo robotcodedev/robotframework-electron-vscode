@@ -83,6 +83,17 @@ The environment arguments are named-only, after the script's arguments. There ar
 - **Only the instance case:** an extensions directory could not be prepared before the start.
 - **Given arguments that override the active instance's:** a reader could not tell which environment a call works on.
 
+### No window from the command-line script
+
+VS Code's script runs a command, such as `--install-extension`, and returns. Without a command, it starts VS Code's window instead and returns at once, with success. An empty value makes it ignore an option: in a manual check on 2026-10-13, `--install-extension ""` opened a window on the user's desktop.
+- **Arguments:** the keyword fails before it runs the script when it gets no arguments for the script or an empty one.
+- **Linux:** the script runs without `DISPLAY` and `WAYLAND_DISPLAY`. A window then cannot start, while the commands need no display. The keyword cannot tell such a call from a command without output, so it returns as usual.
+- **macOS and Windows:** only the check of the arguments applies.
+
+**Alternatives:**
+- **A list of the commands that the keyword accepts:** it would lag behind VS Code and its forks.
+- **Failing on empty output:** `--list-extensions` prints nothing for an empty extensions directory.
+
 ### No helper libraries
 
 `VSCode/Helper.py`, `VSCode/download.py` and `Electron/Helper.py` are removed, together with their unit tests. `installed_executable`, `cli_path` and `product_version` move into `instance.py`, with their unit tests. `executable_path`, which knows the layout of the download cache, goes away.
@@ -138,6 +149,7 @@ The packaging of the helper extension keeps its own `packages/vscode/package.jso
 - [Every existing test changes, because of the renamed keywords and the required executable] → The libraries are in their pilot phase. The commits and the changelog name the renames.
 - [A given user-data directory gets no default settings] → The keyword's documentation lists them. The quiet-start arguments still apply.
 - [Given directories are used in place, so parallel runs on the same directories share them] → Documented. The example copies its prepared extensions for each VS Code, as today.
+- [On the active instance, a call without a command may reach the running VS Code through its IPC socket, which then opens a window on its own display] → Task 4.2 checks it. Such a window belongs to the test's VS Code, not to the user's desktop session.
 - [`Execute VS Code CLI Command` with `executable` creates a folder for directories that are not given] → It is kept with the script's logs, and the next run removes it, like an instance folder.
 
 ## Migration Plan

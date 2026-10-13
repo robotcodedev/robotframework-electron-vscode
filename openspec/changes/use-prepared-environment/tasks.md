@@ -24,9 +24,11 @@
 - [ ] 1.3 Move `Execute VS Code CLI Command` into the `VSCode` library with the signature from design.md:
   - without `executable`, `user_data_dir` and `extensions_dir`, it runs on the active instance;
   - with `executable`, it runs on the environment that `Start VS Code` would get;
-  - directories without `executable`, and a call without an open instance, fail with messages that name `executable`.
+  - directories without `executable`, and a call without an open instance, fail with messages that name `executable`;
+  - a call without arguments for the script, or with an empty one, fails before the script runs;
+  - on Linux, the script runs without `DISPLAY` and `WAYLAND_DISPLAY`.
 
-  Document every argument and both cases with examples. Move the unit tests of the command-line script from `test_helper.py` to `test_library.py`, and add tests for both cases and both errors, with a fake script. Verify that `uv run pytest` passes.
+  Document every argument and both cases with examples. Move the unit tests of the command-line script from `test_helper.py` to `test_library.py`, and add tests with a fake script for both cases, the four errors, and the script's environment without the display variables. Verify that `uv run pytest` passes.
 - [ ] 1.4 Remove `VSCode/Helper.py`, `VSCode/download.py`, `test_download.py` and `test_helper.py`. Rewrite the library introduction:
   - starting VS Code from an executable;
   - given and fresh directories;
@@ -73,6 +75,8 @@
   - the resource keyword that starts VS Code calls `Start VS Code` with `${VSCODE_EXECUTABLE}`;
   - `helper.robot` goes away. Its tests of the command-line script move to a suite for the requirements on the command-line script, on the instance and with `executable`;
   - add tests for the scenarios "Executable is required", "Settings with a given user-data directory", "Prepared user data" and "Directories of the active instance" with `user_data_dir`;
+  - add tests for the scenarios "Empty argument", "No arguments for the script" and "No window on Linux";
+  - check whether `Execute VS Code CLI Command    --disable-extensions` on the active instance opens a window in it, and note the result in design.md;
   - `Install Into Running Instance` calls the command-line script on the active instance, without directories.
 
   Verify that:

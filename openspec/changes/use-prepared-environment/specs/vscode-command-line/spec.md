@@ -53,3 +53,18 @@ With `executable`, `Execute VS Code CLI Command` SHALL run the command-line scri
 #### Scenario: Directories without an executable
 - **WHEN** a test calls `Execute VS Code CLI Command` with `extensions_dir` but without `executable`
 - **THEN** the keyword fails with a message that names `executable`, and the script does not run
+
+### Requirement: No window from the command-line script
+`Execute VS Code CLI Command` SHALL fail without running the script when it gets no arguments for the script or an empty one, because VS Code's script then opens a VS Code window instead of running a command. On Linux, it SHALL run the script without `DISPLAY` and `WAYLAND_DISPLAY`, so that a call with `executable` but without a command of the script opens no window.
+
+#### Scenario: Empty argument
+- **WHEN** a test calls `Execute VS Code CLI Command    --install-extension    ${EMPTY}`
+- **THEN** the keyword fails with a message about the empty argument, and the script does not run
+
+#### Scenario: No arguments for the script
+- **WHEN** a test calls `Execute VS Code CLI Command` with `executable` and without arguments for the script
+- **THEN** the keyword fails with a message that the script needs arguments, and the script does not run
+
+#### Scenario: No window on Linux
+- **WHEN** a test on Linux calls `Execute VS Code CLI Command    --disable-extensions` with `executable`, which is no command of the script
+- **THEN** no VS Code window opens, and no process of that VS Code is still running a few seconds later
