@@ -28,7 +28,9 @@ Element Details
     Get Property    id=name    placeholder    ==    Your name
     Get Style    id=heading    color    ==    rgb(0, 0, 255)
     Get Classes    id=heading    ==    title    main
-    Get BoundingBox    id=hover-target    width    ==    122
+    # 120px and two 1px borders. A fractional display scale snaps the borders to whole device pixels,
+    # for example to 0.8px each at 125 %.
+    Get BoundingBox    id=hover-target    width    validate    abs(value - 122) < 1
     Get Client Size    id=scroller    height    ==    80
     Get Scroll Size    id=scroller    height    ==    400
     Get Element Count    css=#table tr    ==    3
@@ -102,7 +104,8 @@ Drag And Drop
 
 Scrolling
     Scroll By    id=scroller    vertical=100
-    Get Scroll Position    id=scroller    top    ==    100
+    # A fractional display scale can round the offset to whole device pixels.
+    Get Scroll Position    id=scroller    top    validate    abs(value - 100) < 1
     Scroll To    id=scroller    vertical=0
     Get Scroll Position    id=scroller    top    ==    0
     Hover    id=scroller

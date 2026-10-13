@@ -34,7 +34,8 @@ Window Sized From The Main Process
     Evaluate In Main Process    (electron, size, window) => window.setBounds(size)
     ...    arg=${{ {"width": 1024, "height": 700} }}
     ${size} =    Evaluate JavaScript    ${None}    () => ({ width: window.outerWidth, height: window.outerHeight })
-    Should Be Equal    ${size}    ${{ {"width": 1024, "height": 700} }}
+    # A fractional display scale rounds the window's edges to whole device pixels, which adds up to 2px.
+    Should Be True    abs($size["width"] - 1024) <= 2 and abs($size["height"] - 700) <= 2    ${size}
 
 Window Of The Active Page
     Start Fixture App
