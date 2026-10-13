@@ -52,18 +52,23 @@ ${dirs} =    Get VS Code Instance Directories
 Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ms-python.python
 ```
 
-When the script returns, the extension is on disk, but VS Code has not necessarily taken it in yet. VS Code's shared process notices it a moment later and writes a line to `sharedprocess.log` in the instance's log folder:
+When the script returns, the extension is on disk, but VS Code has not necessarily taken it in yet. Its extension host knows: once `vscode.extensions.getExtension` finds the extension there, the window has it. [`Evaluate In Extension Host`](../extension-host/) asks it, and `Wait Until Keyword Succeeds` repeats the question:
 
+```robotframework
+${known} =    Evaluate In Extension Host    (vscode, id) => vscode.extensions.getExtension(id) !== undefined
+...    arg=ms-python.python
 ```
-[info] Extensions added from another source ms-python.python
-```
 
-Wait for that line before you use the extension. Two things can go wrong:
+Two things can go wrong:
 
-- **VS Code misses the install.** The shared process reads the list of extensions when it starts, and only then begins to watch for changes. An extension installed in between, typically in the first second after the start, is never reported, and its commands never appear. Uninstalling it and installing it again makes VS Code notice it.
+- **VS Code misses the install, or deletes the extension again.** VS Code's shared process keeps track of the installed extensions. When it starts, it reads the list of extensions, begins to watch it, and deletes extension folders that are not in the list. The workbench can show before that is over.
+  - An extension installed in that moment does not reach the window. It may even be deleted again, while the shared process log still says "Extensions added from another source".
+  - On a loaded machine, this happened to about one in five installs right after `Open VS Code`.
+  - **Wait for the extension host before the install,** with `Evaluate In Extension Host    () => true`. It comes up later, and in our measurements no install failed after it.
+  - **If the extension host does not know the extension after the install,** install it again and reload the window, so that VS Code reads its extensions anew. Uninstall it before; the uninstall fails when VS Code has deleted the extension, which does not matter.
 - **The script fails on a busy file.** The running VS Code writes the list of extensions, `extensions.json`, at the same time, and the script fails with "Unable to write file '…/extensions.json'". Trying again helps.
 
-The example's keyword `Install Into Running VS Code` does all of this, see [the example](#the-example). Without the wait, such tests pass on a fast machine and fail on a loaded CI runner.
+The example's keyword `Install Into Running VS Code` does all of this, see [the example](#the-example). Without it, such tests pass on a fast machine and fail on a loaded CI runner.
 
 ## Listing, uninstalling and updating
 

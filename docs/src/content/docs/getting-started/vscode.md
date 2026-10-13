@@ -58,6 +58,7 @@ The example project in the repository goes further, with its own keywords for th
 ## Next steps
 
 - [Browser keywords in applications](../../guides/browser-keywords/) for what works on an application's windows and what does not.
+- [The extension host](../../guides/extension-host/) for VS Code's extension API in a test, for example to run a command by its id or to wait for a language server.
 - [CI and the Linux display](../../guides/ci-and-display/) for running without a desktop.
 - [Downloads and cache](../../guides/downloads-and-cache/) for VS Code versions and offline runs.
 - [Logs and troubleshooting](../../guides/logs/) for VS Code's logs and the instance directories.

@@ -35,4 +35,6 @@ Extension Command Shows A Message
 
 The command palette filters asynchronously, so the test waits for the command's row before pressing Enter.
 
+`Evaluate In Extension Host` runs JavaScript with VS Code's extension API in the extension host, for example to run a command by its id or to wait for a language server, see [the extension host](https://robotcodedev.github.io/robotframework-electron-vscode/guides/extension-host/).
+
 The [documentation](https://robotcodedev.github.io/robotframework-electron-vscode/) covers the options of `Open VS Code`, downloads and cache, VS Code forks, running on CI, and logs and troubleshooting.

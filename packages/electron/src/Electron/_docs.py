@@ -105,9 +105,12 @@ def shared_sections(start: str, close: str) -> str:
         """)
 
 
-def importing(library: str) -> str:
-    """Return the import documentation of ``library``, which takes the Browser library's import arguments."""
-    return cleandoc(f"""
+def importing(library: str, own_arguments: str = "") -> str:
+    """Return the import documentation of ``library``, which takes the Browser library's import arguments.
+
+    ``own_arguments`` documents the import arguments that ``library`` adds to Browser's.
+    """
+    browser = cleandoc(f"""
         {library} library takes the same import arguments as the Browser
         library, described under {browser_link("Importing")} in its
         documentation.
@@ -117,10 +120,9 @@ def importing(library: str) -> str:
         other page. Arguments that are about browsers, such as
         ``external_browser_executable``, have no effect on applications. All
         arguments are named arguments.
-
-        Example:
-        | Library    {library}    timeout=20s    enable_presenter_mode=True
         """)
+    own = f"\n\n{cleandoc(own_arguments)}" if own_arguments else ""
+    return f"{browser}{own}\n\nExample:\n| Library    {library}    timeout=20s    enable_presenter_mode=True"
 
 
 # Notes for Browser keywords that behave differently in applications, by method name. The acceptance

@@ -1,6 +1,6 @@
 """Robot Framework library for end-to-end testing of VS Code extensions."""
 
-import functools
+import inspect
 import os
 from datetime import timedelta
 from importlib.metadata import version
@@ -17,6 +17,13 @@ from Electron import Electron, RecordVideo
 from Electron._docs import importing, shared_sections
 
 from .download import select_build
+from .extension_host import (
+    HELPER_EXTENSION,
+    PAGE_WORKSPACE_ID,
+    PageNotReadyError,
+    UnknownWorkspaceError,
+    run_in_extension_host,
+)
 from .instance import (
     InstanceDirectories,
     create_instance_directories,
@@ -65,6 +72,17 @@ other parts of the workbench. Their DOM changes with VS Code releases and
 differs between forks, so these keywords and their locators belong to your
 project. The documentation site shows how to write them.
 
+= The extension host =
+
+VS Code runs the extensions of a workbench window in its extension host,
+where the ``vscode`` module gives access to the extension API.
+`Evaluate In Extension Host` runs a JavaScript function there, to prepare a
+test or to wait for a state, for example to run a command by its id or to wait
+for the diagnostics of a language server. Check the outcome through the
+workbench. The keyword works through a small helper extension, which
+`Open VS Code` loads as a development extension. The import argument
+``enable_extension_host_evaluation=False`` leaves it out, see `Importing`.
+
 = Several instances =
 
 Several instances can be open at once. `Switch Electron Application` makes
@@ -90,9 +108,37 @@ and returns its executable, for example in a setup step of a CI job.
 """
 
 
+_IMPORT_ARGUMENTS = """
+It also takes ``enable_extension_host_evaluation``, an import argument of its
+own.
+
+*Arguments:*
+  - ``enable_extension_host_evaluation``: Loads the library's helper
+        extension into every instance that `Open VS Code` starts, so that
+        `Evaluate In Extension Host` works. ``False`` leaves it out: then a
+        window without a development extension of your own is no
+        "Extension Development Host", and ``vscode.extensions.all`` does not
+        list the helper.
+"""
+
+
 class Instance(NamedTuple):
     executable: Path
     directories: InstanceDirectories
+
+
+def _after_browsers_import_arguments(init: Any) -> None:
+    """Give ``init`` Browser's import arguments, followed by its own keyword-only arguments.
+
+    Libdoc, Robot Framework's argument conversion and robotlibcore read the import arguments, with
+    their types, from the signature. There is no ``__wrapped__``, which robotlibcore would follow to
+    Browser's signature alone.
+    """
+    browser = inspect.unwrap(Electron.__init__)
+    signature = inspect.signature(browser)
+    own = [p for p in inspect.signature(init).parameters.values() if p.kind is inspect.Parameter.KEYWORD_ONLY]
+    init.__signature__ = signature.replace(parameters=[*signature.parameters.values(), *own])
+    init.__annotations__ = {**browser.__annotations__, **{p.name: p.annotation for p in own}}
 
 
 class VSCode(Electron):
@@ -100,13 +146,12 @@ class VSCode(Electron):
 
     _instance_cleanup_done = False
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, enable_extension_host_evaluation: bool = True, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        self._extension_host_evaluation = enable_extension_host_evaluation
 
-    # Libdoc and robotlibcore take the signature and the types of the import arguments
-    # from Browser through __wrapped__. A decorator would hide __init__ from mypy.
-    functools.update_wrapper(__init__, Electron.__init__)
-    __init__.__doc__ = importing("VSCode")
+    _after_browsers_import_arguments(__init__)
+    __init__.__doc__ = importing("VSCode", _IMPORT_ARGUMENTS)
 
     def _start_suite(self, name: str, attrs: dict[str, Any]) -> None:
         super()._start_suite(name, attrs)
@@ -157,6 +202,10 @@ class VSCode(Electron):
         Application`: its workbench window is the active page, Browser
         keywords work on it, and `Close VS Code` and automatic closing end
         it.
+
+        The instance also loads the library's helper extension as a
+        development extension, for `Evaluate In Extension Host`, unless the
+        library is imported with ``enable_extension_host_evaluation=False``.
 
         *Arguments:*
           - ``path``: A folder to open as workspace, or a file to open in an editor.
@@ -223,7 +272,10 @@ class VSCode(Electron):
         env = instance_environment(os.environ)
         if isinstance(extension_development_path, Path):
             extension_development_path = [extension_development_path]
-        arguments = launch_arguments(directories, extension_development_path or [], args or [], path)
+        development_paths = list(extension_development_path or [])
+        if self._extension_host_evaluation:
+            development_paths.append(HELPER_EXTENSION)
+        arguments = launch_arguments(directories, development_paths, args or [], path)
         logger.info(f"Starting VS Code {product or executable} with instance directory {directories.root}")
         instance, page = self.new_electron_application(
             executable,
@@ -302,11 +354,103 @@ class VSCode(Electron):
             root=str(directories.root), user_data=str(directories.user_data), extensions=str(directories.extensions)
         )
 
+    @keyword("Evaluate In Extension Host")
+    def evaluate_in_extension_host(
+        self, function: str, *lines: str, arg: Any = None, workspace: Path | None = None
+    ) -> Any:
+        """Runs a JavaScript function in VS Code's extension host and returns its result.
+
+        The extension host runs the extensions of a workbench window. There,
+        the ``vscode`` module gives access to VS Code's extension API. Use it
+        to prepare a test and to wait for a state, for example to run a
+        command by its id, to wait for the diagnostics of a language server or
+        to read the text of an editor, and check the outcome through the
+        workbench. The function runs in the library's helper extension, which
+        `Open VS Code` loads unless the library is imported with
+        ``enable_extension_host_evaluation=False``.
+
+        Each workbench window has an extension host of its own. Without
+        ``workspace``, the keyword takes the one of the window that shows the
+        active page; `Switch Page` changes it. A window into which an editor
+        was moved belongs to the window that the editor came from.
+
+        The keyword waits up to the library's timeout for the extension host,
+        for example right after `Open VS Code` or after the window reloads,
+        and then again up to the timeout for the function. A function that
+        takes longer keeps running in the extension host.
+
+        A command that opens a quick pick or an input box settles only once
+        it is answered. Start such a command with ``void`` instead of
+        returning its promise, so that the keyword returns at once.
+
+        *Arguments:*
+          - ``function``: A JavaScript function as text, or its first line.
+                It gets two parameters: the ``vscode`` module and ``arg``.
+                It may return a promise.
+          - ``lines``: Further lines of the function. They are joined to
+                ``function`` with line breaks, so that a function can span
+                several cells with ``...``.
+          - ``arg``: A JSON-serialisable value that the function gets.
+          - ``workspace``: The folder or the ``.code-workspace`` file that a
+                window has open, to select that window instead of the one of
+                the active page. A relative path is relative to the working
+                directory of the test run.
+
+        *Returns:*
+          The function's result, which must be JSON-serialisable. ``None`` if
+          the function returns nothing.
+
+        *Raises:*
+          - ``ValueError``: ``arg`` is not JSON-serialisable.
+          - ``AssertionError``: The helper extension is switched off, no
+                VS Code instance is open, the active application was not
+                started by `Open VS Code`, the window cannot be determined, no
+                extension host answers within the timeout, or the function
+                throws an error, does not finish within the timeout or returns
+                a value that is not JSON-serialisable.
+
+        Example:
+        | `Evaluate In Extension Host`    (vscode) => vscode.commands.executeCommand('myExtension.refresh')
+        | ${text} =    `Evaluate In Extension Host`    (vscode) => vscode.window.activeTextEditor?.document.getText()
+        | `Evaluate In Extension Host`    (vscode) => {
+        | ...    void vscode.commands.executeCommand('workbench.action.quickOpen');
+        | ...    }
+        | ${count} =    `Evaluate In Extension Host`    (vscode, path) =>
+        | ...    vscode.languages.getDiagnostics(vscode.Uri.file(path)).length
+        | ...    arg=${EXECDIR}/tests/workspace/src/example.py
+        """
+        if not self._extension_host_evaluation:
+            raise AssertionError(
+                "Evaluate In Extension Host needs the library's helper extension, which the import argument "
+                "enable_extension_host_evaluation=False switches off."
+            )
+        try:
+            user_data = self._instance(SelectionType.CURRENT).directories.user_data
+        except ValueError as error:
+            # The active application is no argument here, so this fails like a check, as in Evaluate In Main Process.
+            raise AssertionError(str(error)) from None
+        script = "\n".join((function, *lines))
+        return run_in_extension_host(user_data, script, arg, workspace, self._page_workspace_id, self.timeout / 1000)
+
+    def _page_workspace_id(self) -> str | None:
+        """VS Code's id of the workspace of the active page's workbench window, ``None`` for an empty window."""
+        try:
+            found = self.evaluate_javascript(None, PAGE_WORKSPACE_ID)
+        except AssertionError as error:
+            # Browser reports the page's errors so, for example while the window reloads and its page navigates.
+            raise PageNotReadyError(str(error)) from error
+        if not isinstance(found, dict):
+            raise UnknownWorkspaceError
+        workspace_id: str | None = found["workspaceId"]
+        return workspace_id
+
     def _instance(self, instance: SelectionType | str) -> Instance:
         """The instance of `Open VS Code` with the id ``instance``, or the active one for ``CURRENT``."""
         if SelectionType.create(instance) is SelectionType.CURRENT:
             active = self.get_browser_ids(SelectionType.CURRENT)
-            instance_id = active[0] if active else "CURRENT"
+            if not active:
+                raise ValueError("No VS Code instance is open.")
+            instance_id = active[0]
         else:
             instance_id = str(instance)
         found = self._instances().get(instance_id)

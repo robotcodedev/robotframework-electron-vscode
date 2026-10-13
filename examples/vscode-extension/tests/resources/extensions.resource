@@ -37,36 +37,41 @@ Install Into Running VS Code
     [Documentation]    Installs an extension into the active VS Code and waits until VS Code has taken it in.
     ...
     ...    VS Code's command-line script installs into the directories of the running
-    ...    VS Code, and VS Code notices the new extension a moment later. Its shared
-    ...    process reports that in its log. VS Code misses an install while it is still
-    ...    starting, so if the report does not come, the keyword installs the extension
-    ...    again. The script can also fail once because VS Code writes the list of
+    ...    VS Code. While VS Code's shared process is still starting, it misses an
+    ...    extension that arrives, or even deletes it again, and the workbench can show
+    ...    before that is over. So the keyword waits for the extension host first, which
+    ...    comes up later. Then it waits until the extension host knows the extension:
+    ...    that is what the window has taken in. If it does not, the keyword installs the
+    ...    extension again and reloads the window, so that VS Code reads its extensions
+    ...    anew. The script can also fail once because VS Code writes the list of
     ...    extensions at the same time, so the first install is tried twice.
-    [Arguments]    ${extension}
+    ...
+    ...    `extension` is a Marketplace id or a `.vsix` file; for a `.vsix` file, give its
+    ...    id as `id`.
+    [Arguments]    ${extension}    ${id}=${extension}
     ${dirs} =    Get VS Code Instance Directories
+    Evaluate In Extension Host    () => true
     Wait Until Keyword Succeeds    2x    1s
     ...    Execute VS Code CLI Command In Instance    ${dirs}    --install-extension    ${extension}
-    ${reported} =    Run Keyword And Return Status    Wait Until Keyword Succeeds    10s    0.2s
-    ...    Shared Process Log Should Contain    ${dirs.user_data}    Extensions added from another source ${extension}
-    IF    not ${reported}
-        Execute VS Code CLI Command In Instance    ${dirs}    --uninstall-extension    ${extension}
+    ${known} =    Run Keyword And Return Status    Wait Until Keyword Succeeds    10s    0.2s
+    ...    Extension Host Should Know    ${id}
+    IF    not ${known}
+        Run Keyword And Ignore Error    Execute VS Code CLI Command In Instance    ${dirs}    --uninstall-extension    ${id}
         Execute VS Code CLI Command In Instance    ${dirs}    --install-extension    ${extension}
-        Wait Until Keyword Succeeds    10s    0.2s
-        ...    Shared Process Log Should Contain    ${dirs.user_data}    Extensions added from another source ${extension}
+        Evaluate In Extension Host
+        ...    (vscode) => { void vscode.commands.executeCommand('workbench.action.reloadWindow'); }
+        Wait Until Keyword Succeeds    30s    0.5s    Extension Host Should Know    ${id}
     END
+
+Extension Host Should Know
+    [Documentation]    Fails unless the extension host of the active window knows the extension with the given id.
+    [Arguments]    ${id}
+    ${known} =    Evaluate In Extension Host    (vscode, id) => vscode.extensions.getExtension(id) !== undefined
+    ...    arg=${id}
+    Should Be True    ${known}    The extension host does not know ${id}.
 
 Execute VS Code CLI Command In Instance
     [Documentation]    Runs VS Code's command-line script on the directories of a running VS Code.
     [Arguments]    ${dirs}    @{args}
     Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    @{args}
     ...    version=${VSCODE_VERSION}    executable=${VSCODE_EXECUTABLE}    cache_dir=${VSCODE_CACHE}
-
-Shared Process Log Should Contain
-    [Documentation]    Fails unless the shared process log of the running VS Code contains the text.
-    ...
-    ...    The log is `sharedprocess.log` in the newest folder under `logs` of the user-data
-    ...    directory that has one; calls of the command-line script add folders without it.
-    [Arguments]    ${user_data_dir}    ${text}
-    ${logs} =    Evaluate    sorted(pathlib.Path($user_data_dir, "logs").glob("*/sharedprocess.log"))    modules=pathlib
-    ${log} =    Get File    ${logs}[-1]
-    Should Contain    ${log}    ${text}

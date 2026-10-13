@@ -21,7 +21,8 @@ Marketplace Extension
 
 Setting Takes Effect
     Open Test VS Code    settings=${{ {"window.title": "robot-test"} }}
-    Get Title    ==    robot-test
+    # The library's helper extension makes the window an Extension Development Host.
+    Get Title    ==    [Extension Development Host] robot-test
 
 Quiet Start
     Open Test VS Code    ${TEST_WORKSPACE}

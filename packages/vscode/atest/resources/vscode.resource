@@ -42,24 +42,28 @@ Run Command From A Fresh Palette
     Keyboard Key    press    Enter
 
 Install Into Running Instance
-    [Arguments]    ${extension}    ${id}    ${browser}=CURRENT
-    ${dirs} =    Get VS Code Instance Directories    ${browser}
+    [Arguments]    ${extension}    ${id}
+    ${dirs} =    Get VS Code Instance Directories
+    # VS Code's shared process can still be starting while the workbench shows, and then misses an extension
+    # that arrives, or deletes it again. The extension host comes up later.
+    Evaluate In Extension Host    () => true
     # The running instance writes extensions.json as well, so the script can fail on a busy file once.
     Wait Until Keyword Succeeds    2x    1s
     ...    Execute Test VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ${extension}
-    ${reported} =    Run Keyword And Return Status    Wait Until Keyword Succeeds    10s    0.2s
-    ...    Shared Process Log Should Contain    ${dirs.user_data}    Extensions added from another source ${id}
-    IF    not ${reported}
-        # VS Code misses an install while it is still starting. Installing again makes it notice.
-        Execute Test VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --uninstall-extension    ${id}
+    ${known} =    Run Keyword And Return Status    Wait Until Keyword Succeeds    10s    0.2s
+    ...    Extension Host Should Know    ${id}
+    IF    not ${known}
+        # Brings back a deleted extension; the reload makes the window read its extensions anew.
+        Run Keyword And Ignore Error
+        ...    Execute Test VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --uninstall-extension    ${id}
         Execute Test VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ${extension}
-        Wait Until Keyword Succeeds    10s    0.2s
-        ...    Shared Process Log Should Contain    ${dirs.user_data}    Extensions added from another source ${id}
+        Evaluate In Extension Host
+        ...    (vscode) => { void vscode.commands.executeCommand('workbench.action.reloadWindow'); }
+        Wait Until Keyword Succeeds    30s    0.5s    Extension Host Should Know    ${id}
     END
 
-Shared Process Log Should Contain
-    [Arguments]    ${user_data_dir}    ${text}
-    # Calls of the command-line script add log folders of their own, without sharedprocess.log.
-    ${logs} =    Evaluate    sorted(pathlib.Path($user_data_dir, "logs").glob("*/sharedprocess.log"))    modules=pathlib
-    ${log} =    Get File    ${logs}[-1]
-    Should Contain    ${log}    ${text}
+Extension Host Should Know
+    [Arguments]    ${id}
+    ${known} =    Evaluate In Extension Host    (vscode, id) => vscode.extensions.getExtension(id) !== undefined
+    ...    arg=${id}
+    Should Be True    ${known}    The extension host does not know ${id}.
