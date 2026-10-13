@@ -11,7 +11,7 @@ The `VSCode` library SHALL NOT provide keywords or locators for parts of the VS 
 
 #### Scenario: Keywords of the library
 - **WHEN** libdoc generates the documentation of `VSCode`
-- **THEN** the only keywords it adds to those of `Electron` are `Open VS Code`, `Close VS Code`, `Get VS Code Instance Directories` and `Evaluate In Extension Host`
+- **THEN** the only keywords it adds to those of `Electron` are `Start VS Code`, `Close VS Code`, `Get VS Code Instance Directories`, `Execute VS Code CLI Command` and `Evaluate In Extension Host`
 
 ### Requirement: Examples for driving the workbench
 The repository SHALL provide an example project, `examples/vscode-extension`, whose own resources define keywords for running a command through the command palette, selecting a quick pick item, reading notifications, acting inside a webview, opening and editing files, using VS Code's file dialog and reading the terminal.
@@ -70,14 +70,14 @@ The documentation site SHALL have a guide on writing your own workbench keywords
 The examples SHALL run as part of the repository's tests, so that they keep working with the current libraries and VS Code.
 
 #### Scenario: Example run
-- **WHEN** `uv run robotcode -r examples/vscode-extension robot` runs from the repository root
+- **WHEN** the example's npm script has downloaded its VS Code, and `uv run robotcode -r examples/vscode-extension robot` runs from the repository root
 - **THEN** all example tests pass
 
 ### Requirement: Self-contained template
-The example SHALL be a self-contained extension project with its own `robot.toml`, which refers to nothing outside its folder, so that it can be copied as a starting point.
+The example SHALL be a self-contained extension project with its own `robot.toml` and `package.json`, which refer to nothing outside its folder, so that it can be copied as a starting point.
 
 #### Scenario: Copied example
-- **WHEN** the example folder is copied out of the repository and run from its own root, with the VSCode library installed
+- **WHEN** the example folder is copied out of the repository, its npm script downloads VS Code, and it runs from its own root with the VSCode library installed
 - **THEN** its tests pass
 
 ### Requirement: Display profiles
@@ -176,3 +176,14 @@ The example SHALL have a suite that records a Playwright trace of a test and a H
 #### Scenario: Guide on traces
 - **WHEN** the documentation site is built
 - **THEN** the guide on traces and HAR files shows the example's `tracing.robot` from `examples/vscode-extension`
+
+### Requirement: VS Code for the example
+The example SHALL download the VS Code that it runs against with `@vscode/test-electron`, through an npm script in its `package.json`, into a folder of its own that git ignores. Its `robot.toml` SHALL point the variable `VSCODE_EXECUTABLE` to that VS Code, and a personal `.robot.toml` SHALL be able to point it to another one.
+
+#### Scenario: Downloaded VS Code
+- **WHEN** `npm ci` and the example's npm script run in the example's folder
+- **THEN** VS Code 1.141.0 is in the example's folder, and the example's tests start it
+
+#### Scenario: Another VS Code
+- **WHEN** a personal `.robot.toml` sets `VSCODE_EXECUTABLE` to an installed VS Code
+- **THEN** the example's tests start that VS Code

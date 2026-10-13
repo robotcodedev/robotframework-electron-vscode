@@ -6,34 +6,12 @@ Run VS Code's command-line script, for example to install, uninstall or list ext
 
 ## Requirements
 
-### Requirement: Run the command-line script
-`Execute VS Code CLI Command` in `VSCode.Helper` SHALL run the command-line script of a VS Code build with the given arguments and SHALL return the script's output. The build SHALL be selected as for `Get VS Code Executable`, from a version or a given executable.
-
-#### Scenario: List extensions
-- **WHEN** `Execute VS Code CLI Command` is called with `--list-extensions` for an extensions directory that holds an extension
-- **THEN** the keyword returns the output of the script, which names that extension
-
-#### Scenario: Fixed version
-- **WHEN** `Execute VS Code CLI Command` is called with `version=1.141.0`
-- **THEN** the command-line script of VS Code 1.141.0 runs, downloaded and cached as for `Get VS Code Executable`
-
-### Requirement: Explicit directories
-`Execute VS Code CLI Command` SHALL require an extensions directory and a user-data directory and SHALL pass them to the script, so that a call never works on the user's own VS Code.
-
-#### Scenario: Directories are required
-- **WHEN** `Execute VS Code CLI Command` is called without an extensions directory or a user-data directory
-- **THEN** Robot Framework reports the missing argument, and the script does not run
-
-#### Scenario: Install into a prepared directory
-- **WHEN** `Execute VS Code CLI Command` installs an extension with `--install-extension` into given directories
-- **THEN** the extension is in the given extensions directory and not in the user's own VS Code
-
 ### Requirement: Clean environment
 `Execute VS Code CLI Command` SHALL run the script without the environment variables that start with `VSCODE_` and without `ELECTRON_RUN_AS_NODE`.
 
 #### Scenario: Run from VS Code's terminal
 - **WHEN** `Execute VS Code CLI Command` runs in a test run started from VS Code's integrated terminal
-- **THEN** the script works on the given directories and does not contact the VS Code that the terminal belongs to
+- **THEN** the script works on the directories of the active instance or on those of the given environment, and does not contact the VS Code that the terminal belongs to
 
 ### Requirement: Failures
 `Execute VS Code CLI Command` SHALL fail with the script's output if the script ends with an error, and SHALL fail if the script does not finish within a time limit.
@@ -43,8 +21,49 @@ Run VS Code's command-line script, for example to install, uninstall or list ext
 - **THEN** the keyword fails with the script's message
 
 ### Requirement: Usable without a browser
-`Execute VS Code CLI Command` SHALL NOT start the Playwright process or require an open browser.
+`Execute VS Code CLI Command` SHALL NOT start the Playwright process, and with `executable` it SHALL NOT require an open browser.
 
 #### Scenario: Prepare before any browser
-- **WHEN** a suite setup calls `Execute VS Code CLI Command` before any VS Code or browser is opened
+- **WHEN** a suite setup calls `Execute VS Code CLI Command` with an executable before any VS Code or browser is opened
 - **THEN** the keyword works and no Node.js process is started
+
+### Requirement: Command-line script of the active instance
+Without `executable`, `user_data_dir` and `extensions_dir`, `Execute VS Code CLI Command` in the `VSCode` library SHALL run the command-line script of the active VS Code instance with the given arguments, on the instance's directories, and SHALL return the script's output. Without an open instance, it SHALL fail with a message that names `executable`.
+
+#### Scenario: Extensions of the running instance
+- **WHEN** a test starts VS Code with a prepared extensions directory and calls `Execute VS Code CLI Command    --list-extensions`
+- **THEN** the keyword returns the script's output, which names the prepared extension
+
+#### Scenario: Install into the running instance
+- **WHEN** a test calls `Execute VS Code CLI Command    --install-extension` with a `.vsix` after `Start VS Code`, without further arguments
+- **THEN** the extension is in the instance's extensions directory
+
+#### Scenario: No instance open
+- **WHEN** no VS Code instance is open and a test calls `Execute VS Code CLI Command    --list-extensions`
+- **THEN** the keyword fails with a message that no instance is open and that names `executable`
+
+### Requirement: Command-line script of a given environment
+With `executable`, `Execute VS Code CLI Command` SHALL run the command-line script of that VS Code on the environment that `Start VS Code` gets with the same `executable`, `user_data_dir` and `extensions_dir`: given directories as they are, the others fresh. `user_data_dir` or `extensions_dir` without `executable` SHALL fail.
+
+#### Scenario: Install into a prepared directory
+- **WHEN** a test installs an extension with `Execute VS Code CLI Command    --install-extension`, `executable` and `extensions_dir`, and then starts VS Code with the same `executable` and `extensions_dir`
+- **THEN** the instance starts with the extension, and the user's own VS Code does not have it
+
+#### Scenario: Directories without an executable
+- **WHEN** a test calls `Execute VS Code CLI Command` with `extensions_dir` but without `executable`
+- **THEN** the keyword fails with a message that names `executable`, and the script does not run
+
+### Requirement: No window from the command-line script
+`Execute VS Code CLI Command` SHALL fail without running the script when it gets no arguments for the script or an empty one, because VS Code's script then opens a VS Code window instead of running a command. On Linux, it SHALL run the script without `DISPLAY`, `WAYLAND_DISPLAY` and `XDG_SESSION_TYPE`, so that a call with `executable` but without a command of the script opens no window.
+
+#### Scenario: Empty argument
+- **WHEN** a test calls `Execute VS Code CLI Command    --install-extension    ${EMPTY}`
+- **THEN** the keyword fails with a message about the empty argument, and the script does not run
+
+#### Scenario: No arguments for the script
+- **WHEN** a test calls `Execute VS Code CLI Command` with `executable` and without arguments for the script
+- **THEN** the keyword fails with a message that the script needs arguments, and the script does not run
+
+#### Scenario: No window on Linux
+- **WHEN** a test on Linux calls `Execute VS Code CLI Command    --disable-extensions` with `executable`, which is no command of the script
+- **THEN** no VS Code window opens, and no process of that VS Code is still running a few seconds later

@@ -52,10 +52,10 @@ The library documentation SHALL be the `Electron` library's own, with import doc
 - **THEN** it says, after Browser's text, that `Close Page` waits forever on the page of a `<webview>` and how to remove the `<webview>` instead
 
 ### Requirement: Start an application
-`New Electron Application` SHALL start the Electron application at a given executable path, or a command on `PATH`, and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. A relative executable path and a relative working directory SHALL be relative to the test run's working directory, and without a working directory the application SHALL run in the test run's working directory. If no environment variables are given, the application SHALL inherit the environment of the test run without `ELECTRON_RUN_AS_NODE`.
+`Start Electron Application` SHALL start the Electron application at a given executable path, or a command on `PATH`, and SHALL return once the application's first window has opened. How long it waits for that window SHALL be configurable per call. Command-line arguments, a working directory and environment variables SHALL be passed to the application as given. A relative executable path and a relative working directory SHALL be relative to the test run's working directory, and without a working directory the application SHALL run in the test run's working directory. If no environment variables are given, the application SHALL inherit the environment of the test run without `ELECTRON_RUN_AS_NODE`.
 
 #### Scenario: Application opens a window
-- **WHEN** `New Electron Application` is called with the path of an Electron application
+- **WHEN** `Start Electron Application` is called with the path of an Electron application
 - **THEN** the keyword returns after the application's first window has opened
 
 #### Scenario: Arguments and environment
@@ -79,7 +79,7 @@ The library documentation SHALL be the `Electron` library's own, with import doc
 - **THEN** the keyword returns without an error, and windows that the application opens later can be selected with `Switch Page`
 
 ### Requirement: Windows are Browser pages
-A started application SHALL be a browser in Browser's state with one context. Each of its windows SHALL be a page of that context, and its first window SHALL be the active page when `New Electron Application` returns, also when the application shows `WebContentsView`s or `<webview>`s, which are pages of the context as well.
+A started application SHALL be a browser in Browser's state with one context. Each of its windows SHALL be a page of that context, and its first window SHALL be the active page when `Start Electron Application` returns, also when the application shows `WebContentsView`s or `<webview>`s, which are pages of the context as well.
 
 #### Scenario: Browser keywords act on the first window
 - **WHEN** an application has been started
@@ -135,7 +135,7 @@ An application SHALL end whenever Browser closes it: through `Close Electron App
 - **THEN** the application process ends
 
 ### Requirement: Failed start
-If the application cannot be started, opens no window within the time allowed, or cannot be taken over by the Browser library, `New Electron Application` SHALL fail with an error that names the cause. It SHALL leave no application process running and SHALL add nothing to Browser's state.
+If the application cannot be started, opens no window within the time allowed, or cannot be taken over by the Browser library, `Start Electron Application` SHALL fail with an error that names the cause. It SHALL leave no application process running and SHALL add nothing to Browser's state.
 
 #### Scenario: Wrong executable path
 - **WHEN** the executable path does not exist
@@ -150,7 +150,7 @@ If the application cannot be started, opens no window within the time allowed, o
 - **THEN** the keyword fails with an error that names the cause, and afterwards no process of the application is running
 
 ### Requirement: Video recording
-`New Electron Application` SHALL record a video of the application's windows when it is given `record_video`. It SHALL store the video in Browser's video folder of the output directory unless `record_video` names a folder, return the video's path in the page details of its return value, and embed the video in the log, as Browser does for `New Context`.
+`Start Electron Application` SHALL record a video of the application's windows when it is given `record_video`. It SHALL store the video in Browser's video folder of the output directory unless `record_video` names a folder, return the video's path in the page details of its return value, and embed the video in the log, as Browser does for `New Context`.
 
 #### Scenario: Video of an application
 - **WHEN** a test starts an application with `record_video`, acts in its window and closes it
@@ -165,7 +165,7 @@ If the application cannot be started, opens no window within the time allowed, o
 - **THEN** no video is recorded, and the video path in the page details is empty
 
 ### Requirement: Tracing
-`New Electron Application` SHALL record a Playwright trace of the application when it is given `tracing`, with the values and paths of `tracing` of Browser's `New Context`, and also when the variable or environment variable `ROBOT_FRAMEWORK_BROWSER_TRACING` is `True`. The trace SHALL be saved when the application closes and SHALL show the keyword calls as groups.
+`Start Electron Application` SHALL record a Playwright trace of the application when it is given `tracing`, with the values and paths of `tracing` of Browser's `New Context`, and also when the variable or environment variable `ROBOT_FRAMEWORK_BROWSER_TRACING` is `True`. The trace SHALL be saved when the application closes and SHALL show the keyword calls as groups.
 
 #### Scenario: Trace of an application
 - **WHEN** a test starts an application with `tracing` set to a `.zip` path, clicks in its window and closes it
@@ -180,7 +180,7 @@ If the application cannot be started, opens no window within the time allowed, o
 - **THEN** no trace is saved
 
 ### Requirement: HAR recording
-`New Electron Application` SHALL record the network traffic of the application's windows into a HAR file when it is given `record_har`, with the keys of `recordHar` of Browser's `New Context`. A relative path SHALL be relative to the output directory. The file SHALL be written when the application closes.
+`Start Electron Application` SHALL record the network traffic of the application's windows into a HAR file when it is given `record_har`, with the keys of `recordHar` of Browser's `New Context`. A relative path SHALL be relative to the output directory. The file SHALL be written when the application closes.
 
 #### Scenario: HAR of an application
 - **WHEN** a test starts an application with `record_har`, loads a page from a web server in its window, makes the page fetch a resource and closes the application
@@ -197,11 +197,11 @@ Browser's `Download` SHALL work in an application's windows. The library SHALL g
 The library's own keywords SHALL document every argument, their return value and the exceptions they raise for invalid input, so that Libdoc shows them with the arguments, the return type and the exceptions.
 
 #### Scenario: Keyword documentation
-- **WHEN** libdoc generates the documentation of `Electron` or `Electron.Helper`
-- **THEN** every argument of their own keywords has a description, keywords that return a value document it, and keywords that raise an exception for invalid input document it
+- **WHEN** libdoc generates the documentation of `Electron`
+- **THEN** every argument of its own keywords has a description, keywords that return a value document it, and keywords that raise an exception for invalid input document it
 
 ### Requirement: Color scheme
-`New Electron Application` SHALL leave the color scheme of the application's pages to the application by default, so that `prefers-color-scheme` reports what the application chose. When `color_scheme` is `light` or `dark`, the pages SHALL report that color scheme instead.
+`Start Electron Application` SHALL leave the color scheme of the application's pages to the application by default, so that `prefers-color-scheme` reports what the application chose. When `color_scheme` is `light` or `dark`, the pages SHALL report that color scheme instead.
 
 #### Scenario: Application decides the color scheme
 - **WHEN** a test starts an application that switches its theme to dark, without `color_scheme`
@@ -212,14 +212,14 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** its page matches `prefers-color-scheme: light`
 
 ### Requirement: Locale and time zone
-`New Electron Application` SHALL start the application's pages with the given `locale` and `timezone_id`, which apply to the language the pages report and to their number and date formatting. Without them, the pages SHALL follow the system.
+`Start Electron Application` SHALL start the application's pages with the given `locale` and `timezone_id`, which apply to the language the pages report and to their number and date formatting. Without them, the pages SHALL follow the system.
 
 #### Scenario: Given locale and time zone
 - **WHEN** a test starts an application with `locale=pt-BR` and `timezone_id=Asia/Tokyo`
 - **THEN** its page reports the language `pt-BR` and the time zone `Asia/Tokyo`, and formats numbers as in Brazilian Portuguese
 
 ### Requirement: Bypass the Content Security Policy
-`New Electron Application` SHALL start the application with the Content Security Policy of its pages bypassed, including Trusted Types, when `bypass_csp` is true. By default, the policy SHALL be enforced.
+`Start Electron Application` SHALL start the application with the Content Security Policy of its pages bypassed, including Trusted Types, when `bypass_csp` is true. By default, the policy SHALL be enforced.
 
 #### Scenario: Script added to a page with a strict policy
 - **WHEN** a test starts an application whose page requires Trusted Types for scripts, with `bypass_csp=True`, and adds a script element with inline code through `Evaluate JavaScript`
@@ -230,7 +230,7 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** adding the script fails with an error about Trusted Types
 
 ### Requirement: Evaluate in the main process
-`Evaluate In Main Process` SHALL run a JavaScript function in the main process of an application started by `New Electron Application`, the active one or the one with a given application id. The function SHALL be a required argument; further arguments continue it. It SHALL get the `electron` module and the keyword's `arg`, and the keyword SHALL return the function's result. Without an open application, or for an id that is not such an application, it SHALL fail with a message that says so.
+`Evaluate In Main Process` SHALL run a JavaScript function in the main process of an application started by `Start Electron Application`, the active one or the one with a given application id. The function SHALL be a required argument; further arguments continue it. It SHALL get the `electron` module and the keyword's `arg`, and the keyword SHALL return the function's result. Without an open application, or for an id that is not such an application, it SHALL fail with a message that says so.
 
 #### Scenario: Value from the main process
 - **WHEN** a test evaluates `({ app }) => app.getName()` in the main process of the fixture app
@@ -241,7 +241,7 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** no dialog opens, and the page shows the fixed path
 
 #### Scenario: Not an Electron application
-- **WHEN** `Evaluate In Main Process` is called with an application id that `New Electron Application` did not return
+- **WHEN** `Evaluate In Main Process` is called with an application id that `Start Electron Application` did not return
 - **THEN** it fails with a message that names the id
 
 #### Scenario: No application open
