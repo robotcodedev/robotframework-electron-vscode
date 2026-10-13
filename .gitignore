@@ -10,6 +10,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Node.js packages
+node_modules/
+
 # Test output and downloads
 results/
 .cache/
@@ -19,11 +22,9 @@ results/
 *.code-workspace
 
 # The helper extension's .vsix, which the build packs with vsce
-packages/vscode/node_modules/
 packages/vscode/src/VSCode/extension-host.vsix
 
 # Documentation site
-docs/node_modules/
 docs/dist/
 docs/.astro/
 

@@ -4,7 +4,7 @@ Documentation       Opens a second VS Code window and switches between the windo
 Library             OperatingSystem
 Resource            resources/vscode.resource
 
-Suite Setup         Open Example VS Code
+Suite Setup         Start Example VS Code
 Suite Teardown      Close VS Code
 
 

@@ -4,7 +4,7 @@ Documentation       Runs a command in the integrated terminal and reads its outp
 Resource            resources/vscode.resource
 Resource            resources/terminal.resource
 
-Suite Setup         Open Example VS Code
+Suite Setup         Start Example VS Code
 Suite Teardown      Close VS Code
 
 

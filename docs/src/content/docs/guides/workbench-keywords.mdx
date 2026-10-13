@@ -15,7 +15,7 @@ import fileDialog from '../../../../../examples/vscode-extension/tests/resources
 import terminal from '../../../../../examples/vscode-extension/tests/resources/terminal.resource?raw';
 import webviewTest from '../../../../../examples/vscode-extension/tests/webview.robot?raw';
 
-The `VSCode` library downloads VS Code, starts it in isolation and hands the workbench window to Browser. It has no keywords for the command palette, quick picks, notifications, webviews, the editor or the terminal, and no locators for them. These belong to your project:
+The `VSCode` library starts VS Code in isolation and hands the workbench window to Browser. It has no keywords for the command palette, quick picks, notifications, webviews, the editor or the terminal, and no locators for them. These belong to your project:
 
 - The workbench's DOM changes with VS Code releases, and it differs between versions and forks.
 - Every extension needs other parts of the workbench.
@@ -23,15 +23,15 @@ The `VSCode` library downloads VS Code, starts it in isolation and hands the wor
 
 The example project `examples/vscode-extension` in the repository shows how to write them. It is a small extension with a command that shows a notification, a command that shows a quick pick, and a command that opens a webview, and a workspace with a Python script and a text file. Its tests keep one resource file per workbench part, with the part's keywords and its locators as variables. The keywords use only Browser keywords. Copy the folder as a starting point and keep the resources your extension needs.
 
-## Opening VS Code
+## Starting VS Code
 
-`Open Example VS Code` opens VS Code with the extension of the project's folder, `${EXECDIR}`:
+`Start Example VS Code` starts VS Code with the extension of the project's folder, `${EXECDIR}`:
 
-- **Version:** the variables select the VS Code version and default to a download into the user's cache, so a copied project runs without any setup. A personal `.robot.toml` or the command line can point them to an installed VS Code, see [Downloads and cache](../downloads-and-cache/).
+- **VS Code:** `VSCODE_EXECUTABLE` in the project's `robot.toml` names the VS Code that the tests start, the one that the project's npm script `download-vscode` downloads. A personal `.robot.toml` or the command line can point it to an installed VS Code, see [VS Code versions and profiles](../vscode-versions/).
 - **Workspace:** VS Code opens a fresh copy of `tests/workspace` in the output directory, so tests can change files. `Example Workspace` returns its path, computed when it is needed instead of stored in a suite variable.
 - **Settings:** VS Code opens maximised, which fills the screen when a window manager runs, see [CI and the Linux display](../ci-and-display/). VS Code's own file dialog replaces the native one, and the terminal runs `sh`, so that personal shell configuration does not show up in tests and screenshots. VS Code has no built-in profile `sh`, so the settings define it.
 - **Helper extension:** next to the project's extension, VS Code loads the library's helper extension from the installed package, for `Evaluate In Extension Host`. See [The extension host](../extension-host/).
-- **Options:** named arguments of `Open VS Code`, such as `extensions_dir`, are passed on.
+- **Options:** named arguments of `Start VS Code`, such as `extensions_dir`, are passed on.
 
 <Code code={vscodeResource} lang="robotframework" title="tests/resources/vscode.resource" />
 
@@ -116,7 +116,7 @@ Then open VS Code with the project's own keyword and look at the part you need. 
 ```robotframework
 Resource    tests/resources/vscode.resource
 Resource    tests/resources/command_palette.resource
-Open Example VS Code
+Start Example VS Code
 ${snapshot} =    Get Aria Snapshot    .activitybar
 Highlight Elements    .activitybar .action-item    duration=3s
 ${count} =    Get Element Count    .activitybar .action-item

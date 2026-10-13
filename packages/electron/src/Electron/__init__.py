@@ -32,13 +32,14 @@ are on the
 
 = Starting and closing an application =
 
-`New Electron Application` starts an application and waits for its first
+`Start Electron Application` starts an application and waits for its first
 window. Pass the application's executable, or for an application that the plain
 Electron binary runs, the Electron executable and the application folder in
-``args``. ``Get Electron Executable`` of the ``Electron.Helper`` library
-downloads an Electron release and returns its executable.
+``args``. The library downloads nothing: the npm package ``electron``, for
+example, brings an Electron release, and ``require('electron')`` returns its
+executable.
 
-| ${app}    ${page} =    `New Electron Application`    /opt/my-app/my-app
+| ${app}    ${page} =    `Start Electron Application`    /opt/my-app/my-app
 | `Get Title`    ==    My App
 | `Click`    text=Settings
 
@@ -66,14 +67,14 @@ replace a native dialog, click a menu item or size a window.
 
 = Launch options =
 
-`New Electron Application` takes some options of the Browser library's
+`Start Electron Application` takes some options of the Browser library's
 ``New Context``: ``color_scheme``, ``locale``, ``timezone_id`` and
 ``bypass_csp``. They apply from the start, so another value means starting the
 application again.
 
 = Videos, traces and HAR files =
 
-`New Electron Application` records a video of the windows with
+`Start Electron Application` records a video of the windows with
 ``record_video``, a Playwright trace with ``tracing``, and the network traffic
 of the windows with ``record_har``. They are saved when the application closes.
 """
@@ -113,8 +114,8 @@ class RecordVideo(TypedDict, total=False):
       ``fontSize`` and ``cursor``.
 
     Example:
-    | `New Electron Application`    ${ELECTRON}    record_video={'size': {'width': 1920, 'height': 1080}}
-    | `New Electron Application`    ${ELECTRON}    record_video={'showActions': {'duration': 800}}
+    | `Start Electron Application`    ${ELECTRON}    record_video={'size': {'width': 1920, 'height': 1080}}
+    | `Start Electron Application`    ${ELECTRON}    record_video={'showActions': {'duration': 800}}
     """
 
     dir: str
@@ -180,7 +181,7 @@ class Electron(Browser):
         return with_note(method.__name__, documentation) if method is not None else documentation
 
     @keyword
-    def new_electron_application(
+    def start_electron_application(
         self,
         executable_path: Path,
         args: list[str] | None = None,
@@ -268,11 +269,11 @@ class Electron(Browser):
           - ``ValueError``: The executable is not found.
 
         Example:
-        | ${app}    ${page} =    `New Electron Application`    /opt/my-app/my-app
+        | ${app}    ${page} =    `Start Electron Application`    /opt/my-app/my-app
         | `Get Title`    ==    My App
-        | `New Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
-        | `New Electron Application`    /opt/my-app/my-app    tracing=True    record_har={'path': 'my-app.har'}
-        | `New Electron Application`    /opt/my-app/my-app    color_scheme=dark    locale=de-DE
+        | `Start Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
+        | `Start Electron Application`    /opt/my-app/my-app    tracing=True    record_har={'path': 'my-app.har'}
+        | `Start Electron Application`    /opt/my-app/my-app    color_scheme=dark    locale=de-DE
         """
         found = shutil.which(str(executable_path))
         if found is None:
@@ -334,12 +335,12 @@ class Electron(Browser):
         applications as well, see `Automatic page and context closing`.
 
         *Arguments:*
-          - ``application``: The application id that `New Electron Application`
+          - ``application``: The application id that `Start Electron Application`
                 returned. ``CURRENT`` ends the active application, ``ALL`` ends
                 all applications.
 
         Example:
-        | ${app}    ${_} =    `New Electron Application`    /opt/my-app/my-app
+        | ${app}    ${_} =    `Start Electron Application`    /opt/my-app/my-app
         | `Close Electron Application`    ${app}
         | `Close Electron Application`    ALL
         """
@@ -352,15 +353,15 @@ class Electron(Browser):
         Browser keywords then act on the active page of that application.
 
         *Arguments:*
-          - ``application``: The application id that `New Electron Application`
+          - ``application``: The application id that `Start Electron Application`
                 returned.
 
         *Returns:*
           The id of the application that was active before.
 
         Example:
-        | ${first}    ${_} =    `New Electron Application`    /opt/my-app/my-app
-        | `New Electron Application`    /opt/other-app/other-app
+        | ${first}    ${_} =    `Start Electron Application`    /opt/my-app/my-app
+        | `Start Electron Application`    /opt/other-app/other-app
         | `Switch Electron Application`    ${first}
         """
         previous: str = self.switch_browser(application)
@@ -375,7 +376,7 @@ class Electron(Browser):
                 ``CURRENT`` for the active one.
 
         *Returns:*
-          A list of application ids, as `New Electron Application` returned them.
+          A list of application ids, as `Start Electron Application` returned them.
 
         Example:
         | ${ids} =    `Get Electron Application Ids`
@@ -445,7 +446,7 @@ class Electron(Browser):
                 several cells with ``...``.
           - ``arg``: A JSON-serialisable value that the function gets.
           - ``application``: ``CURRENT`` for the active application, or an
-                application id that `New Electron Application` returned.
+                application id that `Start Electron Application` returned.
 
         *Returns:*
           The function's result, which must be JSON-serialisable. Objects of
@@ -454,7 +455,7 @@ class Electron(Browser):
 
         *Raises:*
           - ``AssertionError``: No application is open, the id is not an
-                application started by `New Electron Application`, or the
+                application started by `Start Electron Application`, or the
                 function throws an error.
 
         Example:
@@ -484,7 +485,7 @@ class Electron(Browser):
 
 
 Electron.__doc__ = (
-    cleandoc(_INTRO) + "\n\n" + shared_sections("`New Electron Application`", "`Close Electron Application`")
+    cleandoc(_INTRO) + "\n\n" + shared_sections("`Start Electron Application`", "`Close Electron Application`")
 )
 
 __all__ = ["HIDDEN_KEYWORDS", "Electron"]

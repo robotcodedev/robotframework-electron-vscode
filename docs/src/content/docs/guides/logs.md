@@ -9,7 +9,7 @@ Besides Robot Framework's own `log.html`, the output directory holds `playwright
 
 ## VS Code instance directories
 
-Every instance that `Open VS Code` starts gets its own folder `vscode/<n>` in the output directory, numbered from 1, with its user-data and extensions directories. The folders stay after the run, so VS Code's own logs can be read afterwards:
+Every VS Code instance gets its own folder `vscode/<n>` in the output directory, numbered from 1, with its user-data and extensions directories, unless `user_data_dir` or `extensions_dir` of `Start VS Code` give them; VS Code then writes its logs into the given user-data directory. `Execute VS Code CLI Command` with `executable` gets such a folder as well, and `Get VS Code Instance Directories` returns the directories of an instance. The folders stay after the run, so VS Code's own logs can be read afterwards:
 
 - `vscode/<n>/user-data/logs/<timestamp>/main.log` for the main process,
 - `vscode/<n>/user-data/logs/<timestamp>/window1/` for the window, with the extension host's log in `exthost/exthost.log`.
@@ -18,7 +18,7 @@ When a run starts, the library removes the `vscode` folder that earlier runs lef
 
 ## Troubleshooting
 
-**The Electron binary behaves like Node.js.** Runs started from VS Code, for example from its terminal or test explorer, inherit `ELECTRON_RUN_AS_NODE=1`, which makes every Electron binary run as plain Node.js. `New Electron Application` and `Open VS Code` remove that variable. If you pass `env` to `New Electron Application` yourself, leave it out there.
+**The Electron binary behaves like Node.js.** Runs started from VS Code, for example from its terminal or test explorer, inherit `ELECTRON_RUN_AS_NODE=1`, which makes every Electron binary run as plain Node.js. `Start Electron Application` and `Start VS Code` remove that variable. If you pass `env` to `Start Electron Application` yourself, leave it out there.
 
 **An application cannot be started.** Playwright attaches to an Electron application through the Node.js inspector. Applications built with the Electron fuse `EnableNodeCliInspectArguments` switched off cannot be started.
 

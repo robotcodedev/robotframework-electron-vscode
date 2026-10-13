@@ -1,18 +1,15 @@
 *** Settings ***
 Library     Electron
-Library     Electron.Helper
 Library     ElectronFixture.py
-Resource    variables.resource
 
 
 
 *** Keywords ***
 Start Fixture App
     [Arguments]    @{extra_args}    &{options}
-    ${electron} =    Get Electron Executable    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}    ${ELECTRON_CACHE}
     ${app} =    Get Fixture App
     ${user_data} =    New User Data Dir    ${OUTPUT_DIR}
-    ${ids} =    New Electron Application    ${electron}
+    ${ids} =    Start Electron Application    ${ELECTRON_EXECUTABLE}
     ...    args=${{ [$app, "--user-data-dir=" + $user_data, *$extra_args] }}    &{options}
     RETURN    ${ids}
 

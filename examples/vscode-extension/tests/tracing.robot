@@ -12,12 +12,12 @@ Resource            resources/webview.resource
 
 *** Test Cases ***
 Trace Of A Command
-    Open Example VS Code    tracing=${True}
+    Start Example VS Code    tracing=${True}
     Run Command    Robot Example: Say Hello
     Notification Should Be Shown    Hello Robot
 
 Trace Of A Webview With The Network Traffic
-    Open Example VS Code    tracing=${True}    record_har=${{ {"path": "har/webview.har"} }}
+    Start Example VS Code    tracing=${True}    record_har=${{ {"path": "har/webview.har"} }}
     Run Command    Robot Example: Open Webview
     ${previous} =    Enter Webview    robot.example-extension
     Click    id=click-me

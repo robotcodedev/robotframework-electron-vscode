@@ -8,31 +8,30 @@ import pythonTest from '../../../../../examples/vscode-extension/tests/python.ro
 import extensionsResource from '../../../../../examples/vscode-extension/tests/resources/extensions.resource?raw';
 import pythonResource from '../../../../../examples/vscode-extension/tests/resources/python.resource?raw';
 
-Every VS Code that `Open VS Code` starts has its own extensions directory. Neither your own VS Code nor other instances see what is in it. Extensions get into it in several ways. The libraries do not install extensions themselves; they provide the building blocks, and this page shows how to combine them:
+Every VS Code that `Start VS Code` starts has its own extensions directory, unless `extensions_dir` gives a prepared one. Neither your own VS Code nor other instances see what is in it. Extensions get into it in several ways. The libraries do not install extensions themselves; they provide the building blocks, and this page shows how to combine them:
 
-- `extension_development_path` and `extensions_dir` of `Open VS Code`;
-- `Execute VS Code CLI Command` from `VSCode.Helper`, which runs VS Code's command-line script;
-- `Get VS Code Instance Directories`, which returns the directories of an instance.
+- `extension_development_path` and `extensions_dir` of `Start VS Code`;
+- `Execute VS Code CLI Command`, which runs VS Code's command-line script.
 
-`Execute VS Code CLI Command` always needs the extensions directory and the user-data directory that it works on. Without them, VS Code's command line would work on your own VS Code. It also removes the variables that tie a process to a running VS Code: in VS Code's integrated terminal, `VSCODE_IPC_HOOK_CLI` would send the call to the VS Code that the terminal belongs to.
+`Execute VS Code CLI Command` never works on your own VS Code. Without `executable`, it works on the directories of the active instance. With `executable`, it works on the directories that `Start VS Code` would get with the same arguments: the given ones, and fresh ones for the others. It also removes the variables that tie a process to a running VS Code: in VS Code's integrated terminal, `VSCODE_IPC_HOOK_CLI` would send the call to the VS Code that the terminal belongs to.
 
 ## From source
 
 The extension under test is loaded from its folder, without being installed. Several folders are possible as well:
 
 ```robotframework
-Open VS Code    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+Start VS Code    ${VSCODE_EXECUTABLE}    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
 ```
 
 ## Before VS Code starts
 
-`Execute VS Code CLI Command` installs Marketplace extensions or `.vsix` files into a directory of their own, and `Open VS Code` starts with a copy of it through `extensions_dir`:
+`Execute VS Code CLI Command` with `executable` installs Marketplace extensions or `.vsix` files into a directory of their own, and `Start VS Code` starts with a copy of it through `extensions_dir`:
 
 ```robotframework
-Execute VS Code CLI Command    ${CACHE}/extensions    ${CACHE}/user-data    --install-extension    ms-python.python
-...    version=${VSCODE_VERSION}
+Execute VS Code CLI Command    --install-extension    ms-python.python
+...    executable=${VSCODE_EXECUTABLE}    extensions_dir=${CACHE}/extensions    user_data_dir=${CACHE}/user-data
 Copy Directory    ${CACHE}/extensions    ${OUTPUT_DIR}/extensions/${TEST NAME}
-Open VS Code    extensions_dir=${OUTPUT_DIR}/extensions/${TEST NAME}    version=${VSCODE_VERSION}
+Start VS Code    ${VSCODE_EXECUTABLE}    extensions_dir=${OUTPUT_DIR}/extensions/${TEST NAME}
 ```
 
 - **Faster and offline:** if `${CACHE}` is a folder that later runs keep, the extensions are downloaded only once. A second `--install-extension` of an installed extension does nothing. With a folder under `${OUTPUT_DIR}` instead, every run downloads them again.
@@ -40,16 +39,15 @@ Open VS Code    extensions_dir=${OUTPUT_DIR}/extensions/${TEST NAME}    version=
 - **Fixed versions:** `publisher.name@1.2.3` installs a fixed version instead of the newest one.
 - **Pre-releases:** add `--pre-release`.
 - **Forks** of VS Code install from their own gallery when `Execute VS Code CLI Command` gets the fork's `executable`; VSCodium, for example, uses Open VSX.
-- **Same VS Code version:** prepare with the VS Code version that opens the copy. Extensions declare which VS Code versions they support.
+- **Same VS Code version:** prepare with the VS Code that starts the copy. Extensions declare which VS Code versions they support. The example keeps a folder per VS Code version, which `--version` reports.
 - **A copy for each instance:** VS Code writes into its extensions directory while it runs. Instances that share one directory can corrupt it.
 
 ## Into the running VS Code
 
-Installing while VS Code runs is useful to test how your extension reacts when another one arrives. `Get VS Code Instance Directories` returns the directories of the running instance, and `Execute VS Code CLI Command` installs into them:
+Installing while VS Code runs is useful to test how your extension reacts when another one arrives. Without `executable`, `Execute VS Code CLI Command` installs into the directories of the active instance:
 
 ```robotframework
-${dirs} =    Get VS Code Instance Directories
-Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --install-extension    ms-python.python
+Execute VS Code CLI Command    --install-extension    ms-python.python
 ```
 
 When the script returns, the extension is on disk, but VS Code has not necessarily taken it in yet. Its extension host knows: once `vscode.extensions.getExtension` finds the extension there, the window has it. [`Evaluate In Extension Host`](../extension-host/) asks it, with the library's helper extension, which the example loads next to its own extension. `Wait Until Keyword Succeeds` repeats the question:
@@ -63,7 +61,7 @@ Two things can go wrong:
 
 - **VS Code misses the install, or deletes the extension again.** VS Code's shared process keeps track of the installed extensions. When it starts, it reads the list of extensions, begins to watch it, and deletes extension folders that are not in the list. The workbench can show before that is over.
   - An extension installed in that moment does not reach the window. It may even be deleted again, while the shared process log still says "Extensions added from another source".
-  - On a loaded machine, this happened to about one in five installs right after `Open VS Code`.
+  - On a loaded machine, this happened to about one in five installs right after `Start VS Code`.
   - **Wait for the extension host before the install,** with `Evaluate In Extension Host    () => true`. It comes up later, and in our measurements no install failed after it.
   - **If the extension host does not know the extension after the install,** install it again and reload the window, so that VS Code reads its extensions anew. Uninstall it before; the uninstall fails when VS Code has deleted the extension, which does not matter.
 - **The script fails on a busy file.** The running VS Code writes the list of extensions, `extensions.json`, at the same time, and the script fails with "Unable to write file '…/extensions.json'". Trying again helps.
@@ -72,13 +70,12 @@ The example's keyword `Install Into Running VS Code` does all of this, see [the 
 
 ## Listing, uninstalling and updating
 
-The same keywords list, uninstall and update the extensions of an instance, or of a prepared directory:
+The same keyword lists, uninstalls and updates the extensions of the active instance, or, with `executable` and the directories, of a prepared directory:
 
 ```robotframework
-${dirs} =    Get VS Code Instance Directories
-${list} =    Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --list-extensions    --show-versions
-Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --uninstall-extension    ms-python.python
-Execute VS Code CLI Command    ${dirs.extensions}    ${dirs.user_data}    --update-extensions
+${list} =    Execute VS Code CLI Command    --list-extensions    --show-versions
+Execute VS Code CLI Command    --uninstall-extension    ms-python.python
+Execute VS Code CLI Command    --update-extensions
 ```
 
 A running VS Code notices an uninstalled extension the same way as an installed one, with "Extensions removed from another source" in its shared process log. `code --help` lists all arguments of the command line.
@@ -88,8 +85,8 @@ A running VS Code notices an uninstalled extension the same way as an installed 
 Command-line arguments of VS Code switch extensions off for one instance. This also works for VS Code's built-in extensions:
 
 ```robotframework
-Open VS Code    args=${{ ["--disable-extension", "vscode.git"] }}
-Open VS Code    args=${{ ["--disable-extensions"] }}
+Start VS Code    ${VSCODE_EXECUTABLE}    args=${{ ["--disable-extension", "vscode.git"] }}
+Start VS Code    ${VSCODE_EXECUTABLE}    args=${{ ["--disable-extensions"] }}
 ```
 
 `--disable-extensions` switches off all installed extensions. Extensions loaded with `extension_development_path` still run.
@@ -105,14 +102,15 @@ VAR    @{install}
 FOR    ${extension}    IN    @{recommended}
     VAR    @{install}    @{install}    --install-extension    ${extension}
 END
-Execute VS Code CLI Command    ${CACHE}/extensions    ${CACHE}/user-data    @{install}
+Execute VS Code CLI Command    @{install}
+...    executable=${VSCODE_EXECUTABLE}    extensions_dir=${CACHE}/extensions    user_data_dir=${CACHE}/user-data
 ```
 
 VS Code allows comments in this file, which `json.loads` does not accept.
 
 ## Profiles
 
-VS Code profiles bundle settings and extensions. `args=${{ ["--profile", "Testing"] }}` opens an instance with a profile of that name, created empty if it does not exist. The command line installs into a profile with `--profile` only once the profile exists, and each instance starts with a fresh user-data directory without profiles. For tests, `settings` and the ways above are simpler.
+VS Code profiles bundle settings and extensions. `args=${{ ["--profile", "Testing"] }}` opens an instance with a profile of that name, created empty if it does not exist. The command line installs into a profile with `--profile` only once the profile exists, and each instance starts with a fresh user-data directory without profiles, unless `user_data_dir` gives a prepared one. For tests, `settings` and the ways above are simpler.
 
 ## The example
 

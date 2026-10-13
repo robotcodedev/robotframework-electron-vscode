@@ -177,7 +177,7 @@ Welcome to your first code contribution! Here's how to set up your development e
 1. **Prerequisites** (see each project's site for install instructions):
    - [Python](https://www.python.org/) 3.10 or newer
    - [uv](https://docs.astral.sh/uv/)
-   - [Node.js](https://nodejs.org/) 22 or newer, for the Browser library, the documentation site and the helper extension of the VSCode library
+   - [Node.js](https://nodejs.org/) 22.12 or newer, for the Browser library, the documentation site, the helper extension of the VSCode library, and the VS Code and Electron builds of the tests
    - [Git](https://git-scm.com/)
    - On Linux, for the display profiles: Xvfb (`xvfb` on Debian and Ubuntu, `xorg-server-xvfb` on Arch Linux), Xephyr (`xserver-xephyr` or `xorg-server-xephyr`) and the window manager Openbox (`openbox`)
 
@@ -195,12 +195,13 @@ Welcome to your first code contribution! Here's how to set up your development e
 
    Do not install `robotframework-browser-batteries`: it brings its own Node process and would bypass the clone.
 
-3. **This repository:** clone it next to the Browser clone and install the workspace with the development tools:
+3. **This repository:** clone it next to the Browser clone, install the workspace with the development tools, and prepare the VS Code and Electron builds of the acceptance tests:
 
    ```bash
    git clone git@github.com:robotcodedev/robotframework-electron-vscode.git
    cd robotframework-electron-vscode
    uv sync
+   npm ci && npm run prepare-tests
    ```
 
 #### IDE Configuration
@@ -214,7 +215,7 @@ We recommend VS Code with the [RobotCode](https://robotcode.io) extension, which
 > 2. Type "Python: Select Interpreter".
 > 3. Choose the interpreter in `.venv`.
 
-Open the repository root as the workspace folder, so that RobotCode reads the root `robot.toml`. Personal settings belong into gitignored files: test variables such as a local `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` into `.robot.toml`, editor settings into `.vscode/` or a `*.code-workspace` file.
+Open the repository root as the workspace folder, so that RobotCode reads the root `robot.toml`. Personal settings belong into gitignored files: test variables such as a local `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` into `.robot.toml`, under `[extend-variables]`, editor settings into `.vscode/` or a `*.code-workspace` file.
 
 #### Pre-commit Hooks
 
@@ -299,12 +300,12 @@ uv run robotcode -r . -p xvfb robot -bl "<longname>"         # a single suite or
 > Always start RobotCode from the repository root with `-r .`. Each package has its own `pyproject.toml`; without `-r`, RobotCode stops its search for the project root at a package's `pyproject.toml` and ignores `robot.toml`.
 
 - The display profile `xvfb` also works on a Wayland desktop and without any desktop; `xephyr` opens a separate window on your desktop. Both start Openbox if it is installed, so that windows can be maximised. Prefer `-p xvfb`: the tests do not open windows on your desktop and do not depend on its size.
-- The tests download Electron and VS Code into the repository's `.cache/`. To use local executables instead, set `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` in `.robot.toml`.
+- The libraries download nothing. Prepare the VS Code and Electron builds of the tests once with `npm ci` and `npm run prepare-tests` in the repository root: VS Code 1.141.0 comes from `@vscode/test-electron` into `.cache/vscode`, and Electron 44.7.0 and 42.11.12 from npm, with their binaries cached in `.cache/electron`. `robot.toml` points `VSCODE_EXECUTABLE` and `ELECTRON_EXECUTABLE` to them with the paths of Linux x64. On other platforms, or to use local executables, set the paths that the script prints under `[extend-variables]` in `.robot.toml`, and `VSCODE_VERSION` to the version of your VS Code; a `[variables]` table there would replace the one of `robot.toml`.
 - The acceptance tests of the VSCode library's helper extension install its `.vsix`. Build it once, and again after changing the helper, with `uv build --package robotframework-vscode`: the build packs it into `packages/vscode/src/VSCode/` with `@vscode/vsce`. `uv sync` does not.
-- Other versions: `-p electron-previous` runs the Electron tests against an older Electron major, and `-p vscode-insiders` the VS Code tests against the newest VS Code Insiders build. Combine them with a display profile, for example `-p xvfb -p vscode-insiders`.
+- Other versions: `-p electron-previous` runs the Electron tests against an older Electron major, and `-p vscode-insiders` the VS Code tests against the newest VS Code Insiders build, after `npm run prepare-tests -- insiders`. Combine them with a display profile, for example `-p xvfb -p vscode-insiders`.
 - For individual tests, the Test Explorer of VS Code with RobotCode is the most convenient way to run and debug a single test.
 
-**Example project** in `examples/vscode-extension`, which has its own `robot.toml` with the same display profiles. Its Python tests need network access and are tagged `network`:
+**Example project** in `examples/vscode-extension`, which has its own `robot.toml` with the same display profiles. It downloads its VS Code itself, once, with `npm ci` and `npm run download-vscode` in its folder. Its Python tests need network access and are tagged `network`:
 
 ```bash
 uv run robotcode -r examples/vscode-extension -p xvfb robot
@@ -320,7 +321,7 @@ uv run robotcode -r examples/vscode-extension -p xvfb robot -e network   # witho
 - `uv run mypy` — Type-check the packages and their tests.
 - `uv run robotcode -r . repl` — Run keywords one by one against a running application, for example to find locators.
 - `uv build --package robotframework-vscode` — Build the VSCode package, and with it the helper extension's `.vsix`. `npm ci --ignore-scripts` and `npm run package-helper` in `packages/vscode` pack only the `.vsix`.
-- `uv run python docs/scripts/update_screenshots.py` — Run the example project with `-p xvfb` and copy its screenshots into the documentation site. Run it after changing the example or its VS Code version, and commit the images. It needs Xvfb, Openbox and network access.
+- `uv run python docs/scripts/update_screenshots.py` — Run the example project with `-p xvfb` and copy its screenshots into the documentation site. Run it after changing the example or its VS Code version, and commit the images. It needs the example's VS Code from `npm ci` and `npm run download-vscode` in its folder, Xvfb, Openbox and network access.
 
 #### Versions and Releases
 
@@ -446,7 +447,7 @@ The scope should indicate the package or area affected:
 #### Examples
 
 ```
-feat(electron): add New Electron Application
+feat(electron): add Start Electron Application
 ```
 
 ```

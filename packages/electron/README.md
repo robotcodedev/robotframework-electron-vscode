@@ -14,21 +14,18 @@ uv sync
 
 ## Example
 
-Import `Electron` instead of `Browser`. For an app that runs on the plain Electron binary, `Get Electron Executable` from `Electron.Helper` downloads Electron, and the app folder is passed as an argument:
+Import `Electron` instead of `Browser`. The library downloads nothing. For an app that runs on the plain Electron binary, the npm package `electron` provides the binary, `node_modules/electron/dist/electron` on Linux, and the app folder is passed as an argument:
 
 ```robotframework
 *** Settings ***
 Library    Electron
-Library    Electron.Helper
 
 *** Variables ***
-${ELECTRON_VERSION}       44.7.0
-${ELECTRON_EXECUTABLE}    ${NONE}
+${ELECTRON_EXECUTABLE}    node_modules/electron/dist/electron
 
 *** Test Cases ***
 App From Source
-    ${electron} =    Get Electron Executable    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}
-    New Electron Application    ${electron}    args=${{ [$EXECDIR + "/app"] }}
+    Start Electron Application    ${ELECTRON_EXECUTABLE}    args=${{ [$EXECDIR + "/app"] }}
 ```
 
-The [documentation](https://robotcodedev.github.io/robotframework-electron-vscode/) covers starting and closing applications, downloads, running on CI and troubleshooting.
+The [documentation](https://robotcodedev.github.io/robotframework-electron-vscode/) covers starting and closing applications, providing Electron, running on CI and troubleshooting.

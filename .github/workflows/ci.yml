@@ -123,6 +123,12 @@ jobs:
       - name: Build the VSCode package
         run: uv build --package robotframework-vscode -o dist
 
+      # VS Code from @vscode/test-electron and Electron from npm, at the paths in robot.toml.
+      - name: Prepare VS Code and Electron for the tests
+        run: |
+          npm ci
+          npm run prepare-tests
+
       - name: Unit tests
         run: uv run pytest
 
@@ -144,9 +150,9 @@ jobs:
           name: test-results-python-${{ matrix.python }}
           path: |
             robotframework-electron-vscode/results/
-            !robotframework-electron-vscode/results/vscode/*/user-data/Cached*/**
-            !robotframework-electron-vscode/results/vscode/*/user-data/*Cache/**
-            !robotframework-electron-vscode/results/vscode/*/user-data/Dictionaries/**
+            !robotframework-electron-vscode/results/**/*user-data/Cached*/**
+            !robotframework-electron-vscode/results/**/*user-data/*Cache/**
+            !robotframework-electron-vscode/results/**/*user-data/Dictionaries/**
           if-no-files-found: ignore
 
   build:

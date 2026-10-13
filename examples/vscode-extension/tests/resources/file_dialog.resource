@@ -2,7 +2,7 @@
 Documentation       Opens and saves files through VS Code's own file dialog.
 ...
 ...                 VS Code shows native file dialogs, which Browser cannot reach. With the
-...                 setting `files.simpleDialog.enable`, which `Open Example VS Code` sets, it shows
+...                 setting `files.simpleDialog.enable`, which `Start Example VS Code` sets, it shows
 ...                 its own dialog in the quick input instead.
 
 Library             VSCode

@@ -5,7 +5,7 @@ Documentation       Evaluate In Extension Host runs functions with VS Code's ext
 ...                 their own.
 Resource            resources/vscode.resource
 
-Suite Setup         Open Test VS Code With Helper    ${TEST_WORKSPACE}    extension_development_path=${TEST_EXTENSION}
+Suite Setup         Start Test VS Code With Helper    ${TEST_WORKSPACE}    extension_development_path=${TEST_EXTENSION}
 Suite Teardown      Close VS Code    ALL
 
 
@@ -16,13 +16,7 @@ ${SECOND_WORKSPACE}     ${OUTPUT_DIR}${/}second-workspace
 *** Test Cases ***
 VS Code's Version From The Extension Host
     ${version} =    Evaluate In Extension Host    (vscode) => vscode.version
-    # The profile vscode-insiders sets the version to "insiders", whose number changes with every build,
-    # and a local VS Code from VSCODE_EXECUTABLE has its own version.
-    IF    $VSCODE_EXECUTABLE is None and $VSCODE_VERSION[0].isdigit()
-        Should Be Equal    ${version}    ${VSCODE_VERSION}
-    ELSE
-        Should Match Regexp    ${version}    ^\\d+\\.\\d+\\.\\d+
-    END
+    Should Be The Version Of The Executable    ${version}
 
 Command By Its Id
     Evaluate In Extension Host    (vscode) => vscode.commands.executeCommand('robotTest.sayHello')
@@ -94,13 +88,13 @@ Workspace That No Window Has Open
     ...    Evaluate In Extension Host    () => 1    workspace=${nowhere}
 
 Right After The Start
-    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Start Test VS Code With Helper    ${TEST_WORKSPACE}
     ${name} =    Evaluate In Extension Host    (vscode) => vscode.env.appName
     Should Not Be Empty    ${name}
     [Teardown]    Close VS Code    ${vscode}
 
 Without An Extension Under Test
-    ${vscode}    ${_} =    Open Test VS Code With Helper
+    ${vscode}    ${_} =    Start Test VS Code With Helper
     ${helper} =    Evaluate In Extension Host
     ...    (vscode) => vscode.extensions.all.filter((extension) => !extension.packageJSON.isBuiltin).map((e) => e.id)
     Should Be Equal    ${helper}    ${{ ["robotframework-vscode.extension-host"] }}
@@ -108,7 +102,7 @@ Without An Extension Under Test
     [Teardown]    Close VS Code    ${vscode}
 
 After The Window Reloads
-    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Start Test VS Code With Helper    ${TEST_WORKSPACE}
     ${before} =    Evaluate In Extension Host    () => process.pid
     Evaluate In Extension Host
     ...    (vscode) => { void vscode.commands.executeCommand('workbench.action.reloadWindow'); }
@@ -119,7 +113,7 @@ After The Window Reloads
     [Teardown]    Close VS Code    ${vscode}
 
 Window By Its Workspace
-    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Start Test VS Code With Helper    ${TEST_WORKSPACE}
     Open Folder In New Window    ${SECOND_WORKSPACE}
     ${folder} =    Evaluate In Extension Host    (vscode) => vscode.workspace.workspaceFolders[0].uri.fsPath
     ...    workspace=${SECOND_WORKSPACE}
@@ -127,7 +121,7 @@ Window By Its Workspace
     [Teardown]    Close VS Code    ${vscode}
 
 Window Of The Active Page
-    ${vscode}    ${first} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
+    ${vscode}    ${first} =    Start Test VS Code With Helper    ${TEST_WORKSPACE}
     Open Folder In New Window    ${SECOND_WORKSPACE}
     Wait Until The Extension Host Answers    ${SECOND_WORKSPACE}
     Folder Of The Active Pages Window Should Be    ${TEST_WORKSPACE}
@@ -141,14 +135,14 @@ Window Of The Active Page
     [Teardown]    Close VS Code    ${vscode}
 
 Window That Has Just Opened
-    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Start Test VS Code With Helper    ${TEST_WORKSPACE}
     Open Folder In New Window    ${SECOND_WORKSPACE}
     Switch Page    NEW
     Folder Of The Active Pages Window Should Be    ${SECOND_WORKSPACE}
     [Teardown]    Close VS Code    ${vscode}
 
 Editor Moved Into Its Own Window
-    ${vscode}    ${_} =    Open Test VS Code With Helper    ${TEST_WORKSPACE}
+    ${vscode}    ${_} =    Start Test VS Code With Helper    ${TEST_WORKSPACE}
     Evaluate In Extension Host    async (vscode, path) => {
     ...        await vscode.window.showTextDocument(vscode.Uri.file(path));
     ...        void vscode.commands.executeCommand('workbench.action.moveEditorToNewWindow');
@@ -162,7 +156,7 @@ Editor Moved Into Its Own Window
     [Teardown]    Close VS Code    ${vscode}
 
 Several Windows Without A Workspace
-    ${vscode}    ${_} =    Open Test VS Code With Helper
+    ${vscode}    ${_} =    Start Test VS Code With Helper
     Evaluate In Extension Host    (vscode) => { void vscode.commands.executeCommand('workbench.action.newWindow'); }
     Switch Page    NEW
     # Until the new window's extension host answers, the first one is the only one.
@@ -172,13 +166,12 @@ Several Windows Without A Workspace
     [Teardown]    Close VS Code    ${vscode}
 
 Application That Is Not A VS Code Instance
-    ${code} =    Get VS Code Executable    ${VSCODE_VERSION}    ${VSCODE_EXECUTABLE}    ${VSCODE_CACHE}
     ${environment} =    VS Code Environment
     VAR    ${folder} =    ${OUTPUT_DIR}${/}plain-vs-code
-    ${app}    ${_} =    New Electron Application    ${code}
+    ${app}    ${_} =    Start Electron Application    ${VSCODE_EXECUTABLE}
     ...    args=${{ ["--user-data-dir=" + $folder + "/user-data", "--extensions-dir=" + $folder + "/extensions"] }}
     ...    env=${environment}
-    Run Keyword And Expect Error    EQUALS:'${app}' is not an open VS Code instance started by 'Open VS Code'.
+    Run Keyword And Expect Error    EQUALS:'${app}' is not an open VS Code instance started by 'Start VS Code'.
     ...    Evaluate In Extension Host    () => 1
     [Teardown]    Close Electron Application    ${app}
 

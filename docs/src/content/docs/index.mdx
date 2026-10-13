@@ -8,7 +8,7 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 Two [Robot Framework](https://robotframework.org) libraries built on the [Browser library](https://robotframework-browser.org):
 
 - **robotframework-electron** (`Electron`) starts Electron applications. Their windows are ordinary Browser pages, and Browser's keywords work on them.
-- **robotframework-vscode** (`VSCode`) downloads VS Code and starts isolated instances with the extension under test, for end-to-end tests of VS Code extensions. It contains the keywords of `Electron`.
+- **robotframework-vscode** (`VSCode`) starts isolated instances of a VS Code that you provide, with the extension under test, for end-to-end tests of VS Code extensions. It contains the keywords of `Electron`.
 
 The libraries provide the technique: starting the application and handing its windows to Browser. What to click and which locators to use belongs to your tests.
 

@@ -1,0 +1,17 @@
+{
+    "name": "robotframework-electron-vscode-tests",
+    "description": "Prepares the VS Code and Electron builds that the acceptance tests run against",
+    "private": true,
+    "license": "MPL-2.0",
+    "engines": {
+        "node": ">=22.12"
+    },
+    "scripts": {
+        "prepare-tests": "node scripts/prepare_tests.mjs"
+    },
+    "devDependencies": {
+        "@vscode/test-electron": "3.1.0",
+        "electron": "44.7.0",
+        "electron-previous": "npm:electron@42.11.12"
+    }
+}

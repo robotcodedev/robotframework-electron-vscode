@@ -7,7 +7,7 @@ Resource            resources/editor.resource
 Resource            resources/explorer.resource
 Resource            resources/file_dialog.resource
 
-Suite Setup         Open Example VS Code
+Suite Setup         Start Example VS Code
 Suite Teardown      Close VS Code
 
 

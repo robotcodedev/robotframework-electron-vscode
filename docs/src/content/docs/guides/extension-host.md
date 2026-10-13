@@ -23,7 +23,7 @@ The library does not load the helper: like the extensions under test, it is part
 
 ### As a development extension
 
-Give the folder to `Open VS Code` in `extension_development_path`, after your own extensions. Inline Python finds the folder in the installed package, also in a `*** Variables ***` section:
+Give the folder to `Start VS Code` in `extension_development_path`, after your own extensions. Inline Python finds the folder in the installed package, also in a `*** Variables ***` section:
 
 ```robotframework
 *** Variables ***
@@ -32,7 +32,7 @@ ${HELPER_EXTENSION}    ${{ pathlib.Path(VSCode.__file__).parent / 'extension' }}
 *** Test Cases ***
 Refresh Command
     VAR    @{development}    ${EXECDIR}    ${HELPER_EXTENSION}
-    Open VS Code    ${EXECDIR}/tests/workspace    extension_development_path=${development}
+    Start VS Code    ${VSCODE_EXECUTABLE}    ${EXECDIR}/tests/workspace    extension_development_path=${development}
     Evaluate In Extension Host    (vscode) => vscode.commands.executeCommand('myExtension.refresh')
 ```
 
@@ -40,12 +40,11 @@ Nothing is installed, so this works with the fresh directories of every instance
 
 ### Installed from the .vsix
 
-Install `extension-host.vsix` into an extensions directory before VS Code starts, and give the directory to `Open VS Code` as `extensions_dir`. VS Code then runs without development mode. In Robot Framework, `Execute VS Code CLI Command` of the `VSCode.Helper` library installs it:
+Install `extension-host.vsix` into an extensions directory before VS Code starts, and give the directory to `Start VS Code` as `extensions_dir`. VS Code then runs without development mode. In Robot Framework, `Execute VS Code CLI Command` with `executable` installs it:
 
 ```robotframework
 *** Settings ***
 Library    VSCode
-Library    VSCode.Helper
 
 *** Variables ***
 ${HELPER_VSIX}    ${{ pathlib.Path(VSCode.__file__).parent / 'extension-host.vsix' }}
@@ -53,17 +52,18 @@ ${PREPARED}       ${OUTPUT_DIR}/prepared
 
 *** Test Cases ***
 Installed Helper
-    Execute VS Code CLI Command    ${PREPARED}/extensions    ${PREPARED}/user-data
-    ...    --install-extension    ${HELPER_VSIX}
-    Open VS Code    extensions_dir=${PREPARED}/extensions
+    Execute VS Code CLI Command    --install-extension    ${HELPER_VSIX}
+    ...    executable=${VSCODE_EXECUTABLE}    extensions_dir=${PREPARED}/extensions
+    Start VS Code    ${VSCODE_EXECUTABLE}    extensions_dir=${PREPARED}/extensions
     ${version} =    Evaluate In Extension Host    (vscode) => vscode.version
 ```
 
-In a shell, for example in a CI step that prepares the extensions directory before the tests, Python prints the path of the `.vsix`. Run it outside VS Code's integrated terminal, where `code` would talk to the VS Code that the terminal belongs to. `${vsix:?}` stops the command when Python does not find the library: with an empty value, `code` ignores `--install-extension` and opens a VS Code window instead.
+In a shell, for example in a CI step that prepares the extensions directory before the tests, Python prints the path of the `.vsix`, and the command-line script of the VS Code that the tests start installs it: `bin/code` in the folder of a build that `@vscode/test-electron` downloaded. Run it outside VS Code's integrated terminal, where the script would talk to the VS Code that the terminal belongs to. `${vsix:?}` stops the command when Python does not find the library: with an empty value, the script ignores `--install-extension` and opens a VS Code window instead.
 
 ```bash
 vsix=$(python -c "import pathlib, VSCode; print(pathlib.Path(VSCode.__file__).parent / 'extension-host.vsix')")
-code --extensions-dir prepared/extensions --user-data-dir prepared/user-data --install-extension "${vsix:?}"
+.vscode-test/vscode-linux-x64-1.141.0/bin/code --extensions-dir prepared/extensions --user-data-dir prepared/user-data \
+    --install-extension "${vsix:?}"
 ```
 
 The helper has the version of the library. After an update of the library, install the `.vsix` again, which replaces the old helper: until then, `Evaluate In Extension Host` fails at once with a message that names both versions.
@@ -162,7 +162,7 @@ ${name} =    Evaluate In Extension Host    (vscode) => vscode.workspace.name    
 
 The keyword waits up to the library's timeout, which the import argument `timeout` and `Set Browser Timeout` set:
 
-- **For the extension host:** right after `Open VS Code`, the extension host needs a moment to start. After the window reloads, the keyword waits for the new extension host. A reload takes a moment to begin, though: a function that a test evaluates right after starting one, for example with `workbench.action.reloadWindow`, can still run in the old extension host.
+- **For the extension host:** right after `Start VS Code`, the extension host needs a moment to start. After the window reloads, the keyword waits for the new extension host. A reload takes a moment to begin, though: a function that a test evaluates right after starting one, for example with `workbench.action.reloadWindow`, can still run in the old extension host.
 - **For the function:** a function that does not finish within the timeout keeps running in the extension host, because JavaScript cannot stop it. The keyword fails, but what the function does afterwards still happens.
 
 ## Things to know

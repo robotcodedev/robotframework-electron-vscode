@@ -1,24 +1,19 @@
 *** Settings ***
-Documentation       Opens VS Code with the extension of this folder.
+Documentation       Starts VS Code with the extension of this folder.
 
 Library             OperatingSystem
 Library             VSCode
 
 
 *** Variables ***
-# The VS Code version that the tests run against: a fixed version, `stable` or `insiders`.
-${VSCODE_VERSION}       1.141.0
-# An installed VS Code to use instead of a download, for example /usr/share/code/code.
-${VSCODE_EXECUTABLE}    ${NONE}
-# Where downloaded VS Code builds are cached; ${NONE} is the user's cache directory.
-${VSCODE_CACHE}         ${NONE}
+# VSCODE_EXECUTABLE, the VS Code that the tests run against, comes from robot.toml or a personal .robot.toml.
 # The library's helper extension for Evaluate In Extension Host, from the installed package.
 ${HELPER_EXTENSION}     ${{ pathlib.Path(VSCode.__file__).parent / 'extension' }}
 
 
 *** Keywords ***
-Open Example VS Code
-    [Documentation]    Opens an isolated VS Code with the extension of this folder loaded from source,
+Start Example VS Code
+    [Documentation]    Starts an isolated VS Code with the extension of this folder loaded from source,
     ...    next to the library's helper extension for `Evaluate In Extension Host`.
     ...
     ...    VS Code opens a fresh copy of `tests/workspace`, see `Example Workspace`, so
@@ -26,7 +21,7 @@ Open Example VS Code
     ...    on Xvfb and Xephyr this needs a window manager, which the display profiles
     ...    start. Its own file dialog replaces the native one, which Browser cannot reach,
     ...    and its terminal runs `sh`, independent of personal shell configuration.
-    ...    Named arguments of `Open VS Code`, such as `extensions_dir` or `record_video`, are
+    ...    Named arguments of `Start VS Code`, such as `extensions_dir` or `record_video`, are
     ...    passed on.
     [Arguments]    &{options}
     ${workspace} =    Example Workspace
@@ -42,14 +37,11 @@ Open Example VS Code
     ...    terminal.integrated.defaultProfile.linux=sh
     ...    terminal.integrated.defaultProfile.osx=sh
     VAR    @{development}    ${EXECDIR}    ${HELPER_EXTENSION}
-    Open VS Code    ${workspace}
-    ...    version=${VSCODE_VERSION}
-    ...    executable=${VSCODE_EXECUTABLE}
-    ...    cache_dir=${VSCODE_CACHE}
+    Start VS Code    ${VSCODE_EXECUTABLE}    ${workspace}
     ...    extension_development_path=${development}
     ...    settings=${settings}
     ...    &{options}
 
 Example Workspace
-    [Documentation]    Returns the folder of the workspace copy that `Open Example VS Code` opens in this suite.
+    [Documentation]    Returns the folder of the workspace copy that `Start Example VS Code` opens in this suite.
     RETURN    ${OUTPUT_DIR}/workspaces/${SUITE NAME}

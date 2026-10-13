@@ -10,7 +10,7 @@ A video shows what a test did, which helps when a test fails on CI, and it is a 
 
 ## Recording a video
 
-`New Electron Application` and `Open VS Code` record a video when they get `record_video`. The keys are those of Browser's `recordVideo` for `New Context`, plus Playwright's overlay of the performed actions:
+`Start Electron Application` and `Start VS Code` record a video when they get `record_video`. The keys are those of Browser's `recordVideo` for `New Context`, plus Playwright's overlay of the performed actions:
 
 - `dir`: the folder for the videos. Relative paths are relative to Browser's video folder `browser/video` in the output directory, which is also the default.
 - `size`: the size of the video, as `width` and `height`. The default is 1280×720.
@@ -24,7 +24,7 @@ Library    Electron
 
 *** Test Cases ***
 Recorded Run
-    New Electron Application    /opt/my-app/my-app    record_video={}
+    Start Electron Application    /opt/my-app/my-app    record_video={}
     Click    text=Say hello
     Close Electron Application
 ```
@@ -43,12 +43,12 @@ The example project's `video.robot` does this. Its keyword reads the screen size
 
 <Code code={videoTest} lang="robotframework" title="tests/video.robot" />
 
-Without a window manager, `Set Viewport Size    1920    1080` after `Open VS Code` makes the workbench fill the frame instead. It emulates the size inside the page and leaves the window as it is.
+Without a window manager, `Set Viewport Size    1920    1080` after `Start VS Code` makes the workbench fill the frame instead. It emulates the size inside the page and leaves the window as it is.
 
 The window itself can be sized from VS Code's main process as well; `window` is the window of the active page. Without a window manager, a window stays at least one pixel smaller than the screen, so give the window and the video a size below the screen size:
 
 ```robotframework
-Open VS Code    record_video={'size': {'width': 1600, 'height': 900}}
+Start VS Code    ${VSCODE_EXECUTABLE}    record_video={'size': {'width': 1600, 'height': 900}}
 Evaluate In Main Process    (electron, size, window) => window.setBounds(size)    arg=${{ {"x": 0, "y": 0, "width": 1600, "height": 900} }}
 ```
 

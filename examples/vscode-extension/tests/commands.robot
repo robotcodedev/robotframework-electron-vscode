@@ -5,7 +5,7 @@ Resource            resources/vscode.resource
 Resource            resources/command_palette.resource
 Resource            resources/notifications.resource
 
-Suite Setup         Open Example VS Code
+Suite Setup         Start Example VS Code
 Suite Teardown      Close VS Code
 
 

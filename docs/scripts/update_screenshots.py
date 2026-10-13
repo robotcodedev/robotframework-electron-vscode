@@ -2,7 +2,8 @@
 
 Runs the tests of examples/vscode-extension with its `xvfb` profile, hidden on a Full HD screen
 with a window manager, and copies the screenshots that the tests take to
-docs/src/assets/screenshots/. Run it from the repository root:
+docs/src/assets/screenshots/. The example needs its VS Code first, from `npm ci` and
+`npm run download-vscode` in its folder. Run it from the repository root:
 
     uv run python docs/scripts/update_screenshots.py
 """
@@ -23,7 +24,11 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="screenshots-") as output:
         command = ["robotcode", "-r", str(EXAMPLE), "-p", "xvfb", "robot", "--outputdir", output]
         if subprocess.run(command, cwd=ROOT, check=False).returncode != 0:
-            print("The example's tests failed; the screenshots were not updated.", file=sys.stderr)
+            print(
+                "The example's tests failed; the screenshots were not updated. If its VS Code is missing, download "
+                "it with `npm ci` and `npm run download-vscode` in examples/vscode-extension.",
+                file=sys.stderr,
+            )
             return 1
         TARGET.mkdir(parents=True, exist_ok=True)
         for name in SCREENSHOTS:

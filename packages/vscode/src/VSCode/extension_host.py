@@ -205,7 +205,7 @@ def _not_found(
     if not hosts:
         return (
             f"No extension host of the VS Code instance answered {within}. The library's helper extension may not "
-            f"be loaded: give its folder '{HELPER_EXTENSION}' to Open VS Code in extension_development_path, or "
+            f"be loaded: give its folder '{HELPER_EXTENSION}' to Start VS Code in extension_development_path, or "
             f"install '{HELPER_VSIX}' into the extensions directory before the start."
         )
     return (

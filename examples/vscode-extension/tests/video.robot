@@ -34,7 +34,7 @@ Suite Teardown      Set Presenter Mode    False
 *** Test Cases ***
 Demonstration Of The Extension
     Set Presenter Mode    ${{ {"duration": "1s"} }}
-    Open Example VS Code With Video
+    Start Example VS Code With Video
     Run Command    Robot Example: Say Hello
     Notification Should Be Shown    Hello Robot
     Run Command    Robot Example: Pick
@@ -50,7 +50,7 @@ Python Script Created And Run
     [Tags]    network
     Set Presenter Mode    ${{ {"duration": "1s"} }}
     ${extensions} =    Prepared Extensions    ms-python.python
-    Open Example VS Code With Video    extensions_dir=${extensions}
+    Start Example VS Code With Video    extensions_dir=${extensions}
     New File
     Keyboard Input    type    print("Hello Robot Framework")
     ${workspace} =    Example Workspace
@@ -66,7 +66,7 @@ Python Script Created In The Explorer Without Presenter Mode
     [Tags]    network
     Set Presenter Mode    False
     ${extensions} =    Prepared Extensions    ms-python.python
-    Open Example VS Code With Video    extensions_dir=${extensions}
+    Start Example VS Code With Video    extensions_dir=${extensions}
     Create File In Explorer    greeting.py
     Active Editor Should Be    greeting.py
     Keyboard Input    type    print("Hello Robot Framework")
@@ -77,12 +77,12 @@ Python Script Created In The Explorer Without Presenter Mode
 
 
 *** Keywords ***
-Open Example VS Code With Video
-    [Documentation]    Opens VS Code and records a video in the size of the screen.
+Start Example VS Code With Video
+    [Documentation]    Starts VS Code and records a video in the size of the screen.
     ...    Further named arguments, such as `extensions_dir`, are passed on.
     [Arguments]    &{options}
     ${width}    ${height} =    Split String    %{SCREEN_SIZE=1920x1080}    x
     VAR    &{size}    width=${width}    height=${height}
     VAR    &{show_actions}    duration=${800}    position=top-right
     VAR    &{record_video}    size=${size}    showActions=${show_actions}
-    Open Example VS Code    record_video=${record_video}    &{options}
+    Start Example VS Code    record_video=${record_video}    &{options}

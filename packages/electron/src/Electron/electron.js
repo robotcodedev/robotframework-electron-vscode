@@ -89,7 +89,7 @@ async function robotframeworkElectronIsWindowPage(browserId, page) {
 async function robotframeworkElectronEvaluate(browserId, script, arg, page) {
     const application = applications.get(browserId);
     if (!application) {
-        throw new Error(`Browser '${browserId}' is not an application started by 'New Electron Application'.`);
+        throw new Error(`Browser '${browserId}' is not an application started by 'Start Electron Application'.`);
     }
     const window = page && page.context() === application.context() ? await application.browserWindow(page) : null;
     try {

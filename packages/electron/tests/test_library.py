@@ -95,7 +95,7 @@ def fake_launch(tmp_path, monkeypatch):
 def test_relative_paths_are_relative_to_the_working_directory(fake_launch, tmp_path):
     electron, calls = fake_launch
 
-    electron.new_electron_application(Path("bin/electron"), cwd=Path("work"))
+    electron.start_electron_application(Path("bin/electron"), cwd=Path("work"))
 
     assert calls[0]["executablePath"] == str(tmp_path / "bin" / "electron")
     assert calls[0]["cwd"] == str(tmp_path / "work")
@@ -104,7 +104,7 @@ def test_relative_paths_are_relative_to_the_working_directory(fake_launch, tmp_p
 def test_gives_the_application_the_library_timeout(fake_launch, tmp_path):
     electron, calls = fake_launch
 
-    electron.new_electron_application(tmp_path / "bin" / "electron")
+    electron.start_electron_application(tmp_path / "bin" / "electron")
 
     assert calls[0]["defaultTimeout"] == int(electron.timeout)
 
@@ -112,7 +112,7 @@ def test_gives_the_application_the_library_timeout(fake_launch, tmp_path):
 def test_application_runs_in_the_working_directory_by_default(fake_launch, tmp_path):
     electron, calls = fake_launch
 
-    electron.new_electron_application(tmp_path / "bin" / "electron")
+    electron.start_electron_application(tmp_path / "bin" / "electron")
 
     assert calls[0]["cwd"] == str(tmp_path)
 
@@ -120,7 +120,7 @@ def test_application_runs_in_the_working_directory_by_default(fake_launch, tmp_p
 def test_first_window_closed_during_the_start(fake_launch, tmp_path):
     electron, _ = fake_launch
 
-    application, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+    application, page = electron.start_electron_application(tmp_path / "bin" / "electron")
 
     assert (application, page["page_id"]) == ("browser", "")
 
@@ -128,7 +128,7 @@ def test_first_window_closed_during_the_start(fake_launch, tmp_path):
 def test_no_recording_by_default(fake_launch, tmp_path):
     electron, calls = fake_launch
 
-    electron.new_electron_application(tmp_path / "bin" / "electron")
+    electron.start_electron_application(tmp_path / "bin" / "electron")
 
     assert calls[0]["recordVideo"] is None
     assert calls[0]["tracing"] is None
@@ -139,7 +139,7 @@ def test_recording_options_come_from_browser(fake_launch, tmp_path):
     electron.outputdir = str(tmp_path)
     show_actions: ShowActions = {"duration": 800, "position": "top-right"}
 
-    electron.new_electron_application(
+    electron.start_electron_application(
         tmp_path / "bin" / "electron", record_video={"showActions": show_actions}, tracing=True
     )
 
@@ -156,7 +156,7 @@ def test_har_options_come_from_browser(fake_launch, tmp_path):
     electron, calls = fake_launch
     electron.outputdir = str(tmp_path)
 
-    electron.new_electron_application(tmp_path / "bin" / "electron", record_har={"path": "network.har"})
+    electron.start_electron_application(tmp_path / "bin" / "electron", record_har={"path": "network.har"})
 
     assert calls[0]["recordHar"] == {"path": str((tmp_path / "network.har").resolve())}
 
@@ -164,7 +164,7 @@ def test_har_options_come_from_browser(fake_launch, tmp_path):
 def test_no_launch_options_by_default(fake_launch, tmp_path):
     electron, calls = fake_launch
 
-    electron.new_electron_application(tmp_path / "bin" / "electron")
+    electron.start_electron_application(tmp_path / "bin" / "electron")
 
     assert calls[0]["launchOptions"] == {}
 
@@ -172,7 +172,7 @@ def test_no_launch_options_by_default(fake_launch, tmp_path):
 def test_launch_options_have_playwrights_names(fake_launch, tmp_path):
     electron, calls = fake_launch
 
-    electron.new_electron_application(
+    electron.start_electron_application(
         tmp_path / "bin" / "electron",
         color_scheme=ColorScheme.dark,
         locale="de-DE",
@@ -191,7 +191,7 @@ def test_launch_options_have_playwrights_names(fake_launch, tmp_path):
 def test_null_color_scheme_leaves_it_to_the_application(fake_launch, tmp_path):
     electron, calls = fake_launch
 
-    electron.new_electron_application(tmp_path / "bin" / "electron", color_scheme=ColorScheme["null"])
+    electron.start_electron_application(tmp_path / "bin" / "electron", color_scheme=ColorScheme["null"])
 
     assert calls[0]["launchOptions"] == {}
 
@@ -247,7 +247,7 @@ def pages(fake_launch, monkeypatch):
 def test_switches_to_the_window_page_when_a_view_is_active(pages, tmp_path):
     electron, _, switches = pages
 
-    _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+    _, page = electron.start_electron_application(tmp_path / "bin" / "electron")
 
     assert page["page_id"] == "page=window"
     assert switches == ["page=guest", "page=window"]
@@ -257,7 +257,7 @@ def test_keeps_the_active_page_when_it_is_the_window(pages, tmp_path):
     electron, active, switches = pages
     active[0] = "page=window"
 
-    _, page = electron.new_electron_application(tmp_path / "bin" / "electron")
+    _, page = electron.start_electron_application(tmp_path / "bin" / "electron")
 
     assert page["page_id"] == "page=window"
     assert switches == []

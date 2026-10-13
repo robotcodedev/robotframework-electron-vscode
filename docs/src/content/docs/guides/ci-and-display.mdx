@@ -51,6 +51,6 @@ Without `-s`, `xvfb-run` starts a screen of only 640×480, which is too small fo
 
 VS Code does not fill the screen by itself; its window keeps its default size. With the setting `window.newWindowDimensions` set to `maximized` and a window manager, it fills the screen, and screenshots and videos show the whole screen size. The example project opens VS Code this way. Without a window manager, `Set Viewport Size` sets the page to the wanted size instead, as in [Videos and slow motion](../videos/).
 
-## Downloads on CI
+## VS Code and Electron on CI
 
-`Open VS Code` and `Get Electron Executable` download VS Code and Electron on first use and cache them in the user's cache directory. To keep the downloads between CI runs, cache that directory, or give the keywords a `cache_dir` that the CI caches. [Downloads and cache](../downloads-and-cache/) shows how to pass it as a variable.
+The libraries download nothing, so a step of the CI job prepares VS Code or Electron before the tests, in the paths that `robot.toml` names. For VS Code, `@vscode/test-electron` downloads a fixed version; for an Electron app, the npm package `electron` brings the binary on the first `require('electron')`. The getting-started pages for [VS Code](../../getting-started/vscode/#vs-code) and [Electron apps](../../getting-started/electron/#an-app-from-source) show both. To keep the downloads between CI runs, cache their folders: `.vscode-test`, the default of `@vscode/test-electron`, and Electron's cache folder, `~/.cache/electron` on Linux or the folder that `electron_config_cache` names.

@@ -275,7 +275,7 @@ def test_names_both_ways_to_load_the_helper_after_the_timeout_without_an_extensi
     message = str(error.value)
     assert "answered within 200 milliseconds." in message
     assert "helper extension may not be loaded" in message
-    assert f"'{HELPER_EXTENSION}' to Open VS Code in extension_development_path" in message
+    assert f"'{HELPER_EXTENSION}' to Start VS Code in extension_development_path" in message
     assert f"install '{HELPER_VSIX}' into the extensions directory" in message
 
 

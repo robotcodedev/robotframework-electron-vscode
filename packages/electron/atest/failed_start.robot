@@ -7,7 +7,7 @@ Test Teardown       Close Electron Application    ALL
 *** Test Cases ***
 Wrong Executable Path
     Run Keyword And Expect Error    *'/does/not/exist/electron' not found*
-    ...    New Electron Application    /does/not/exist/electron
+    ...    Start Electron Application    /does/not/exist/electron
     ${ids} =    Get Electron Application Ids
     Should Be Empty    ${ids}
 

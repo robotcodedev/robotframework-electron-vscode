@@ -27,5 +27,11 @@
                 "category": "Robot Example"
             }
         ]
+    },
+    "scripts": {
+        "download-vscode": "node -e \"require('@vscode/test-electron').downloadAndUnzipVSCode('1.141.0').then(console.log)\""
+    },
+    "devDependencies": {
+        "@vscode/test-electron": "3.1.0"
     }
 }

@@ -5,9 +5,15 @@
 paths = ["tests"]
 output-dir = "results"
 
+# The VS Code that the tests run against: `npm run download-vscode` downloads it to this path,
+# which is the one of Linux x64. On other platforms, or for an installed VS Code, set VSCODE_EXECUTABLE under
+# [extend-variables] in a personal .robot.toml; a [variables] table there would replace this one.
+[variables]
+VSCODE_EXECUTABLE = ".vscode-test/vscode-linux-x64-1.141.0/code"
+
 # The locators are variables of the resources in tests/resources. When another VS Code version,
 # or a fork, needs other locators, add a profile for it that overrides them, usually together
-# with VSCODE_VERSION, and select it with `robotcode -p <profile> robot`. The keywords stay the same.
+# with VSCODE_EXECUTABLE, and select it with `robotcode -p <profile> robot`. The keywords stay the same.
 #
 # This profile overrides the command palette locator with an equivalent selector, to show how.
 [profiles.locator-override]

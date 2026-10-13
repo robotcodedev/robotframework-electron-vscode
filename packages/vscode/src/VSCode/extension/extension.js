@@ -1,5 +1,5 @@
-// Helper extension of the robotframework-vscode library. `Open VS Code` loads it as a development
-// extension, and `Evaluate In Extension Host` runs functions in this window's extension host through it.
+// Helper extension of the robotframework-vscode library. A test loads it as a development extension or
+// installs its .vsix, and `Evaluate In Extension Host` runs functions in this window's extension host through it.
 'use strict';
 
 const crypto = require('crypto');

@@ -23,7 +23,7 @@ Native Dialog Replaced
 Not An Electron Application
     Start Fixture App
     Run Keyword And Expect Error
-    ...    *Browser 'browser=unknown' is not an application started by 'New Electron Application'.
+    ...    *Browser 'browser=unknown' is not an application started by 'Start Electron Application'.
     ...    Evaluate In Main Process    () => 1    application=browser=unknown
 
 No Application Open

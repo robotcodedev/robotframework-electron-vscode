@@ -201,7 +201,7 @@ def test_evaluates_without_a_window_for_a_page_of_another_browser(tmp_path):
 def test_evaluating_fails_for_a_browser_that_is_no_open_application(tmp_path, scenario, browser_id):
     outcome = run(tmp_path, scenario, EVALUATE_HARNESS)
 
-    assert outcome["error"] == f"Browser '{browser_id}' is not an application started by 'New Electron Application'."
+    assert outcome["error"] == f"Browser '{browser_id}' is not an application started by 'Start Electron Application'."
 
 
 @pytest.mark.parametrize(("scenario", "video"), [("view-first", "window.webm"), ("first-closed", "closed.webm")])

@@ -10,7 +10,7 @@ A trace records what a test did step by step: every Browser action with screensh
 
 ## Recording a trace
 
-`New Electron Application` and `Open VS Code` record a trace when they get `tracing`. It works as `tracing` of Browser's `New Context`:
+`Start Electron Application` and `Start VS Code` record a trace when they get `tracing`. It works as `tracing` of Browser's `New Context`:
 
 - `True` saves the trace in `browser/traces` in the output directory, named after the application's context. Give a path to choose the name.
 - A path ending in `.zip` saves it there, and a folder saves it in that folder. Relative paths are relative to the output directory, and folders relative to `browser/traces`.
@@ -22,7 +22,7 @@ Library    Electron
 
 *** Test Cases ***
 Traced Run
-    New Electron Application    /opt/my-app/my-app    tracing=True
+    Start Electron Application    /opt/my-app/my-app    tracing=True
     Click    text=Say hello
     Close Electron Application
 ```

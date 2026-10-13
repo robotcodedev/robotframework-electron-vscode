@@ -19,12 +19,12 @@ Test Teardown       Close VS Code
 *** Test Cases ***
 Prepared Before The Start
     ${extensions} =    Prepared Extensions    ms-python.python
-    Open Example VS Code    extensions_dir=${extensions}
+    Start Example VS Code    extensions_dir=${extensions}
     Run Hello World
     Take Screenshot    filename=python-run
 
 Installed While Running
-    Open Example VS Code
+    Start Example VS Code
     Install Into Running VS Code    ms-python.python
     Run Hello World
 

@@ -16,23 +16,23 @@ Installed From The VSIX
     ...    The helper's .vsix is missing. Build it with 'uv build --package robotframework-vscode'.
     VAR    ${prepared}    ${OUTPUT_DIR}/installed-helper
     Remove Directory    ${prepared}    recursive=True
-    Execute Test VS Code CLI Command    ${prepared}/extensions    ${prepared}/user-data
-    ...    --install-extension    ${HELPER_VSIX}
-    Open Test VS Code    extensions_dir=${prepared}/extensions
+    Execute VS Code CLI Command    --install-extension    ${HELPER_VSIX}
+    ...    executable=${VSCODE_EXECUTABLE}    extensions_dir=${prepared}/extensions
+    Start Test VS Code    extensions_dir=${prepared}/extensions
     Get Title    not contains    [Extension Development Host]
     ${version} =    Evaluate In Extension Host    (vscode) => vscode.version
     Should Match Regexp    ${version}    ^\\d+\\.\\d+\\.\\d+
 
 VS Code Without The Helper
-    Open Test VS Code
+    Start Test VS Code
     Get Title    not contains    [Extension Development Host]
     Run Keyword And Expect Error
-    ...    GLOB:No extension host of the VS Code instance answered within 5 seconds. The library's helper extension may not be loaded: give its folder '${HELPER_EXTENSION}' to Open VS Code in extension_development_path, or install '${HELPER_VSIX}' *
+    ...    GLOB:No extension host of the VS Code instance answered within 5 seconds. The library's helper extension may not be loaded: give its folder '${HELPER_EXTENSION}' to Start VS Code in extension_development_path, or install '${HELPER_VSIX}' *
     ...    Evaluate In Extension Host    () => 1
 
 Helper Of Another Version
     ${helper} =    Copy Helper With Version    ${OUTPUT_DIR}/helper-0.0.1    0.0.1
-    Open Test VS Code    extension_development_path=${helper}
+    Start Test VS Code    extension_development_path=${helper}
     VAR    ${marker}    ${OUTPUT_DIR}/function-ran
     Remove File    ${marker}
     Run Keyword And Expect Error
@@ -42,7 +42,7 @@ Helper Of Another Version
     File Should Not Exist    ${marker}
 
 Only The Given Development Extensions
-    Open Test VS Code    ${TEST_WORKSPACE}    extension_development_path=${TEST_EXTENSION}
+    Start Test VS Code    ${TEST_WORKSPACE}    extension_development_path=${TEST_EXTENSION}
     ${arguments} =    Evaluate In Main Process    () => process.argv
     ${paths} =    Evaluate    [arg for arg in $arguments if arg.startswith("--extensionDevelopmentPath=")]
     Should Be Equal    ${paths}    ${{ ["--extensionDevelopmentPath=" + $TEST_EXTENSION] }}

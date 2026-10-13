@@ -12,11 +12,12 @@ A small VS Code extension with Robot Framework tests that drive the VS Code work
 
 Each VS Code opens a fresh copy of `tests/workspace` in the output directory, so the tests can change files.
 
-The `VSCode` library only downloads and starts VS Code. The keywords and locators for the workbench are part of this example, in `tests/resources/`, one resource per workbench part. Your project owns them and adapts them when VS Code changes.
+The `VSCode` library only starts VS Code. The keywords and locators for the workbench are part of this example, in `tests/resources/`, one resource per workbench part. Your project owns them and adapts them when VS Code changes.
 
 ## Prerequisites
 
 - Python with `robotframework-vscode` and RobotCode.
+- Node.js 22 or later, to download the VS Code that the tests run against.
 - For `python.robot` and the Python tests of `video.robot`: network access for the Marketplace, which downloads the Python extension (about 100 MB) once into `.cache/extensions` and again for each install into a running VS Code, and a Python interpreter on the `PATH`.
 - On Linux, for the display profiles in `robot.toml`:
   - Xvfb for `xvfb`: the package `xvfb` on Debian and Ubuntu, `xorg-server-xvfb` on Arch Linux;
@@ -25,7 +26,14 @@ The `VSCode` library only downloads and starts VS Code. The keywords and locator
 
 ## Running
 
-From this folder, with `robotframework-vscode` installed:
+Download VS Code once, with `@vscode/test-electron`, into `.vscode-test`:
+
+```sh
+npm ci
+npm run download-vscode
+```
+
+`VSCODE_EXECUTABLE` in `robot.toml` points to it, with the path of Linux x64. Then, from this folder, with `robotframework-vscode` installed:
 
 ```sh
 robotcode robot
@@ -37,10 +45,10 @@ From the root of the `robotframework-electron-vscode` repository:
 uv run robotcode -r examples/vscode-extension robot
 ```
 
-On Linux, `robotcode -p xvfb robot` runs the tests hidden on a Full HD Xvfb screen, also on a Wayland desktop, and `robotcode -p xephyr robot` in a separate Xephyr window. Add `-p small-screen` for a 1280×800 screen instead. The first run downloads VS Code 1.141.0 into the user's cache directory. To use an installed VS Code instead, set `VSCODE_EXECUTABLE` in a personal `.robot.toml` next to `robot.toml`:
+On Linux, `robotcode -p xvfb robot` runs the tests hidden on a Full HD Xvfb screen, also on a Wayland desktop, and `robotcode -p xephyr robot` in a separate Xephyr window. Add `-p small-screen` for a 1280×800 screen instead. On other platforms, or to use an installed VS Code, set `VSCODE_EXECUTABLE` in a personal `.robot.toml` next to `robot.toml`, under `extend-variables`:
 
 ```toml
-[variables]
+[extend-variables]
 VSCODE_EXECUTABLE = "/usr/share/code/code"
 ```
 

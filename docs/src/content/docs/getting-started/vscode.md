@@ -1,11 +1,11 @@
 ---
 title: Test a VS Code extension
-description: Open an isolated VS Code with your extension using robotframework-vscode and drive the workbench with Browser keywords.
+description: Start an isolated VS Code with your extension using robotframework-vscode and drive the workbench with Browser keywords.
 sidebar:
   order: 2
 ---
 
-`VSCode` is built on `Electron` and the [Browser library](https://robotframework-browser.org). It contains every Electron and Browser keyword, downloads VS Code, and starts isolated VS Code instances with the extension under test. The workbench window is an ordinary Browser page.
+`VSCode` is built on `Electron` and the [Browser library](https://robotframework-browser.org). It contains every Electron and Browser keyword and starts isolated VS Code instances with the extension under test. The workbench window is an ordinary Browser page.
 
 ## Installation
 
@@ -15,7 +15,23 @@ Like `robotframework-electron`, the library needs a Browser hook that is not rel
 uv sync
 ```
 
-Nothing from npm is needed. VS Code itself is downloaded on first use.
+## VS Code
+
+The library starts a VS Code that you provide: an installed VS Code, a portable copy, a [fork](../../guides/vscode-forks/), or a build that [`@vscode/test-electron`](https://www.npmjs.com/package/@vscode/test-electron) downloads. It downloads nothing itself. For a fixed version, add `@vscode/test-electron` to the development dependencies of your extension, with Node.js 22 or later, and download VS Code once:
+
+```sh
+npm install --save-dev @vscode/test-electron
+node -e "require('@vscode/test-electron').downloadAndUnzipVSCode('1.141.0').then(console.log)"
+```
+
+VS Code goes into `.vscode-test`, a folder for git to ignore, and the command prints the executable's path, on Linux `.vscode-test/vscode-linux-x64-1.141.0/code`. A variable in `robot.toml` keeps the path out of the tests:
+
+```toml
+[variables]
+VSCODE_EXECUTABLE = ".vscode-test/vscode-linux-x64-1.141.0/code"
+```
+
+A profile can point the variable to another VS Code, see [VS Code versions and profiles](../../guides/vscode-versions/).
 
 ## First test
 
@@ -27,7 +43,7 @@ Library    VSCode
 
 *** Test Cases ***
 Extension Command Shows A Message
-    Open VS Code    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
+    Start VS Code    ${VSCODE_EXECUTABLE}    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
     Keyboard Key    press    F1
     Keyboard Input    type    Robot Test: Say Hello
     Wait For Elements State    .quick-input-list .monaco-list-row[aria-label*="Robot Test: Say Hello"]    visible
@@ -42,17 +58,17 @@ The command palette filters asynchronously, so the test waits for the command's 
 
 The example project in the repository goes further, with its own keywords for the command palette, quick picks, notifications, webviews, the editor and the terminal; see [Writing your own workbench keywords](../../guides/workbench-keywords/).
 
-## Opening VS Code
+## Starting VS Code
 
-`Open VS Code` starts VS Code and returns once the workbench is ready. It returns the instance's id and the page details of the workbench window, like `New Electron Application`.
+`Start VS Code` starts the VS Code of the given executable and returns once the workbench is ready. It returns the instance's id and the page details of the workbench window, like `Start Electron Application`.
 
-- **Which VS Code:** `version` is `stable` (the default), `insiders` or a fixed version such as `1.141.0`. Alternatively, `executable` starts an installed VS Code or a [fork](../../guides/vscode-forks/) and downloads nothing.
+- **Which VS Code:** the executable, as a path or as a command on `PATH`. Symbolic links are followed.
 - **Extensions:**
   - `extension_development_path` loads one or more extensions from source.
-  - `extensions_dir` starts the instance with a prepared extensions directory, for example one that `Execute VS Code CLI Command` from `VSCode.Helper` filled with Marketplace extensions or `.vsix` files.
+  - `extensions_dir` starts the instance with a prepared extensions directory, for example one that `Execute VS Code CLI Command` filled with Marketplace extensions or `.vsix` files.
   - [Extensions](../../guides/extensions/) shows these and other ways, such as installing into the running instance.
-- **Settings:** `settings` are written to the instance's user settings. The defaults switch off the welcome page, release notes, update checks, telemetry and workspace trust. They also switch off the screen reader mode, which VS Code otherwise turns on under Playwright, and hide the secondary side bar. Given settings override the defaults.
-- **Isolation:** every instance gets its own user-data and extensions directories under the output directory. Neither the user's own VS Code nor other instances affect it. `VSCODE_*` variables and `ELECTRON_RUN_AS_NODE` are removed from its environment.
+- **Settings:** `settings` are written to the user settings of the instance's own user-data directory. The defaults switch off the welcome page, release notes, update checks, telemetry and workspace trust. They also switch off the screen reader mode, which VS Code otherwise turns on under Playwright, and hide the secondary side bar. Given settings override the defaults.
+- **Isolation:** every instance gets its own user-data and extensions directories under the output directory. Neither the user's own VS Code nor other instances affect it. `user_data_dir` and `extensions_dir` give prepared directories instead, which the instance uses as they are. The library writes no settings into a given user-data directory, and `settings` cannot be combined with it: put the settings that the tests need, at least `"editor.accessibilitySupport": "off"`, into its `User/settings.json`. `VSCODE_*` variables and `ELECTRON_RUN_AS_NODE` are removed from its environment.
 - **Closing:** `Close VS Code` and Browser's automatic closing end the instance.
 
 ## Next steps
@@ -60,5 +76,5 @@ The example project in the repository goes further, with its own keywords for th
 - [Browser keywords in applications](../../guides/browser-keywords/) for what works on an application's windows and what does not.
 - [The extension host](../../guides/extension-host/) for VS Code's extension API in a test, for example to run a command by its id or to wait for a language server.
 - [CI and the Linux display](../../guides/ci-and-display/) for running without a desktop.
-- [Downloads and cache](../../guides/downloads-and-cache/) for VS Code versions and offline runs.
+- [VS Code versions and profiles](../../guides/vscode-versions/) for running the tests against several VS Code builds.
 - [Logs and troubleshooting](../../guides/logs/) for VS Code's logs and the instance directories.

@@ -42,12 +42,11 @@ Default Working Directory
     Get Text    id=cwd    ==    ${EXECDIR}
 
 Relative Executable Path
-    ${electron} =    Get Electron Executable    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}    ${ELECTRON_CACHE}
-    ${relative} =    Evaluate    os.path.relpath(shutil.which($electron))    modules=os,shutil
+    ${relative} =    Evaluate    os.path.relpath(shutil.which($ELECTRON_EXECUTABLE))    modules=os,shutil
     Should Not Be Equal    ${relative}    ${{ os.path.abspath($relative) }}
     ${app} =    Get Fixture App
     ${user_data} =    New User Data Dir    ${OUTPUT_DIR}
-    New Electron Application    ${relative}    args=${{ [$app, "--user-data-dir=" + $user_data] }}
+    Start Electron Application    ${relative}    args=${{ [$app, "--user-data-dir=" + $user_data] }}
     Get Title    ==    Electron Fixture
 
 Test Run Started From Inside VS Code

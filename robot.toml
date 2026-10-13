@@ -5,13 +5,22 @@ paths = ["packages/electron/atest", "packages/vscode/atest"]
 output-dir = "results"
 run-empty-suite = true
 
+# The builds that `npm run prepare-tests` prepares, with the paths of Linux x64, relative to the repository root.
+# On other platforms, set the paths that the script prints under [extend-variables] in .robot.toml; a
+# [variables] table there would replace this one. VSCODE_VERSION is the version of VSCODE_EXECUTABLE for the
+# tests that check it; set both when you point VSCODE_EXECUTABLE elsewhere.
+[variables]
+VSCODE_EXECUTABLE = ".cache/vscode/vscode-linux-x64-1.141.0/code"
+VSCODE_VERSION = "1.141.0"
+ELECTRON_EXECUTABLE = "node_modules/electron/dist/electron"
+
 [profiles.electron-previous]
 description = "Run the Electron tests against an older Electron major"
-extend-variables = { ELECTRON_VERSION = "42.11.12" }
+extend-variables = { ELECTRON_EXECUTABLE = "node_modules/electron-previous/dist/electron" }
 
 [profiles.vscode-insiders]
-description = "Run the VS Code tests against the newest VS Code Insiders build"
-extend-variables = { VSCODE_VERSION = "insiders" }
+description = "Run the VS Code tests against the newest VS Code Insiders, after `npm run prepare-tests -- insiders`"
+extend-variables = { VSCODE_EXECUTABLE = ".cache/vscode/vscode-linux-x64-insiders/code-insiders", VSCODE_VERSION = "insiders" }
 
 # Where the tests run. Without a display profile they run on the normal desktop.
 # The wrappers run as shell scripts; RobotCode appends its command line, which they run as "$@".

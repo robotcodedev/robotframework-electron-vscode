@@ -66,7 +66,7 @@ We use **CVSS v4.0** (v3.1 also accepted) with the following guidelines:
 
 ### In Scope ✅
 * The `robotframework-electron` and `robotframework-vscode` packages
-* How they download VS Code, install extensions, and start Electron applications and VS Code instances
+* How they start Electron applications and VS Code instances, run VS Code's command-line script, and run code in VS Code's extension host through the helper extension
 * Documentation site content and example code that could cause vulnerabilities when followed
 * Supply chain issues (malicious dependencies, typosquatting)
 * Configuration defaults that create security risks

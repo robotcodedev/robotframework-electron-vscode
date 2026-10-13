@@ -3,7 +3,7 @@
 [Robot Framework](https://robotframework.org) libraries for testing Electron applications and VS Code extensions, built on the [Browser library](https://robotframework-browser.org):
 
 - [`robotframework-electron`](packages/electron/) (`Electron`) starts Electron applications. Their windows are ordinary Browser pages, and Browser's keywords work on them; the keywords for browsers and contexts are replaced by keywords for applications.
-- [`robotframework-vscode`](packages/vscode/) (`VSCode`) downloads VS Code and starts isolated instances with the extension under test, for end-to-end tests of VS Code extensions.
+- [`robotframework-vscode`](packages/vscode/) (`VSCode`) starts isolated instances of a VS Code that you provide, with the extension under test, for end-to-end tests of VS Code extensions.
 
 The libraries provide the technique: starting the application and handing its windows to Browser. What to click and which locators to use belongs to your tests.
 
@@ -21,6 +21,7 @@ The repository is a uv workspace with both libraries in `packages/`, the documen
 
 ```sh
 uv sync                                            # install the workspace with the dev tools
+npm ci && npm run prepare-tests                    # VS Code and Electron for the acceptance tests
 uv run pytest                                      # unit tests
 uv run robotcode -r . robot                                  # acceptance tests on the desktop, configured in robot.toml
 uv run robotcode -r . -p xvfb robot                          # hidden on a Full HD Xvfb screen (Linux)
@@ -30,18 +31,12 @@ uv run robotcode -r . -p xvfb -p vscode-insiders robot       # against the newes
 ```
 
 - The display profiles need Xvfb (`xvfb` or `xorg-server-xvfb`) and, for `xephyr`, Xephyr (`xserver-xephyr` or `xorg-server-xephyr`); with Openbox (`openbox`) installed, windows can be maximised there.
-- The acceptance tests download Electron and VS Code into the repository's `.cache/`. To use local executables instead, set `ELECTRON_EXECUTABLE` or `VSCODE_EXECUTABLE` in a personal, gitignored `.robot.toml`:
-
-  ```toml
-  [variables]
-  VSCODE_EXECUTABLE = "/path/to/code"
-  ```
-
+- The libraries download nothing. `npm ci` and `npm run prepare-tests`, with Node.js 22.12 or later, prepare the VS Code and Electron builds of the acceptance tests; `npm run prepare-tests -- insiders` adds the newest VS Code Insiders for `-p vscode-insiders`. [Running Tests](CONTRIBUTING.md#running-tests) in the contribution guide shows how to use local executables instead.
 - The test `Application And Web Browser` needs Chromium for Playwright in the Browser clone, and the video tests need Playwright's ffmpeg: `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` there installs both.
-- To run the VS Code tests against a fork, point `VSCODE_EXECUTABLE` at it and leave out the tests that check VS Code's own behaviour:
+- To run the VS Code tests against a fork, point `VSCODE_EXECUTABLE` at it, set `VSCODE_VERSION` to a name instead of a version number, as the profile `vscode-insiders` does, so that the version tests only check the version's form, and leave out the tests that check VS Code's own behaviour:
 
   ```sh
-  uv run robotcode -r . -p xvfb robot -v VSCODE_EXECUTABLE:/opt/vscodium/codium -e vscode-only -bl "Electron & VSCode.VSCode"
+  uv run robotcode -r . -p xvfb robot -v VSCODE_EXECUTABLE:/opt/vscodium/codium -v VSCODE_VERSION:vscodium -e vscode-only -bl "Electron & VSCode.VSCode"
   ```
 
 ## Contributing

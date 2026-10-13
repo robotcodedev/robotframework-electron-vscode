@@ -9,7 +9,7 @@ The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser o
 
 ## How an application looks to Browser
 
-- **One browser, one context.** `New Electron Application` and `Open VS Code` make the application a browser with one context. Each window of the application is a page of that context, and so are its `<webview>`s and `WebContentsView`s.
+- **One browser, one context.** `Start Electron Application` and `Start VS Code` make the application a browser with one context. Each window of the application is a page of that context, and so are its `<webview>`s and `WebContentsView`s.
 - **The application creates its pages.** The libraries hide `New Page`, `New Context` and the other keywords for browsers and contexts, and offer keywords for applications instead, see [Compared with the Browser library](#compared-with-the-browser-library).
 - **Settings mean a restart.** Options such as the color scheme or the locale apply from the start, see [launch options](../../getting-started/electron/#launch-options). Another value means starting the application again.
 - **The main process is outside the pages.** Native dialogs, menus and the tray belong to the main process, which Browser keywords do not reach. `Evaluate In Main Process` runs code there, see [the main process](../../getting-started/electron/#the-main-process).
@@ -26,7 +26,7 @@ The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser o
 | Dialogs | Works | `alert` and `confirm` with `Handle Future Dialogs`, `Wait For Alert` and `Wait For Alerts`. Without a handler, Playwright dismisses them. Electron has no `prompt()`, see [Behaviour of Electron](#behaviour-of-electron). Both kinds of handler on the same page crash Browser's Node process, and so does a `beforeunload` handler, see [Known crashes](#known-crashes). Native dialogs need the main process. |
 | Downloads | Works | `Promise To Wait For Download` after a click, also with `wait_for_finished=False` and `Get Download State`, and `Download` from a page loaded from a URL. `Cancel Download` cancels a running download. The libraries tell Browser that the application accepts downloads, as Electron does. |
 | Pages and windows | Works | Windows that the application opens later: `Switch Page    NEW`. `<webview>`s and `WebContentsView`s are pages too, but select them by page id, see [Pages and windows](#pages-and-windows). A window that the application closes leaves `Get Page Ids`. `Close Page` closes windows and `WebContentsView`s, but waits forever on a `<webview>`. On the last window, it ends most applications, through their `window-all-closed` handler. |
-| Screenshots, recordings and coverage | Works | `Take Screenshot` of the window or an element; screenshots have the window's size. Videos, traces and HAR files come from `record_video`, `tracing` and `record_har` of `New Electron Application`, see [Videos and slow motion](../videos/) and [Traces and HAR files](../traces/). `Start Coverage`, `Highlight Elements`, `Add Style Tag` and presenter mode work. Playwright has no `slowMo` for Electron; presenter mode slows a test down instead. |
+| Screenshots, recordings and coverage | Works | `Take Screenshot` of the window or an element; screenshots have the window's size. Videos, traces and HAR files come from `record_video`, `tracing` and `record_har` of `Start Electron Application`, see [Videos and slow motion](../videos/) and [Traces and HAR files](../traces/). `Start Coverage`, `Highlight Elements`, `Add Style Tag` and presenter mode work. Playwright has no `slowMo` for Electron; presenter mode slows a test down instead. |
 | Applications | Own keywords | `Switch Electron Application`, `Get Electron Application Ids` and `Get Electron Application Catalog` replace Browser's keywords for browsers and contexts, see [Compared with the Browser library](#compared-with-the-browser-library). |
 | Other keywords | Works | From the audit: locator handlers, WebAuthn credentials (`Create Credential` and the related keywords), `Register Keyword To Run On Failure`, `Show Keyword Banner` and `Set Strict Mode`. |
 
@@ -36,7 +36,7 @@ The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser o
 
 | Browser keyword | In `Electron` and `VSCode` | Why |
 |---|---|---|
-| `New Browser`, `New Persistent Context`, `Open Browser` | `New Electron Application`, `Open VS Code` | A test starts an application. |
+| `New Browser`, `New Persistent Context`, `Open Browser` | `Start Electron Application`, `Start VS Code` | A test starts an application. |
 | `Close Browser`, `Close Context` | `Close Electron Application`, `Close VS Code` | The application ends with its only context. |
 | `Switch Browser` | `Switch Electron Application` | Several applications can be open at once. |
 | `Get Browser Ids` | `Get Electron Application Ids` | It returns the ids of the open applications. |
@@ -59,7 +59,7 @@ Library    Browser
 
 *** Test Cases ***
 Web Page Beside An Application
-    New Electron Application    /opt/my-app/my-app
+    Start Electron Application    /opt/my-app/my-app
     Browser.New Browser    chromium    headless=True
     Browser.New Page    https://example.com/
     Electron.Get Title    ==    My App
@@ -102,7 +102,7 @@ Library    Electron    jsextension=${CURDIR}/selector_engine.js
 *** Test Cases ***
 Find By Tag Name
     Register Tag Engine
-    New Electron Application    /opt/my-app/my-app
+    Start Electron Application    /opt/my-app/my-app
     Get Text    tag=h1    ==    My App
 ```
 
@@ -135,7 +135,7 @@ Switch To Page With Title
 
 ## Behaviour of Electron
 
-- **Color scheme:** by default, the application decides its color scheme. `color_scheme` of `New Electron Application` sets one, see [launch options](../../getting-started/electron/#launch-options).
+- **Color scheme:** by default, the application decides its color scheme. `color_scheme` of `Start Electron Application` sets one, see [launch options](../../getting-started/electron/#launch-options).
 - **Window size:** a window has the size that the application gives it; there is no emulated viewport. `Set Viewport Size` emulates one inside the page. Maximising a window needs a window manager, see [CI and the Linux display](../ci-and-display/); without one, [size the window from the main process](../videos/#a-full-frame-of-vs-code).
 - **Locale and time zone:** they follow the system. `locale` and `timezone_id` set them for the windows; `--lang` in `args` and `TZ` in `env` set them for the main process.
 - **User data:** Electron keeps cookies, local storage and other data of an application in its user-data folder, on Linux `~/.config/<name>`, on Windows `%APPDATA%\<name>` and on macOS `~/Library/Application Support/<name>`, so they last from one run to the next. `args=--user-data-dir=<folder>` with a new, empty folder starts the application without them, unless it sets the folder itself with `app.setPath`.
@@ -177,10 +177,10 @@ VS Code is an Electron application, so everything above applies to it. In additi
 | `Drag And Drop` in the explorer | Needs a setting | `explorer.confirmDragAndDrop: false`, otherwise VS Code asks for confirmation. |
 | File dialogs | Needs a setting | `files.simpleDialog.enable: true` makes VS Code use its own dialog instead of the native one. |
 | Native message boxes | Needs the main process | `Evaluate In Main Process` replaces `dialog.showMessageBox` before VS Code opens one. |
-| `Record Selector` | Needs an option | `bypass_csp=True` of `Open VS Code`. The workbench requires Trusted Types for scripts, and the recorder adds a script to the page. |
+| `Record Selector` | Needs an option | `bypass_csp=True` of `Start VS Code`. The workbench requires Trusted Types for scripts, and the recorder adds a script to the page. |
 | Maximised windows | Needs a window manager | See [CI and the Linux display](../ci-and-display/). |
 
-The example project uses many of these features. The following snippets show the others; they assume a VS Code opened with `Open VS Code`.
+The example project uses many of these features. The following snippets show the others; they assume a VS Code started with `Start VS Code`.
 
 An aria snapshot of a part of the workbench lists its roles and names:
 
@@ -202,7 +202,7 @@ Add Locator Handler Custom    .notifications-toasts .notification-toast
 ...    ${{ [{"action": "click", "selector": ".notifications-toasts .notification-list-item-message"}, {"action": "click", "selector": ".notifications-toasts .notification-toast .codicon-notifications-clear"}] }}
 ```
 
-Moving a file into a folder in the explorer, with `explorer.confirmDragAndDrop` set to `false` in the settings of `Open VS Code`:
+Moving a file into a folder in the explorer, with `explorer.confirmDragAndDrop` set to `false` in the settings of `Start VS Code`:
 
 ```robotframework
 Drag And Drop    .explorer-folders-view >> text="notes.txt"    .explorer-folders-view >> text="archive"

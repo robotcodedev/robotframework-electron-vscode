@@ -25,7 +25,7 @@ Library    Electron
 
 *** Test Cases ***
 Greeting Is Shown
-    New Electron Application    /opt/my-app/my-app
+    Start Electron Application    /opt/my-app/my-app
     Click    text=Say hello
     Get Text    id=greeting    ==    Hello!
     Close Electron Application
@@ -33,28 +33,32 @@ Greeting Is Shown
 
 ## An app from source
 
-An app that runs on the plain Electron binary gets its app folder as an argument. `Get Electron Executable` from the `Electron.Helper` library provides the binary:
+An app that runs on the plain Electron binary gets its app folder as an argument. The npm package `electron` provides the binary in the version that the app needs, and in Node, `require('electron')` returns its executable:
+
+```sh
+npm install --save-dev electron@44.7.0
+node -p "require('electron')"
+```
+
+The package needs Node.js 22.12 or later and downloads the binary on first use, into the user's cache directory, or into the folder that the environment variable `electron_config_cache` names. The library downloads nothing itself. A variable in `robot.toml` holds the executable's path, on Linux `node_modules/electron/dist/electron`:
+
+```toml
+[variables]
+ELECTRON_EXECUTABLE = "node_modules/electron/dist/electron"
+```
 
 ```robotframework
 *** Settings ***
 Library    Electron
-Library    Electron.Helper
-
-*** Variables ***
-${ELECTRON_VERSION}       44.7.0
-${ELECTRON_EXECUTABLE}    ${NONE}
 
 *** Test Cases ***
 App From Source
-    ${electron} =    Get Electron Executable    ${ELECTRON_VERSION}    ${ELECTRON_EXECUTABLE}
-    New Electron Application    ${electron}    args=${{ [$EXECDIR + "/app"] }}
+    Start Electron Application    ${ELECTRON_EXECUTABLE}    args=${{ [$EXECDIR + "/app"] }}
 ```
-
-`Get Electron Executable` downloads the given Electron release on first use and caches it. If `executable` is set, for example with `--variable ELECTRON_EXECUTABLE:/path/to/electron`, it returns that path and downloads nothing. See [Downloads and cache](../../guides/downloads-and-cache/).
 
 ## Windows and closing
 
-- `New Electron Application` returns the application id and the details of the first window's page: `${app}    ${page} =    New Electron Application    …`.
+- `Start Electron Application` returns the application id and the details of the first window's page: `${app}    ${page} =    Start Electron Application    …`.
 - Windows that the app opens later can be selected with `Switch Page    NEW`.
 - `Close Electron Application` and Browser's automatic closing end the application.
 - Several applications can be open at once. `Switch Electron Application` switches between them.
@@ -85,10 +89,10 @@ Evaluate In Main Process    (electron, size, window) => window.setBounds(size)  
 
 ## Launch options
 
-`New Electron Application` takes some of the options that the Browser library's `New Context` has for a web browser. They apply from the start, so another value means starting the application again.
+`Start Electron Application` takes some of the options that the Browser library's `New Context` has for a web browser. They apply from the start, so another value means starting the application again.
 
 ```robotframework
-New Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=pt-BR    timezone_id=Asia/Tokyo
+Start Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=pt-BR    timezone_id=Asia/Tokyo
 ```
 
 - **`color_scheme`:** by default, the application decides its color scheme, as it does outside of tests. With `light` or `dark`, its windows report that color scheme for `prefers-color-scheme`. Set it for tests that compare screenshots, so that the application looks the same on every machine.

@@ -15,7 +15,10 @@ from VSCode.instance import instance_environment
 
 
 def newest_instance_directory(output_dir: str) -> str:
-    """Return the instance folder that `Open VS Code` created last in ``output_dir``."""
+    """Return the instance folder created last in ``output_dir``.
+
+    `Start VS Code` creates one, and so does `Execute VS Code CLI Command` with ``executable``.
+    """
     base = Path(output_dir) / "vscode"
     return str(base / str(max(int(entry.name) for entry in base.iterdir() if entry.name.isdigit())))
 
@@ -98,7 +101,7 @@ def send_evaluation_without_token(user_data_dir: str, function: str) -> list[int
 
 
 def vs_code_environment() -> dict[str, str]:
-    """Return the environment for a VS Code that `New Electron Application` starts, as `Open VS Code` uses it."""
+    """Return the environment for a VS Code that `Start Electron Application` starts, as `Start VS Code` uses it."""
     return instance_environment(os.environ)
 
 

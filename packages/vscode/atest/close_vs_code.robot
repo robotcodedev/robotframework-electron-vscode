@@ -7,7 +7,7 @@ Test Teardown       Close VS Code    ALL
 
 *** Test Cases ***
 Instance Ends
-    Open Test VS Code
+    Start Test VS Code
     ${instance} =    Newest Instance
     VS Code Instance Is Running    ${instance}
     Close VS Code
