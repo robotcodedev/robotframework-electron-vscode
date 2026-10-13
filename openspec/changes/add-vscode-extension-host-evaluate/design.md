@@ -88,7 +88,8 @@ A spike checked both against the installed workspace.
 **Build backend:** uv_build has no build hooks, and the uv documentation points to other backends for build steps. `robotframework-vscode` therefore builds with hatchling and a custom build hook in `hatch_build.py`, the mechanism that hatchling documents for this. `robotframework-electron` keeps uv_build.
 
 **The hook:**
-- **In the source tree,** where `packages/vscode/package.json` exists, it runs `npm ci` and `npm run package-helper` before the sdist or the wheel is built. It always packs anew, so that a changed helper or a new version never ships an old `.vsix`.
+- **In the source tree,** where `packages/vscode/package.json` exists, it runs `npm ci --ignore-scripts` and `npm run package-helper` before the sdist or the wheel is built. It always packs anew, so that a changed helper or a new version never ships an old `.vsix`.
+  - `--ignore-scripts` skips the install script of `@vscode/vsce-sign`, which downloads a signing tool that only publishing needs. npm 12 blocks that script anyway, with a warning.
 - **In an unpacked sdist,** which has no `package.json` for vsce, it takes the `.vsix` from the sdist, and fails if it is missing.
 - **In an editable build,** for `uv sync`, it does nothing. A development extension needs only the folder.
 - hatchling leaves out files that git ignores, so both targets declare the `.vsix` as an artifact.
