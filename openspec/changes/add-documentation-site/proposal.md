@@ -8,8 +8,8 @@ The documentation of the two libraries is spread out. There are two long package
 
 - A documentation site built with Astro and Starlight in `docs/`, published on GitHub Pages:
   - **Getting started:** testing an Electron app, and testing a VS Code extension.
-  - **Guides:** CI and the Linux display (Xvfb, Wayland), VS Code forks, downloads and cache, logs and troubleshooting. The guides on writing your own workbench keywords and locators and on profiles per VS Code version come with `add-vscode-examples`, because they show its files.
-  - **Reference:** one Markdown page per library (`Electron`, `Electron.Helper`, `VSCode`, `VSCode.Helper`), generated with `robotcode doc`. Until the Browser hook is released upstream, a script generates the pages locally and they are committed.
+  - **Guides:** CI and the Linux display (Xvfb, Wayland), VS Code forks, logs and troubleshooting. The guides on writing your own workbench keywords and locators and on profiles per VS Code version come with `add-vscode-examples`, because they show its files.
+  - **Reference:** one Markdown page per library (`Electron`, `VSCode`), generated with `robotcode doc`. Until the Browser hook is released upstream, a script generates the pages locally and they are committed.
 - Code shown in guides comes from the files in `examples/`, so that what the docs show is what the example tests run.
 - A README at the repository root gives an overview and the project's status, and links to the site. The package READMEs become short PyPI pages that link to the site.
 - A GitHub Actions workflow builds the site and deploys it to GitHub Pages. The repository location, and with it the site's `site`/`base` URL, is not decided yet and stays a marked placeholder until it is.

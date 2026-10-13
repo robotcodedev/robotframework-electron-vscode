@@ -19,4 +19,4 @@
 ## 4. Keyword reference (after RobotCode 2.8.0 is released)
 
 - [ ] 4.1 Upgrade RobotCode with `uv lock --upgrade-package robotcode && uv sync`. Verify that `uv run robotcode -r . doc keywords VSCode` works.
-- [ ] 4.2 Write `docs/scripts/generate_reference.py`. It generates the pages for `Electron`, `Electron.Helper`, `VSCode` and `VSCode.Helper` into `src/content/docs/reference/` with Starlight frontmatter. Generate and commit the pages, and add the regeneration step to `AGENTS.md`. Verify that the build shows the four reference pages, and that changing a keyword's docstring and regenerating changes its page.
+- [ ] 4.2 Write `docs/scripts/generate_reference.py`. It generates the pages for `Electron` and `VSCode` into `src/content/docs/reference/` with Starlight frontmatter. Generate and commit the pages, and add the regeneration step to `AGENTS.md`. Verify that the build shows the two reference pages, and that changing a keyword's docstring and regenerating changes its page.

@@ -21,7 +21,7 @@ The site SHALL have a getting-started section for Electron apps and for VS Code 
 - **THEN** the sidebar lists getting started, guides and reference, and every page in them can be reached from it
 
 ### Requirement: Keyword reference
-The reference section SHALL have one page for each of `Electron`, `Electron.Helper`, `VSCode` and `VSCode.Helper`, generated as Markdown with `robotcode doc`. A script SHALL regenerate them, and the generated pages SHALL be committed until the Browser hook is released upstream.
+The reference section SHALL have one page for each of `Electron` and `VSCode`, generated as Markdown with `robotcode doc`. A script SHALL regenerate them, and the generated pages SHALL be committed until the Browser hook is released upstream.
 
 #### Scenario: Regenerate the reference
 - **WHEN** the reference script runs after a keyword's documentation has changed

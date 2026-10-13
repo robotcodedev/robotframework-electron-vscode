@@ -32,8 +32,8 @@ docs/
     index.mdx                       what the libraries are, status, where to start
     getting-started/electron.md     test an Electron app
     getting-started/vscode.md       test a VS Code extension
-    guides/                         ci-and-display.md, vscode-forks.md, downloads-and-cache.md, logs.md, …
-    reference/                      electron.md, electron-helper.md, vscode.md, vscode-helper.md (generated)
+    guides/                         ci-and-display.md, vscode-forks.md, logs.md, …
+    reference/                      electron.md, vscode.md (generated)
 ```
 
 - The sidebar has three groups, each with Starlight's `autogenerate` for its folder, so a new page needs no configuration change.
@@ -45,7 +45,7 @@ docs/
 
 ### Content from the existing READMEs
 
-- The getting-started pages and the guides take over the details from the package READMEs: the quick starts, `ELECTRON_RUN_AS_NODE`, the Linux display and Wayland, forks, downloads and cache, the cleanup of instance directories, and the logs.
+- The getting-started pages and the guides take over the details from the package READMEs: the quick starts, `ELECTRON_RUN_AS_NODE`, the Linux display and Wayland, forks, the cleanup of instance directories, and the logs.
 - The quick-start code stays the code that was verified by running it.
 - Afterwards each package README keeps a short description, installation, one minimal example and a link to the site.
 
