@@ -9,7 +9,7 @@ The documentation of the two libraries is spread out. There are two long package
 - A documentation site built with Astro and Starlight in `docs/`, published on GitHub Pages:
   - **Getting started:** testing an Electron app, and testing a VS Code extension.
   - **Guides:** CI and the Linux display (Xvfb, Wayland), VS Code forks, logs and troubleshooting. The guides on writing your own workbench keywords and locators and on profiles per VS Code version come with `add-vscode-examples`, because they show its files.
-  - **Reference:** one Markdown page per library (`Electron`, `VSCode`), generated with `robotcode doc`. Until the Browser hook is released upstream, a script generates the pages locally and they are committed.
+  - **Reference:** the keyword reference pages, generated with `robotcode doc`, moved to `organize-docs-by-library`, because they wait for RobotCode 2.8.0.
 - Code shown in guides comes from the files in `examples/`, so that what the docs show is what the example tests run.
 - A README at the repository root gives an overview and the project's status, and links to the site. The package READMEs become short PyPI pages that link to the site.
 - A GitHub Actions workflow builds the site and deploys it to GitHub Pages. The repository location, and with it the site's `site`/`base` URL, is not decided yet and stays a marked placeholder until it is.
@@ -18,7 +18,7 @@ The documentation of the two libraries is spread out. There are two long package
 
 ### New Capabilities
 
-- `documentation-site`: the published documentation of the libraries — its structure, its reference pages, its code taken from the examples, and how it is built and deployed.
+- `documentation-site`: the published documentation of the libraries — its structure, its code taken from the examples, and how it is built and deployed.
 
 ### Modified Capabilities
 
@@ -28,6 +28,5 @@ None.
 
 - New folder `docs/` with its own `package.json`. Node.js and npm are needed only to build the docs, not to use the libraries.
 - New workflow under `.github/workflows/`.
-- The reference pages depend on `robotcode doc`, which ships with RobotCode 2.8.0. Generating them waits for that release.
 - `README.md` at the root, shorter package READMEs, and `AGENTS.md` for the docs commands.
 - `add-vscode-examples` is adjusted afterwards so that its files can be shown in the guides.

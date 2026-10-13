@@ -1,10 +1,10 @@
-# Spec Delta
+# documentation-site Specification
 
 ## Purpose
 
 The published documentation of `robotframework-electron` and `robotframework-vscode`. It has getting-started pages, guides, generated keyword references and code taken from the runnable examples, and it is built with Astro and Starlight and deployed to GitHub Pages.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Site builds from the repository
 The documentation site SHALL be an Astro and Starlight project in `docs/` that builds into a static site with one command.
@@ -14,18 +14,11 @@ The documentation site SHALL be an Astro and Starlight project in `docs/` that b
 - **THEN** the build succeeds and writes a static site to `docs/dist/`
 
 ### Requirement: Structure of the site
-The site SHALL have a getting-started section for Electron apps and for VS Code extensions, a guides section and a reference section, all reachable from the sidebar.
+The site SHALL have a getting-started section for Electron apps and for VS Code extensions and a guides section, all reachable from the sidebar.
 
 #### Scenario: Sidebar
 - **WHEN** the built site is opened
-- **THEN** the sidebar lists getting started, guides and reference, and every page in them can be reached from it
-
-### Requirement: Keyword reference
-The reference section SHALL have one page for each of `Electron` and `VSCode`, generated as Markdown with `robotcode doc`. A script SHALL regenerate them, and the generated pages SHALL be committed until the Browser hook is released upstream.
-
-#### Scenario: Regenerate the reference
-- **WHEN** the reference script runs after a keyword's documentation has changed
-- **THEN** the corresponding reference page shows the new documentation
+- **THEN** the sidebar lists getting started and guides, and every page in them can be reached from it
 
 ### Requirement: Code from the examples
 Code that a guide shows from the example project SHALL be included from the files in `examples/`, not copied into the page.

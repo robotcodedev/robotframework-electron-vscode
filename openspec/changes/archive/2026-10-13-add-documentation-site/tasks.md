@@ -16,7 +16,6 @@
 - [x] 3.1 Add `.github/workflows/docs.yml` (`withastro/action` with `path: docs`, then `actions/deploy-pages`; triggers: pushes to the default branch that change `docs/**` or `examples/**`, and manual dispatch). Verify that the YAML parses and that its build steps (`npm ci`, `npm run build`) succeed locally. Check the deployment itself once the repository has a remote.
 - [x] 3.2 Add the docs commands (`npm ci`, `npm run dev`, `npm run build` in `docs/`) to `AGENTS.md`. Verify that they run as written.
 
-## 4. Keyword reference (after RobotCode 2.8.0 is released)
+## 4. Keyword reference
 
-- [ ] 4.1 Upgrade RobotCode with `uv lock --upgrade-package robotcode && uv sync`. Verify that `uv run robotcode -r . doc keywords VSCode` works.
-- [ ] 4.2 Write `docs/scripts/generate_reference.py`. It generates the pages for `Electron` and `VSCode` into `src/content/docs/reference/` with Starlight frontmatter. Generate and commit the pages, and add the regeneration step to `AGENTS.md`. Verify that the build shows the two reference pages, and that changing a keyword's docstring and regenerating changes its page.
+The tasks for the generated keyword reference moved to `organize-docs-by-library`, which also gives the site a section per library.

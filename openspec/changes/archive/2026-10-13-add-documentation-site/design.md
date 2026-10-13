@@ -27,13 +27,12 @@ Starlight facts, checked with Context7 on 2026-10-08:
 ```
 docs/
   package.json, package-lock.json, astro.config.mjs
-  scripts/generate_reference.py
   src/content/docs/
     index.mdx                       what the libraries are, status, where to start
     getting-started/electron.md     test an Electron app
     getting-started/vscode.md       test a VS Code extension
     guides/                         ci-and-display.md, vscode-forks.md, logs.md, …
-    reference/                      electron.md, vscode.md (generated)
+    reference/                      empty until the generated keyword reference
 ```
 
 - The sidebar has three groups, each with Starlight's `autogenerate` for its folder, so a new page needs no configuration change.
@@ -57,9 +56,7 @@ docs/
 
 ### Reference pages
 
-- `docs/scripts/generate_reference.py` runs `uv run robotcode -r . doc …` once for each library. It writes the Markdown to `src/content/docs/reference/` with Starlight frontmatter (`title`, `description`) in front of it.
-- The exact `robotcode doc` options are fixed once RobotCode 2.8.0 is released.
-- The pages are committed. AGENTS.md says when to regenerate them: after a keyword or its documentation changes. Once the Browser hook is released upstream and Browser comes from PyPI, the script can move into the workflow.
+The keyword reference, generated with `robotcode doc` from RobotCode 2.8.0, moved to `organize-docs-by-library`, together with the new layout of the site. Until then the sidebar's reference group stays empty.
 
 ### Deployment
 
@@ -67,11 +64,9 @@ docs/
 - `withastro/action` builds the site from `docs/` (with `path: docs`).
 - `actions/deploy-pages` publishes it.
 
-Since the reference pages are committed and the examples are plain files, the workflow needs only Node.js.
+Since the examples are plain files, the workflow needs only Node.js.
 
 ## Risks / Trade-offs
 
-- [The committed reference pages fall behind the code] → AGENTS.md names the regeneration step. The script makes it one command, and keyword changes go through OpenSpec changes whose tasks can include it.
-- [`robotcode doc` output needs adjusting for Starlight, for example its headings or links] → The script owns the post-processing. The output is checked in the first build after 2.8.0.
 - [Without a remote, the workflow cannot be tried] → The local build runs the same `npm ci` and `npm run build`. The workflow is checked once the repository exists.
 - [Moving details out of the package READMEs loses their verified examples] → The quick-start code is taken over unchanged, and the minimal README example is run again.
