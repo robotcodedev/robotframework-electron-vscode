@@ -15,7 +15,7 @@ Every VS Code that `Start VS Code` starts has its own extensions directory, unle
 - `extension_development_path` and `extensions_dir` of `Start VS Code`;
 - `Execute VS Code CLI Command`, which runs VS Code's command-line script.
 
-`Execute VS Code CLI Command` never works on your own VS Code. Without `executable`, it works on the directories of the active instance. With `executable`, it works on the directories that `Start VS Code` would get with the same arguments: the given ones, and fresh ones for the others. It also removes the variables that tie a process to a running VS Code: in VS Code's integrated terminal, `VSCODE_IPC_HOOK_CLI` would send the call to the VS Code that the terminal belongs to.
+`Execute VS Code CLI Command` never works on your own VS Code. Without `executable`, it works on the directories of the active instance. With `executable`, it works on the directories that `Start VS Code` would get with the same arguments: the given ones, and fresh ones for the others. This holds as well when the tests run in VS Code's terminal or test explorer.
 
 ## From source
 

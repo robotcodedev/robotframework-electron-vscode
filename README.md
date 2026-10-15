@@ -13,8 +13,6 @@ The libraries provide the technique: starting the application and handing its wi
 
 The libraries are in a pilot phase, at version 0.1.0, and not yet published on PyPI.
 
-They need a small hook in the Browser library, `adoptContext`, which lets a Browser extension hand a Playwright context that it created itself to the Browser library. The hook is not part of a Browser release yet. Until it is, this repository takes `robotframework-browser` from a local clone with the hook.
-
 ## Development
 
 The repository is a uv workspace with both libraries in `packages/`, the documentation site in `docs/`, and planned and archived changes in `openspec/`. `AGENTS.md` describes how to set up the Browser clone. Then, from the repository root:

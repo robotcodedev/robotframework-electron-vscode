@@ -16,7 +16,7 @@ The site SHALL have a section for Electron, a section for VS Code and a section 
 ## ADDED Requirements
 
 ### Requirement: Keyword reference
-Each library's section SHALL have a reference page with the keyword documentation of its library, `Electron` or `VSCode`, generated as Markdown with `robotcode doc`. A script SHALL regenerate both pages, and the generated pages SHALL be committed until the Browser hook is released upstream.
+Each library's section SHALL have a reference page with the keyword documentation of its library, `Electron` or `VSCode`, generated as Markdown with `robotcode doc`. A script SHALL regenerate both pages, and the generated pages SHALL be committed.
 
 #### Scenario: Reference in its section
 - **WHEN** the built site is opened

@@ -7,7 +7,7 @@ sidebar:
 
 ## Logs of a run
 
-Besides Robot Framework's own `log.html`, the output directory holds `playwright-log.txt`. It is the log of the Browser library's Node.js side and shows its calls to Playwright, with their errors. VS Code keeps logs of its own, see [Instances, logs and troubleshooting](../../vscode/instances/).
+Besides Robot Framework's own `log.html`, the output directory holds `playwright-log.txt`. It is the Browser library's own log and shows its calls to Playwright, with their errors. VS Code keeps logs of its own, see [Instances, logs and troubleshooting](../../vscode/instances/).
 
 ## Troubleshooting
 

@@ -10,11 +10,14 @@ sidebar:
 
 ## Installation
 
-The library needs a small hook in the Browser library that is not released yet. Until it is, install it from the repository's uv workspace. That workspace takes `robotframework-browser` from a local clone with the hook, as described in the repository's `AGENTS.md`.
+The library brings the Browser library, and `rfbrowser init` completes its installation, as in any project with Browser:
 
 ```sh
-uv sync
+pip install robotframework-electron
+rfbrowser init --skip-browsers
 ```
+
+An application brings its own Electron, so `--skip-browsers` leaves out the web browsers that Browser would download. Recording videos needs Playwright's ffmpeg, see [Videos and slow motion](../videos/#ffmpeg), and a test that opens a web browser beside an application needs that browser, for example from `rfbrowser init chromium`. Without Node.js, Browser's BrowserBatteries take the place of `rfbrowser init`: `pip install robotframework-electron "robotframework-browser[bb]"`.
 
 ## First test
 

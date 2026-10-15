@@ -44,12 +44,12 @@ The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser o
 | `Get Browser Ids` | `Get Electron Application Ids` | It returns the ids of the open applications. |
 | `Get Browser Catalog` | `Get Electron Application Catalog` | It leaves out the context level. |
 | `New Context`, `Switch Context`, `Get Context Ids` | – | An application has exactly one context. |
-| `New Page` | – | The application opens its windows; Electron does not let Playwright open one. |
+| `New Page` | – | The application opens its windows itself. |
 | `Launch Browser Server`, `Close Browser Server`, `Connect To Browser` | – | For browsers only. |
 | `Get Device`, `Get Devices` | – | Devices are options for `New Context`. |
 | `Crawl Site` | – | It opens pages of its own. |
-| `Set Storage State` | – | Playwright opens a page of its own to write the storage. |
-| `Tap` | – | Playwright's Electron launch has no touch support. |
+| `Set Storage State` | – | It needs a page of its own to write the storage. |
+| `Tap` | – | Touch input is not enabled for applications. |
 | `Save Page As Pdf` | – | Electron, and with it VS Code, does not provide Chromium's PDF printing over the DevTools protocol. |
 
 A test that needs a web browser as well imports the Browser library beside `Electron` or `VSCode`. Keywords that both libraries have then need the library name:
@@ -73,7 +73,7 @@ These visible keywords fail on an application under some conditions. The accepta
 
 | Keyword | Error | Cause |
 |---|---|---|
-| `Save Storage State` | `Protocol error (Target.createTarget): Not supported` | Only when an http or https origin that the application has visited is no longer open in a window: Playwright then opens a page of its own to read its storage. |
+| `Save Storage State` | `Protocol error (Target.createTarget): Not supported` | Only when an http or https origin that the application has visited is no longer open in a window: reading its storage then needs a page of its own, which an application cannot open. |
 
 ## Locators
 

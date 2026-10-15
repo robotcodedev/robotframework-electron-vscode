@@ -6,11 +6,12 @@ A [Robot Framework](https://robotframework.org) library for end-to-end testing o
 
 ## Installation
 
-Like `robotframework-electron`, the library needs a Browser hook that is not released yet. Until it is, install it from its repository's uv workspace, as described in the repository's `AGENTS.md`:
-
 ```sh
-uv sync
+pip install robotframework-vscode
+rfbrowser init --skip-browsers
 ```
+
+The library brings `robotframework-electron` and the Browser library; `rfbrowser init` completes the installation of the Browser library.
 
 The library starts a VS Code that you provide and downloads nothing: an installation, a portable copy, a fork, or a build that [`@vscode/test-electron`](https://www.npmjs.com/package/@vscode/test-electron) downloads. A variable such as `VSCODE_EXECUTABLE` in `robot.toml` names it.
 

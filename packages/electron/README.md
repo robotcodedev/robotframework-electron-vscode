@@ -6,11 +6,12 @@ A [Robot Framework](https://robotframework.org) library for testing Electron app
 
 ## Installation
 
-The library needs a small hook in the Browser library that is not released yet. Until it is, install it from its repository's uv workspace, which takes `robotframework-browser` from a local clone with the hook, as described in the repository's `AGENTS.md`:
-
 ```sh
-uv sync
+pip install robotframework-electron
+rfbrowser init --skip-browsers
 ```
+
+`rfbrowser init` completes the installation of the Browser library. An application brings its own Electron, so `--skip-browsers` leaves out the web browsers. Without Node.js, install Browser's BrowserBatteries instead: `pip install robotframework-electron "robotframework-browser[bb]"`.
 
 ## Example
 

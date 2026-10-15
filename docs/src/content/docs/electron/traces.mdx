@@ -40,5 +40,4 @@ A HAR file holds what the windows load: their pages, scripts and requests, and i
 
 ## Things to know
 
-- **Needs Browser's hook:** Browser starts tracing for the contexts it creates itself. An Electron application's context is created by Playwright's Electron support and handed over to Browser, so the libraries pass the trace file on with it. This needs the `tracing` option of the `adoptContext` hook in the Browser library.
 - **Size:** a trace contains screenshots and snapshots of every action and grows with the length of the test. For long suites, trace only where you need it, or use Browser's `auto_delete_passed_tracing` to keep only the traces of failed tests.

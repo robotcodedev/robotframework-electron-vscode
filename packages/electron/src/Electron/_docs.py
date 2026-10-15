@@ -20,12 +20,12 @@ def _comparison(start: str, close: str) -> str:
         ("``Get Browser Ids``", "`Get Electron Application Ids`", "It returns the ids of the open applications."),
         ("``Get Browser Catalog``", "`Get Electron Application Catalog`", "It leaves out the context level."),
         ("``New Context``, ``Switch Context``, ``Get Context Ids``", "-", "An application has exactly one context."),
-        ("``New Page``", "-", "The application opens its windows; Electron does not let Playwright open one."),
+        ("``New Page``", "-", "The application opens its windows itself."),
         ("``Launch Browser Server``, ``Close Browser Server``, ``Connect To Browser``", "-", "For browsers only."),
         ("``Get Device``, ``Get Devices``", "-", "Devices are options for ``New Context``."),
         ("``Crawl Site``", "-", "It opens pages of its own."),
-        ("``Set Storage State``", "-", "Playwright opens a page of its own to write the storage."),
-        ("``Tap``", "-", "Playwright's Electron launch has no touch support."),
+        ("``Set Storage State``", "-", "It needs a page of its own to write the storage."),
+        ("``Tap``", "-", "Touch input is not enabled for applications."),
         ("``Save Page As Pdf``", "-", "Electron does not provide Chromium's PDF printing over the DevTools protocol."),
     ]
     lines = ["| =Browser keyword= | =Here= | =Why= |"]

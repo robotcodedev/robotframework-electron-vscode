@@ -209,9 +209,8 @@ class VSCode(Electron):
         or ``extensions_dir`` give them, so neither the user's own VS Code
         nor other instances affect it. The directories are kept after the
         instance ends, with VS Code's logs in ``logs`` of the user-data
-        directory. Variables
-        that tie a process to a running VS Code (``VSCODE_*`` and
-        ``ELECTRON_RUN_AS_NODE``) are removed from the instance's environment.
+        directory. Tests that run in VS Code's terminal or test explorer start
+        an instance that the surrounding VS Code does not affect.
 
         The instance is an application as started by `Start Electron
         Application`: its workbench window is the active page, Browser
@@ -406,13 +405,11 @@ class VSCode(Electron):
           that a call never changes the user's own VS Code. Use it to prepare
           an extensions directory before VS Code starts.
 
-        The variables that tie a process to a running VS Code, such as those of
-        VS Code's integrated terminal, are removed from the script's
-        environment. Without a command, VS Code's script starts VS Code's
-        window instead, so the keyword refuses a call without arguments or
-        with an empty one, and on Linux it runs the script without
-        ``DISPLAY``, ``WAYLAND_DISPLAY`` and ``XDG_SESSION_TYPE``, so that no
-        window can open.
+        A call from VS Code's terminal or test explorer does not reach the
+        surrounding VS Code. Without a command, VS Code's script starts VS
+        Code's window instead, so the keyword refuses a call without arguments
+        or with an empty one, and on Linux it runs the script without a
+        display, so that no window can open.
 
         *Arguments:*
           - ``args``: The arguments of the script, without

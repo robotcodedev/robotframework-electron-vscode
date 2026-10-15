@@ -12,11 +12,12 @@ Everything in the [Electron section](../../electron/getting-started/) applies to
 
 ## Installation
 
-Like `robotframework-electron`, the library needs a Browser hook that is not released yet. Until it is, install it from the repository's uv workspace, as described in the repository's `AGENTS.md`:
-
 ```sh
-uv sync
+pip install robotframework-vscode
+rfbrowser init --skip-browsers
 ```
+
+The library brings `robotframework-electron` and the Browser library, and `rfbrowser init` completes the installation of the Browser library, as for [Electron applications](../../electron/getting-started/#installation).
 
 ## VS Code
 
@@ -71,7 +72,7 @@ The example project in the repository goes further, with its own keywords for th
   - `extensions_dir` starts the instance with a prepared extensions directory, for example one that `Execute VS Code CLI Command` filled with Marketplace extensions or `.vsix` files.
   - [Extensions](../extensions/) shows these and other ways, such as installing into the running instance.
 - **Settings:** `settings` are written to the user settings of the instance's own user-data directory. The defaults switch off the welcome page, release notes, update checks, telemetry and workspace trust. They also switch off the screen reader mode, which VS Code otherwise turns on under Playwright, and hide the secondary side bar. Given settings override the defaults.
-- **Isolation:** every instance gets its own user-data and extensions directories under the output directory. Neither the user's own VS Code nor other instances affect it. `user_data_dir` and `extensions_dir` give prepared directories instead, which the instance uses as they are. The library writes no settings into a given user-data directory, and `settings` cannot be combined with it: put the settings that the tests need, at least `"editor.accessibilitySupport": "off"`, into its `User/settings.json`. `VSCODE_*` variables and `ELECTRON_RUN_AS_NODE` are removed from its environment.
+- **Isolation:** every instance gets its own user-data and extensions directories under the output directory. Neither the user's own VS Code nor other instances affect it. `user_data_dir` and `extensions_dir` give prepared directories instead, which the instance uses as they are. The library writes no settings into a given user-data directory, and `settings` cannot be combined with it: put the settings that the tests need, at least `"editor.accessibilitySupport": "off"`, into its `User/settings.json`. Tests that run in VS Code's terminal or test explorer start an instance that the surrounding VS Code does not affect.
 - **Closing:** `Close VS Code` and Browser's automatic closing end the instance.
 
 ## Next steps

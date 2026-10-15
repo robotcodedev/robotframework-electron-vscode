@@ -82,7 +82,7 @@ docs/src/content/docs/
 This decision moved here from `add-documentation-site`, with the reference pages now in the library sections:
 - **Script:** `docs/scripts/generate_reference.py` runs `uv run robotcode -r . doc …` once for each library. It writes the Markdown with Starlight frontmatter (title, description, `sidebar.order` and `sidebar.label`) to `electron/reference.md` and `vscode/reference.md`.
 - **Options:** the exact `robotcode doc` options are fixed once RobotCode 2.8.0 is released.
-- **Committed pages:** the pages are committed, because the build has no Python and no Browser clone. AGENTS.md says when to regenerate them: after a keyword or its documentation changes. Once Browser comes from PyPI, the script can move into the workflow.
+- **Committed pages:** the pages are committed, because the workflow builds the site with Node.js only; generating them there would need Python and the libraries. AGENTS.md says when to regenerate them: after a keyword or its documentation changes.
 
 ## Risks / Trade-offs
 
