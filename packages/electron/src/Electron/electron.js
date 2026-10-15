@@ -5,7 +5,7 @@
 // The started applications by browser id, until Browser closes them.
 const applications = new Map();
 
-async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, launchOptions, defaultTimeout, playwright, adoptContext) {
+async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, tracesDir, launchOptions, defaultTimeout, playwright, adoptContext) {
     // Browser releases without the hook pass a placeholder instead of a function.
     if (typeof adoptContext !== 'function') {
         throw new Error('The Browser library has no adoptContext hook, which the Electron library needs to take over the application.');
@@ -22,6 +22,7 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
         env,
         cwd,
         timeout,
+        tracesDir,
         ...contextOptions,
     });
     try {

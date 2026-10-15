@@ -76,7 +76,7 @@ async function adoptContext(context, adoptOptions) {
 const hook = scenario === 'no-hook' ? 'RESERVED' : adoptContext;
 const launchOptions = scenario === 'options' ? { colorScheme: 'dark', locale: 'de-DE', bypassCSP: true } : {};
 const recordVideo = scenario === 'view-first' || scenario === 'first-closed' ? {} : null;
-const launchArguments = ['/electron', [], {}, '/cwd', 1000, recordVideo, null, null, launchOptions, 7000];
+const launchArguments = ['/electron', [], {}, '/cwd', 1000, recordVideo, null, null, '/traces', launchOptions, 7000];
 robotframeworkElectronLaunch(...launchArguments, playwright, hook)
     .then((result) => ({ result }), (error) => ({ error: error.message }))
     .then((outcome) => console.log(JSON.stringify({ ...outcome, calls, options })));
@@ -111,7 +111,7 @@ async function adoptContext(adoptedContext, options) {
 const page = scenario === 'other-page' ? { context: () => ({}) } : { context: () => context };
 const script = '(electron, arg, window) => [electron.app.getName(), arg, window && window.title]';
 (async () => {
-    const launchArguments = ['/electron', [], {}, '/cwd', 1000, null, null, null, {}, 7000];
+    const launchArguments = ['/electron', [], {}, '/cwd', 1000, null, null, null, '/traces', {}, 7000];
     await robotframeworkElectronLaunch(...launchArguments, playwright, adoptContext);
     if (scenario === 'closed') await onClose();
     if (scenario === 'is-window') return robotframeworkElectronIsWindowPage('browser=app', windowPage);
@@ -155,6 +155,12 @@ def test_launch_options_reach_playwright_and_browser(tmp_path):
     expected = {"acceptDownloads": True, "colorScheme": "dark", "locale": "de-DE", "bypassCSP": True}
     assert {key: outcome["options"]["launch"][key] for key in expected} == expected
     assert outcome["options"]["adopt"] == expected
+
+
+def test_temporary_trace_files_go_to_the_given_folder(tmp_path):
+    outcome = run(tmp_path, "success")
+
+    assert outcome["options"]["launch"]["tracesDir"] == "/traces"
 
 
 def test_starts_nothing_without_the_hook(tmp_path):

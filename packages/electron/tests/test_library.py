@@ -161,6 +161,15 @@ def test_har_options_come_from_browser(fake_launch, tmp_path):
     assert calls[0]["recordHar"] == {"path": str((tmp_path / "network.har").resolve())}
 
 
+def test_temporary_trace_files_go_to_browsers_folder(fake_launch, tmp_path):
+    electron, calls = fake_launch
+    electron.outputdir = str(tmp_path)
+
+    electron.start_electron_application(tmp_path / "bin" / "electron")
+
+    assert Path(calls[0]["tracesDir"]).parent == tmp_path / "browser" / "traces" / "temp"
+
+
 def test_no_launch_options_by_default(fake_launch, tmp_path):
     electron, calls = fake_launch
 
