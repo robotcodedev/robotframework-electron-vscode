@@ -69,6 +69,9 @@ jobs:
           # The lowest versions that the Browser library supports.
           - python: "3.10"
             sync: --upgrade-package robotframework==7.1.1
+          # The newer Python versions.
+          - python: "3.14"
+          - python: "3.15"
     # Takes precedence over .python-version for every uv command of the job.
     env:
       UV_PYTHON: ${{ matrix.python }}
