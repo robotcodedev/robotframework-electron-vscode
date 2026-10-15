@@ -5,6 +5,10 @@
 const { app, BrowserWindow, Menu, WebContentsView, dialog, ipcMain, nativeTheme } = require('electron');
 const path = require('node:path');
 
+// The tests run under Xvfb without a GPU. A GPU process that hangs while it starts stops the window's frames
+// until Chromium's watchdog falls back to software rendering, so the app renders in software from the start.
+app.disableHardwareAcceleration();
+
 const views = process.argv.includes('--views');
 const pageArgument = process.argv.find((arg) => arg.startsWith('--page='));
 const page = pageArgument ? pageArgument.slice('--page='.length) : views ? 'views.html' : 'index.html';
