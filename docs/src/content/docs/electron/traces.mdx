@@ -1,10 +1,9 @@
 ---
 title: Traces and HAR files
 description: Record Playwright traces and HAR files of Electron applications and VS Code, and open them after the run.
+sidebar:
+  order: 3
 ---
-
-import { Code } from '@astrojs/starlight/components';
-import tracingTest from '../../../../../examples/vscode-extension/tests/tracing.robot?raw';
 
 A trace records what a test did step by step: every Browser action with screenshots, DOM snapshots, console messages and network requests, grouped by the Robot Framework keywords that caused them. It is the most detailed way to find out why a test failed, especially on CI. A HAR file records only the network traffic.
 
@@ -38,14 +37,6 @@ rfbrowser show-trace results/browser/traces/trace_context=….zip
 `record_har` records the network traffic of the windows into a [HAR file](http://www.softwareishard.com/blog/har-12-spec/). It works as `recordHar` of `New Context`: a dictionary with the `path` of the file and optionally `omitContent`. A relative path is relative to the output directory. Playwright writes the file when the application closes.
 
 A HAR file holds what the windows load: their pages, scripts and requests, and in VS Code the workbench's resources and the content of webviews. Requests that the main process or VS Code's extension host make do not go through a window, so they are not in it. An extension's own HTTP requests, for example, run in the extension host.
-
-## The example
-
-The example project's `tracing.robot` traces two tests. The second one also records the network traffic of a webview:
-
-<Code code={tracingTest} lang="robotframework" title="tests/tracing.robot" />
-
-The tests leave closing VS Code to Browser, which saves the traces at the end of each test.
 
 ## Things to know
 

@@ -1,0 +1,47 @@
+---
+title: Videos and slow motion
+description: Record videos of Electron applications and VS Code, and slow tests down with Browser's presenter mode.
+sidebar:
+  order: 4
+---
+
+A video shows what a test did, which helps when a test fails on CI, and it is a good way to demonstrate an extension.
+
+## Recording a video
+
+`Start Electron Application` and `Start VS Code` record a video when they get `record_video`. The keys are those of Browser's `recordVideo` for `New Context`, plus Playwright's overlay of the performed actions:
+
+- `dir`: the folder for the videos. Relative paths are relative to Browser's video folder `browser/video` in the output directory, which is also the default.
+- `size`: the size of the video, as `width` and `height`. The default is 1280×720.
+- `showActions`: shows each performed action in the video, with `duration` in milliseconds, `position` (for example `top-right`), `fontSize` and `cursor`.
+
+An empty dictionary records with the defaults:
+
+```robotframework
+*** Settings ***
+Library    Electron
+
+*** Test Cases ***
+Recorded Run
+    Start Electron Application    /opt/my-app/my-app    record_video={}
+    Click    text=Say hello
+    Close Electron Application
+```
+
+The log embeds the video, and the page details that the keyword returns contain its path. Playwright finishes the file when the application closes, through `Close Electron Application`, `Close VS Code` or Browser's automatic closing.
+
+## ffmpeg
+
+Playwright needs its own ffmpeg to record. It is installed together with Browser's browsers, and with Playwright's `install chromium`. If Browser was set up without browsers, install it alone with Playwright's `install ffmpeg` command. Without ffmpeg, the application's first window does not load, and the start fails after its timeout.
+
+## Slow motion
+
+Playwright's `slowMo` is not available for Electron applications, because Playwright has no such option when it launches them. Browser's presenter mode serves instead. Before every keyword that takes a selector, it scrolls to the element, highlights it and waits for the given duration:
+
+```robotframework
+Set Presenter Mode    {'duration': '1s', 'color': 'red'}
+Click    id=change
+Set Presenter Mode    False
+```
+
+Keyboard keywords such as `Keyboard Input` have no selector and are not slowed down. Together with `showActions` in the video, presenter mode makes a demonstration easy to follow.

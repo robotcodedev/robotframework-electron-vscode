@@ -1,6 +1,8 @@
 ---
 title: Browser keywords in applications
-description: Which Browser keywords work on Electron applications and VS Code, which fail and why, and what Electron does differently from a web browser.
+description: Which Browser keywords work on Electron applications, which fail and why, and what Electron does differently from a web browser.
+sidebar:
+  order: 2
 ---
 
 `Electron` and `VSCode` contain the Browser keywords that apply to applications. They work on an application's windows as they do on the pages of a web browser. This guide lists, for each group of keywords, what works, which keywords the libraries hide and why, which keywords fail, and where Electron behaves differently.
@@ -11,8 +13,8 @@ The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser o
 
 - **One browser, one context.** `Start Electron Application` and `Start VS Code` make the application a browser with one context. Each window of the application is a page of that context, and so are its `<webview>`s and `WebContentsView`s.
 - **The application creates its pages.** The libraries hide `New Page`, `New Context` and the other keywords for browsers and contexts, and offer keywords for applications instead, see [Compared with the Browser library](#compared-with-the-browser-library).
-- **Settings mean a restart.** Options such as the color scheme or the locale apply from the start, see [launch options](../../getting-started/electron/#launch-options). Another value means starting the application again.
-- **The main process is outside the pages.** Native dialogs, menus and the tray belong to the main process, which Browser keywords do not reach. `Evaluate In Main Process` runs code there, see [the main process](../../getting-started/electron/#the-main-process).
+- **Settings mean a restart.** Options such as the color scheme or the locale apply from the start, see [launch options](../getting-started/#launch-options). Another value means starting the application again.
+- **The main process is outside the pages.** Native dialogs, menus and the tray belong to the main process, which Browser keywords do not reach. `Evaluate In Main Process` runs code there, see [the main process](../getting-started/#the-main-process).
 
 ## Overview
 
@@ -135,12 +137,12 @@ Switch To Page With Title
 
 ## Behaviour of Electron
 
-- **Color scheme:** by default, the application decides its color scheme. `color_scheme` of `Start Electron Application` sets one, see [launch options](../../getting-started/electron/#launch-options).
-- **Window size:** a window has the size that the application gives it; there is no emulated viewport. `Set Viewport Size` emulates one inside the page. Maximising a window needs a window manager, see [CI and the Linux display](../ci-and-display/); without one, [size the window from the main process](../videos/#a-full-frame-of-vs-code).
+- **Color scheme:** by default, the application decides its color scheme. `color_scheme` of `Start Electron Application` sets one, see [launch options](../getting-started/#launch-options).
+- **Window size:** a window has the size that the application gives it; there is no emulated viewport. `Set Viewport Size` emulates one inside the page. Maximising a window needs a window manager, see [CI and the Linux display](../../running/ci-and-display/); without one, [size the window from the main process](../getting-started/#the-main-process).
 - **Locale and time zone:** they follow the system. `locale` and `timezone_id` set them for the windows; `--lang` in `args` and `TZ` in `env` set them for the main process.
 - **User data:** Electron keeps cookies, local storage and other data of an application in its user-data folder, on Linux `~/.config/<name>`, on Windows `%APPDATA%\<name>` and on macOS `~/Library/Application Support/<name>`, so they last from one run to the next. `args=--user-data-dir=<folder>` with a new, empty folder starts the application without them, unless it sets the folder itself with `app.setPath`.
 - **`prompt()`:** Electron does not implement it. A page's call fails with "prompt() is not supported.", so `prompt_input` of `Handle Future Dialogs` never applies.
-- **Native dialogs:** file dialogs and message boxes are not part of a page. Replace them in the main process, see [the main process](../../getting-started/electron/#the-main-process).
+- **Native dialogs:** file dialogs and message boxes are not part of a page. Replace them in the main process, see [the main process](../getting-started/#the-main-process).
 
 ### Shortcuts and menus
 
@@ -163,55 +165,3 @@ Two problems end Browser's Node process, and with it every later test of the run
 
   A handler added with `addEventListener` cannot be removed like this. The application then needs a way to switch it off for tests.
 - **`Handle Future Dialogs` and `Wait For Alert` on the same page.** Both accept the same dialog, the second one fails, and the Node process exits. This happens in a web browser too, but an application's window stays the same page across tests, so a handler from an earlier test is still active. Use one of the two per page, or start the application in each test.
-
-## In VS Code
-
-VS Code is an Electron application, so everything above applies to it. In addition:
-
-| Feature | Status | Notes |
-|---|---|---|
-| `Evaluate JavaScript`, `Wait For Function` | Works | They run in the workbench's page, not in the extension host. |
-| Copy and paste in the editor | Works | |
-| A second window: `Switch Page    NEW`, `Close Page` | Works | See `windows.robot` in the example. |
-| Locator handlers for notifications | Works | See below. |
-| `Drag And Drop` in the explorer | Needs a setting | `explorer.confirmDragAndDrop: false`, otherwise VS Code asks for confirmation. |
-| File dialogs | Needs a setting | `files.simpleDialog.enable: true` makes VS Code use its own dialog instead of the native one. |
-| Native message boxes | Needs the main process | `Evaluate In Main Process` replaces `dialog.showMessageBox` before VS Code opens one. |
-| `Record Selector` | Needs an option | `bypass_csp=True` of `Start VS Code`. The workbench requires Trusted Types for scripts, and the recorder adds a script to the page. |
-| Maximised windows | Needs a window manager | See [CI and the Linux display](../ci-and-display/). |
-
-The example project uses many of these features. The following snippets show the others; they assume a VS Code started with `Start VS Code`.
-
-An aria snapshot of a part of the workbench lists its roles and names:
-
-```robotframework
-${snapshot} =    Get Aria Snapshot    .activitybar
-```
-
-The workbench's console messages and page errors:
-
-```robotframework
-${messages} =    Get Console Log
-${errors} =    Get Page Errors
-```
-
-A locator handler closes notifications before every Browser action. The close button of a notification is shown only when the notification is in focus, so the handler first clicks the message and then the button:
-
-```robotframework
-Add Locator Handler Custom    .notifications-toasts .notification-toast
-...    ${{ [{"action": "click", "selector": ".notifications-toasts .notification-list-item-message"}, {"action": "click", "selector": ".notifications-toasts .notification-toast .codicon-notifications-clear"}] }}
-```
-
-Moving a file into a folder in the explorer, with `explorer.confirmDragAndDrop` set to `false` in the settings of `Start VS Code`:
-
-```robotframework
-Drag And Drop    .explorer-folders-view >> text="notes.txt"    .explorer-folders-view >> text="archive"
-```
-
-JavaScript coverage of the workbench while a command runs:
-
-```robotframework
-Start Coverage
-Run Command    Robot Example: Say Hello
-${report} =    Stop Coverage
-```

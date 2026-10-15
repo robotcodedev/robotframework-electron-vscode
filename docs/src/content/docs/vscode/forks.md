@@ -1,6 +1,8 @@
 ---
 title: VS Code forks
 description: Test extensions in VSCodium and other VS Code forks.
+sidebar:
+  order: 9
 ---
 
 Forks of VS Code, such as VSCodium, start like VS Code, from the fork's executable:

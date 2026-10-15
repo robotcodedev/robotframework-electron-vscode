@@ -1,6 +1,8 @@
 ---
 title: VS Code versions and profiles
 description: Run your tests against several VS Code builds, with a RobotCode profile per build for its executable and the locators that differ.
+sidebar:
+  order: 8
 ---
 
 import { Code } from '@astrojs/starlight/components';
@@ -10,11 +12,11 @@ Your tests start the VS Code that a variable such as `${VSCODE_EXECUTABLE}` name
 
 - A fixed version such as `1.141.0` gives reproducible runs.
 - The newest Insiders build shows early when a new VS Code release breaks your tests.
-- An installed VS Code, or a [fork](../vscode-forks/) such as VSCodium, tests what your users run.
+- An installed VS Code, or a [fork](../forks/) such as VSCodium, tests what your users run.
 
 ## Getting the builds
 
-[`@vscode/test-electron`](https://www.npmjs.com/package/@vscode/test-electron) downloads VS Code builds by version, `stable` or `insiders`, keeps them in its cache folder `.vscode-test` and returns the executable's path, as on [the getting-started page](../../getting-started/vscode/#vs-code). An npm script per build in your extension's `package.json` downloads them before the tests; the example project has the first one:
+[`@vscode/test-electron`](https://www.npmjs.com/package/@vscode/test-electron) downloads VS Code builds by version, `stable` or `insiders`, keeps them in its cache folder `.vscode-test` and returns the executable's path, as on [the getting-started page](../getting-started/#vs-code). An npm script per build in your extension's `package.json` downloads them before the tests; the example project has the first one:
 
 ```json
 "scripts": {

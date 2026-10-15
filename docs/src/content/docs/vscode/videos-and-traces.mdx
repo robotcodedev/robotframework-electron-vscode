@@ -1,0 +1,43 @@
+---
+title: Videos and traces of VS Code
+description: Record videos in which VS Code fills the frame, and traces of the workbench, as the example project does.
+sidebar:
+  order: 6
+---
+
+import { Code } from '@astrojs/starlight/components';
+import videoTest from '../../../../../examples/vscode-extension/tests/video.robot?raw';
+import tracingTest from '../../../../../examples/vscode-extension/tests/tracing.robot?raw';
+
+`Start VS Code` records videos, traces and HAR files as `Start Electron Application` does. [Videos and slow motion](../../electron/videos/) and [Traces and HAR files](../../electron/traces/) describe the options, presenter mode and how to open a trace. This page adds what is specific to VS Code, with the tests of the example project.
+
+## A full frame of VS Code
+
+VS Code does not fill the screen by itself; its window keeps its default size. With the setting `window.newWindowDimensions` set to `maximized` and a window manager, it fills the screen, and screenshots and videos show the whole screen size. The display profiles `xvfb` and `xephyr` start a window manager, see [CI and the Linux display](../../running/ci-and-display/).
+
+In a video, a window keeps its own size: a larger window is scaled down to fit, and a smaller one is shown at its own size with a grey margin. For a full frame, open VS Code maximised and record in the size of the screen.
+
+The example project's `video.robot` does this. Its keyword reads the screen size from `SCREEN_SIZE`, which the display profiles use as well, and opens VS Code, which the example opens maximised, with `record_video` in that size and with the action overlay. The tests do not close VS Code themselves: Browser closes it at the end of each test, which finishes the video.
+
+- **With presenter mode:** the first two tests switch on presenter mode, which slows them down and highlights what they act on, so the videos are easy to follow. In presenter mode, Browser also waits five seconds before it closes VS Code, so the video shows the result. The second test creates a Python script, saves it through VS Code's own dialog and runs it with the run button above the editor.
+- **Without presenter mode:** the third test runs at full speed and creates the script in the explorer. Presenter mode could not reach the explorer's actions reliably, because VS Code redraws them while the mouse moves over the explorer. Browser does not wait before closing VS Code then, so the test pauses at the end.
+- **Scope:** presenter mode has no scope and stays on after a test, so each test sets it, and the suite switches it off when it ends.
+
+<Code code={videoTest} lang="robotframework" title="tests/video.robot" />
+
+Without a window manager, `Set Viewport Size    1920    1080` after `Start VS Code` makes the workbench fill the frame instead. It emulates the size inside the page and leaves the window as it is.
+
+The window itself can be sized from VS Code's main process as well; `window` is the window of the active page. Without a window manager, a window stays at least one pixel smaller than the screen, so give the window and the video a size below the screen size:
+
+```robotframework
+Start VS Code    ${VSCODE_EXECUTABLE}    record_video={'size': {'width': 1600, 'height': 900}}
+Evaluate In Main Process    (electron, size, window) => window.setBounds(size)    arg=${{ {"x": 0, "y": 0, "width": 1600, "height": 900} }}
+```
+
+## Traces of the example
+
+The example project's `tracing.robot` traces two tests. The second one also records the network traffic of a webview:
+
+<Code code={tracingTest} lang="robotframework" title="tests/tracing.robot" />
+
+The tests leave closing VS Code to Browser, which saves the traces at the end of each test.

@@ -68,6 +68,6 @@ robotcode -p locator-override robot
 
 ## Learn more
 
-- [Writing your own workbench keywords](https://robotcodedev.github.io/robotframework-electron-vscode/guides/workbench-keywords/) explains the resources.
-- [VS Code versions and profiles](https://robotcodedev.github.io/robotframework-electron-vscode/guides/vscode-versions/) explains the profiles in `robot.toml`.
-- [Extensions](https://robotcodedev.github.io/robotframework-electron-vscode/guides/extensions/) explains `python.robot` and the other ways to get extensions into VS Code.
+- [Writing your own workbench keywords](https://robotcodedev.github.io/robotframework-electron-vscode/vscode/workbench-keywords/) explains the resources.
+- [VS Code versions and profiles](https://robotcodedev.github.io/robotframework-electron-vscode/vscode/versions/) explains the profiles in `robot.toml`.
+- [Extensions](https://robotcodedev.github.io/robotframework-electron-vscode/vscode/extensions/) explains `python.robot` and the other ways to get extensions into VS Code.

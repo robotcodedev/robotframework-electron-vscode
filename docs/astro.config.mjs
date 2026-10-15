@@ -21,10 +21,12 @@ export default defineConfig({
 			expressiveCode: {
 				shiki: { langs: [{ ...robotframework, name: 'robotframework', aliases: ['robot'] }] },
 			},
+			// A section per library and one for the test environment. The Electron section covers what both
+			// libraries share; the VS Code section adds what is specific to VS Code.
 			sidebar: [
-				{ label: 'Getting Started', items: [{ autogenerate: { directory: 'getting-started' } }] },
-				{ label: 'Guides', items: [{ autogenerate: { directory: 'guides' } }] },
-				{ label: 'Reference', items: [{ autogenerate: { directory: 'reference' } }] },
+				{ label: 'Electron', items: [{ autogenerate: { directory: 'electron' } }] },
+				{ label: 'VS Code', items: [{ autogenerate: { directory: 'vscode' } }] },
+				{ label: 'Running tests', items: [{ autogenerate: { directory: 'running' } }] },
 			],
 		}),
 	],

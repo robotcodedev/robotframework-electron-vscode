@@ -1,6 +1,8 @@
 ---
 title: The extension host
 description: Use VS Code's extension API in a test, to prepare it and to wait for a state, with Evaluate In Extension Host.
+sidebar:
+  order: 3
 ---
 
 VS Code runs the extensions of a workbench window in a process of their own, the extension host. There, the `vscode` module gives access to VS Code's extension API. `Evaluate In Extension Host` runs a JavaScript function in the extension host and returns the function's result, the way `Evaluate In Main Process` does for VS Code's main process.

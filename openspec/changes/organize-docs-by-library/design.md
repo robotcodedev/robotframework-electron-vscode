@@ -59,7 +59,7 @@ docs/src/content/docs/
 ### Sidebar
 
 - **Groups:** `Electron`, `VS Code` and `Running tests`, each with `autogenerate` for its folder. A new page then needs no change of the configuration, as today.
-- **Order and labels:** set in the frontmatter, with `sidebar.order` and `sidebar.label`. The getting-started page comes first with the label "Getting started", and the reference page last with the label "Keyword reference". The other pages keep their titles.
+- **Order and labels:** set in the frontmatter, with `sidebar.order` and `sidebar.label`. Every page gets an order, in reading order: without one, Starlight sorts by file name, which would put "The extension host" before "Extensions", and the reference could not come last. The getting-started page comes first with the label "Getting started", and the reference page last with the label "Keyword reference". The other pages keep their titles.
 - **Reference group:** the empty group goes away. Until the reference exists, the sections simply have no reference page.
 
 ### Splitting the mixed pages

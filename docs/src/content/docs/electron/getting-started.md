@@ -2,6 +2,7 @@
 title: Test an Electron app
 description: Start an Electron application with robotframework-electron and test its windows with Browser keywords.
 sidebar:
+  label: Getting started
   order: 1
 ---
 
@@ -62,7 +63,7 @@ App From Source
 - Windows that the app opens later can be selected with `Switch Page    NEW`.
 - `Close Electron Application` and Browser's automatic closing end the application.
 - Several applications can be open at once. `Switch Electron Application` switches between them.
-- The library hides Browser's keywords for browsers and contexts, such as `New Page` and `Close Browser`. [Browser keywords in applications](../../guides/browser-keywords/#compared-with-the-browser-library) compares the two libraries.
+- The library hides Browser's keywords for browsers and contexts, such as `New Page` and `Close Browser`. [Browser keywords in applications](../browser-keywords/#compared-with-the-browser-library) compares the two libraries.
 
 ## The main process
 
@@ -101,6 +102,7 @@ Start Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=
 
 ## Next steps
 
-- [Browser keywords in applications](../../guides/browser-keywords/) for what works on an application's windows and what does not.
-- [CI and the Linux display](../../guides/ci-and-display/) for running without a desktop.
-- [Logs and troubleshooting](../../guides/logs/) if an app does not start.
+- [Browser keywords in applications](../browser-keywords/) for what works on an application's windows and what does not.
+- [Traces and HAR files](../traces/) and [Videos and slow motion](../videos/) for recording what a test did.
+- [CI and the Linux display](../../running/ci-and-display/) for running without a desktop.
+- [Logs and troubleshooting](../../running/logs/) if an app does not start.
