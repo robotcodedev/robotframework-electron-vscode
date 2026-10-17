@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from Browser.utils import logger
-from Browser.utils.data_types import ColorScheme, ElementState, NewPageDetails, RecordHar, SelectionType
+from Browser.utils.data_types import ColorScheme, ElementState, NewPageDetails, RecordHar, RecordVideo, SelectionType
 from robot.utils import DotDict
 from robotlibcore import keyword
 
-from Electron import Electron, RecordVideo
+from Electron import Electron
 from Electron._docs import importing, shared_sections
 
 from .extension_host import (

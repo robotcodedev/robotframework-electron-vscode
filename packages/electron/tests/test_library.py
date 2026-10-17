@@ -4,11 +4,10 @@ from typing import Any
 
 import pytest
 from Browser import Browser
-from Browser.utils.data_types import AutoClosingLevel, ColorScheme, SelectionType
-from robot.running.arguments.typeinfo import TypeInfo
+from Browser.utils.data_types import AutoClosingLevel, ColorScheme, SelectionType, ShowActions, ShowActionsPosition
 from robot.running.testlibraries import TestLibrary as RobotLibrary
 
-from Electron import HIDDEN_KEYWORDS, Electron, RecordVideo, ShowActions, __version__
+from Electron import HIDDEN_KEYWORDS, Electron, __version__
 
 
 @pytest.fixture(autouse=True)
@@ -59,19 +58,6 @@ def test_reports_own_version():
     assert import_library().ROBOT_LIBRARY_VERSION == __version__
 
 
-def test_record_video_converts_robot_framework_values():
-    value = "{'size': {'width': '1920', 'height': '1080'}, 'showActions': {'duration': '800', 'cursor': 'none'}}"
-
-    converted = TypeInfo.from_type_hint(RecordVideo).convert(value)
-
-    assert converted == {"size": {"width": 1920, "height": 1080}, "showActions": {"duration": 800, "cursor": "none"}}
-
-
-def test_record_video_rejects_unknown_keys():
-    with pytest.raises(ValueError, match="'speed' not allowed"):
-        TypeInfo.from_type_hint(RecordVideo).convert("{'speed': 2}")
-
-
 @pytest.fixture
 def fake_launch(tmp_path, monkeypatch):
     """Replaces the start in Browser's Node process and records its arguments."""
@@ -99,14 +85,6 @@ def test_relative_paths_are_relative_to_the_working_directory(fake_launch, tmp_p
 
     assert calls[0]["executablePath"] == str(tmp_path / "bin" / "electron")
     assert calls[0]["cwd"] == str(tmp_path / "work")
-
-
-def test_gives_the_application_the_library_timeout(fake_launch, tmp_path):
-    electron, calls = fake_launch
-
-    electron.start_electron_application(tmp_path / "bin" / "electron")
-
-    assert calls[0]["defaultTimeout"] == int(electron.timeout)
 
 
 def test_application_runs_in_the_working_directory_by_default(fake_launch, tmp_path):
@@ -137,15 +115,16 @@ def test_no_recording_by_default(fake_launch, tmp_path):
 def test_recording_options_come_from_browser(fake_launch, tmp_path):
     electron, calls = fake_launch
     electron.outputdir = str(tmp_path)
-    show_actions: ShowActions = {"duration": 800, "position": "top-right"}
+    show_actions: ShowActions = {"duration": 800, "position": ShowActionsPosition.top_right}
 
     electron.start_electron_application(
-        tmp_path / "bin" / "electron", record_video={"showActions": show_actions}, tracing=True
+        tmp_path / "bin" / "electron", record_video={"fps": 10, "showActions": show_actions}, tracing=True
     )
 
     assert calls[0]["recordVideo"] == {
         "dir": str((tmp_path / "browser" / "video").resolve()),
         "size": {"width": 1280, "height": 720},
+        "fps": 10,
         "showActions": show_actions,
     }
     assert calls[0]["tracing"] == str(tmp_path / "browser" / "traces")

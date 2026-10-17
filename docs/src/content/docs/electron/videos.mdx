@@ -9,11 +9,12 @@ A video shows what a test did, which helps when a test fails on CI, and it is a 
 
 ## Recording a video
 
-`Start Electron Application` and `Start VS Code` record a video when they get `record_video`. The keys are those of Browser's `recordVideo` for `New Context`, plus Playwright's overlay of the performed actions:
+`Start Electron Application` and `Start VS Code` record a video when they get `record_video`. The keys are those of Browser's `recordVideo` for `New Context`:
 
 - `dir`: the folder for the videos. Relative paths are relative to Browser's video folder `browser/video` in the output directory, which is also the default.
 - `size`: the size of the video, as `width` and `height`. The default is 1280×720.
-- `showActions`: shows each performed action in the video, with `duration` in milliseconds, `position` (for example `top-right`), `fontSize` and `cursor`.
+- `fps`: the frame rate of the video. The default is 25.
+- `showActions`: shows each performed action in the video, with `duration` in milliseconds, `position` (for example `top-right`), `cursor`, and `style`, which takes CSS declarations for the action's `title`, a `point` marker and a `highlight` box over the element.
 
 An empty dictionary records with the defaults:
 

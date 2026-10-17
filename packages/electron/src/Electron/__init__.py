@@ -7,11 +7,11 @@ from datetime import timedelta
 from importlib.metadata import version
 from inspect import cleandoc
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 
 from Browser import Browser
 from Browser.utils import logger
-from Browser.utils.data_types import ColorScheme, NewPageDetails, RecordHar, SelectionType, ViewportDimensions
+from Browser.utils.data_types import ColorScheme, NewPageDetails, RecordHar, RecordVideo, SelectionType
 from robotlibcore import keyword
 
 from ._docs import importing, shared_sections, with_note
@@ -78,49 +78,6 @@ application again.
 ``record_video``, a Playwright trace with ``tracing``, and the network traffic
 of the windows with ``record_har``. They are saved when the application closes.
 """
-
-
-class ShowActions(TypedDict, total=False):
-    """Overlay of the performed actions in a video, as Playwright's ``recordVideo.showActions``.
-
-    - ``duration``: How long each action is shown, in milliseconds.
-    - ``position``: Where the overlay is shown: ``top-left``, ``top``,
-      ``top-right``, ``bottom-left``, ``bottom`` or ``bottom-right``.
-    - ``fontSize``: Font size of the overlay, in pixels.
-    - ``cursor``: ``pointer`` shows the mouse cursor, ``none`` hides it.
-    """
-
-    duration: int
-    position: str
-    fontSize: int
-    cursor: str
-
-
-class RecordVideo(TypedDict, total=False):
-    """Video recording of an Electron application's windows.
-
-    The keys ``dir`` and ``size`` work as for Browser's ``recordVideo`` of
-    ``New Context``, ``showActions`` is Playwright's overlay of the performed
-    actions.
-
-    - ``dir``: Folder for the videos. Relative paths are relative to
-      Browser's video folder ``browser/video`` in the output directory,
-      which is also the default.
-    - ``size``: Size of the video, as a dictionary with ``width`` and
-      ``height``. Defaults to 1280x720. A larger window is scaled down to
-      fit, a smaller one is shown at its own size with a grey margin.
-    - ``showActions``: Shows the performed actions in the video: a
-      dictionary with ``duration`` (milliseconds), ``position``,
-      ``fontSize`` and ``cursor``.
-
-    Example:
-    | `Start Electron Application`    ${ELECTRON}    record_video={'size': {'width': 1920, 'height': 1080}}
-    | `Start Electron Application`    ${ELECTRON}    record_video={'showActions': {'duration': 800}}
-    """
-
-    dir: str
-    size: ViewportDimensions
-    showActions: ShowActions
 
 
 # Browser keywords that the library does not offer, by method name. An application is one
@@ -220,11 +177,15 @@ class Electron(Browser):
           - ``timeout``: How long to wait for the application to start and
                 open its first window. Defaults to the library timeout.
           - ``record_video``: Records a video of the application's windows,
-                see `RecordVideo`. An empty dictionary records with the
-                defaults. The log embeds the video, and the file is complete
-                once the application has closed. Recording needs Playwright's
-                ffmpeg, which is installed with Browser's browsers.
-
+                see `RecordVideo` for the folder, size, frame rate and the
+                annotations of the performed actions. An empty dictionary
+                records with the defaults: Browser's video folder
+                ``browser/video`` in the output directory and a size of
+                1280x720. A larger window is scaled down to fit, a smaller one
+                is shown at its own size with a grey margin. The log embeds the
+                video, and the file is complete once the application has
+                closed. Recording needs Playwright's ffmpeg, which is installed
+                with Browser's browsers.
           - ``record_har``: Records the network traffic of the application's
                 windows into a [http://www.softwareishard.com/blog/har-12-spec/|HAR]
                 file, as ``recordHar`` of the Browser library's ``New Context``: a dictionary with the
@@ -274,6 +235,7 @@ class Electron(Browser):
         | `Start Electron Application`    ${ELECTRON}    args=${{ [$EXECDIR + "/app"] }}
         | `Start Electron Application`    /opt/my-app/my-app    tracing=True    record_har={'path': 'my-app.har'}
         | `Start Electron Application`    /opt/my-app/my-app    color_scheme=dark    locale=de-DE
+        | `Start Electron Application`    /opt/my-app/my-app    record_video={'showActions': {'position': 'bottom'}}
         """
         found = shutil.which(str(executable_path))
         if found is None:
@@ -300,7 +262,6 @@ class Electron(Browser):
             timeout=self.get_timeout(timeout),
             **recording,
             launchOptions={name: value for name, value in launch_options.items() if value is not None},
-            defaultTimeout=int(self.timeout),
         )
         logger.info(f"Started Electron application {executable} as {adopted['browserId']}")
         if recording["tracing"]:

@@ -16,7 +16,8 @@ Video Of An Application
     File Should Not Be Empty    ${page}[video_path]
 
 Action Overlay
-    VAR    &{show_actions}    duration=${500}    position=top-right
+    VAR    &{style}    title=font-size: 20px
+    VAR    &{show_actions}    duration=${500}    position=top-right    style=${style}
     ${_}    ${page} =    Start Fixture App    record_video=${{ {"showActions": $show_actions} }}
     Click    id=change
     Close Electron Application
