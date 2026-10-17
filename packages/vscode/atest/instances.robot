@@ -86,7 +86,9 @@ Prepared User Data
     ${dirs} =    Get VS Code Instance Directories
     Should Be Equal    ${dirs.user_data}    ${prepared}
     Should Be Equal    ${dirs.extensions}    ${dirs.root}${/}extensions
-    Directory Should Be Empty    ${dirs.extensions}
+    # VS Code writes its extensions.json there while it starts.
+    ${extensions} =    List Directories In Directory    ${dirs.extensions}
+    Should Be Empty    ${extensions}
 
 Settings With A Given User-Data Directory
     VAR    ${prepared}    ${OUTPUT_DIR}/given-user-data-and-settings
