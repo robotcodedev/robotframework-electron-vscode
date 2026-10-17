@@ -21,8 +21,8 @@ Background, research and the initial design ideas are in [dev-docs/background.md
 
 Until a Browser release contains our changes, `robotframework-browser` comes from a local clone at `../robotframework-browser` (editable path source in the root `pyproject.toml`).
 
-- The hook was merged into Browser's `main` in MarketSquare/robotframework-browser#5318, but is not released yet.
-- The libraries also need its follow-up, the public methods `adopted_context_options` and `register_adopted_context`. It is developed in the clone on the branch `adopted-context-recording`, created from `upstream/main`. CI checks out this branch from the fork.
+- The `adoptContext` hook (MarketSquare/robotframework-browser#5318) and the public methods `adopted_context_options` and `register_adopted_context` (MarketSquare/robotframework-browser#5326) are merged into Browser's `main`, but not released yet.
+- The clone's `main` tracks `upstream/main`, and CI checks out `main` of `MarketSquare/robotframework-browser`.
 - The clone's `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`. Push to the fork over SSH (`git@github.com:d-biehl/robotframework-browser.git`); the HTTPS `origin` has no credentials.
 
 The clone needs its generated gRPC stubs and the built Node wrapper, which are not in git:
@@ -37,7 +37,7 @@ PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build # runs deps, protobuf, node-build
 
 The browser download is skipped there, but some acceptance tests need Chromium and the video tests need Playwright's ffmpeg: run `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` in the clone once, which installs both.
 
-After switching branches in the clone or changing its TypeScript or proto files, run `inv node-build` there again; it regenerates the gRPC code too. Do not install `robotframework-browser-batteries`: it brings its own gRPC server and would bypass the patched Node code of the clone.
+After pulling `upstream/main` or switching branches in the clone, run `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build` there again, because its dependencies may have changed; when it reinstalls the Node packages, install Chromium again as above. After changing only its TypeScript or proto files, `inv node-build` is enough; it regenerates the gRPC code too. Do not install `robotframework-browser-batteries`: it brings its own gRPC server and would bypass the Node code of the clone.
 
 ## Common Commands
 

@@ -15,6 +15,7 @@ Decisions so far:
 - Electron support is **not** built into the Browser library. Upstream only gets one small, generic hook (see below).
 - Until the hook is released, the Browser library comes from a local clone at `~/develop/robot/robotframework-browser` (`../robotframework-browser` from this repository), used as an editable path dependency.
   - The hook was developed there on the branch `adopt-context-hook`, created from `main` at `2cf74ae6`, and merged into Browser's `main` in MarketSquare/robotframework-browser#5318 on 2026-10-11.
+  - Its follow-up, the methods `adopted_context_options` and `register_adopted_context`, was developed on the branch `adopted-context-recording` and merged in MarketSquare/robotframework-browser#5326 on 2026-10-16. Since then the clone and CI use Browser's `main`.
   - `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`.
   - How to prepare the clone is described in [AGENTS.md](../AGENTS.md).
 - Do not model the design on Browser PR #4695 ("Add Electron application support"). It is AI-generated, stalled since 2026-03 and has open maintainer remarks.

@@ -31,8 +31,8 @@ jobs:
       - name: Check out the Browser library with the adoptContext hook
         uses: actions/checkout@v7
         with:
-          repository: d-biehl/robotframework-browser
-          ref: adopted-context-recording
+          repository: MarketSquare/robotframework-browser
+          ref: main
           path: robotframework-browser
 
       - uses: actions/setup-node@v7
@@ -84,13 +84,14 @@ jobs:
         with:
           path: robotframework-electron-vscode
 
-      # Until a Browser release contains the adoptContext hook and its follow-up, the
-      # workspace takes robotframework-browser from a clone of the fork next to the repository.
+      # Until a Browser release contains the adoptContext hook and the methods for adopted
+      # contexts, the workspace takes robotframework-browser from a clone of Browser's main
+      # branch next to the repository.
       - name: Check out the Browser library with the adoptContext hook
         uses: actions/checkout@v7
         with:
-          repository: d-biehl/robotframework-browser
-          ref: adopted-context-recording
+          repository: MarketSquare/robotframework-browser
+          ref: main
           path: robotframework-browser
 
       - uses: actions/setup-node@v7
@@ -117,7 +118,7 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install --with-deps chromium
 
       # Not --locked: the lock file records the Browser clone's dependencies,
-      # which change with the branch. The lowest versions change it in the checkout only.
+      # which change with Browser's main. The lowest versions change it in the checkout only.
       - name: Install the workspace
         run: uv sync ${{ matrix.sync }}
 
