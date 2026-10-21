@@ -128,7 +128,6 @@ def test_recording_options_come_from_browser(fake_launch, tmp_path):
         "showActions": show_actions,
     }
     assert calls[0]["tracing"] == str(tmp_path / "browser" / "traces")
-    assert electron.tracing_contexts == ["context"]
 
 
 def test_har_options_come_from_browser(fake_launch, tmp_path):
@@ -210,45 +209,14 @@ def test_evaluates_in_the_main_process_of_a_given_application(fake_launch):
     assert calls[0] == {"browserId": "browser=other", "script": "(electron, arg) => arg", "arg": {"answer": 42}}
 
 
-@pytest.fixture
-def pages(fake_launch, monkeypatch):
-    """Fakes an application whose active page after the start is a view, and records the page switches."""
+def test_returns_the_page_and_the_video_that_browser_reports(fake_launch, monkeypatch, tmp_path):
     electron, _ = fake_launch
-    active = ["page=view"]
-    switches: list[str] = []
+    adopted = {"browserId": "browser", "contextId": "context", "pageId": "page=window", "videoPath": "window.webm"}
+    monkeypatch.setattr(electron, "call_js_keyword", lambda name, **arguments: adopted)
 
-    def call_js_keyword(name, **arguments):
-        if name == "robotframeworkElectronIsWindowPage":
-            return active[0] == "page=window"
-        return {"browserId": "browser", "contextId": "context", "pageId": active[0]}
+    application, page = electron.start_electron_application(tmp_path / "bin" / "electron")
 
-    def switch_page(page_id, *args):
-        switches.append(page_id)
-        active[0] = page_id
-
-    monkeypatch.setattr(electron, "call_js_keyword", call_js_keyword)
-    monkeypatch.setattr(electron, "get_page_ids", lambda *args: ["page=guest", "page=window", "page=view"])
-    monkeypatch.setattr(electron, "switch_page", switch_page)
-    return electron, active, switches
-
-
-def test_switches_to_the_window_page_when_a_view_is_active(pages, tmp_path):
-    electron, _, switches = pages
-
-    _, page = electron.start_electron_application(tmp_path / "bin" / "electron")
-
-    assert page["page_id"] == "page=window"
-    assert switches == ["page=guest", "page=window"]
-
-
-def test_keeps_the_active_page_when_it_is_the_window(pages, tmp_path):
-    electron, active, switches = pages
-    active[0] = "page=window"
-
-    _, page = electron.start_electron_application(tmp_path / "bin" / "electron")
-
-    assert page["page_id"] == "page=window"
-    assert switches == []
+    assert (application, page["page_id"], page["video_path"]) == ("browser", "page=window", "window.webm")
 
 
 @pytest.fixture

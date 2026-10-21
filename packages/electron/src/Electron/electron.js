@@ -5,7 +5,7 @@
 // The started applications by browser id, until Browser closes them.
 const applications = new Map();
 
-async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, tracesDir, launchOptions, defaultTimeout, playwright, adoptContext) {
+async function robotframeworkElectronLaunch(executablePath, args, env, cwd, timeout, recordVideo, recordHar, tracing, tracesDir, launchOptions, playwright, adoptContext) {
     // Browser releases without the hook pass a placeholder instead of a function.
     if (typeof adoptContext !== 'function') {
         throw new Error('The Browser library has no adoptContext hook, which the Electron library needs to take over the application.');
@@ -27,16 +27,22 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
     });
     try {
         const window = await firstWindowPage(app, await app.firstWindow({ timeout }), timeout);
-        // The library timeout, as the contexts that Browser creates get it.
-        app.context().setDefaultTimeout(defaultTimeout);
         let browserId;
         const onClose = async () => {
             applications.delete(browserId);
         };
-        const adopted = await adoptContext(app.context(), { name: 'electron', tracing: tracing || undefined, contextOptions, onClose });
+        // A window that closed during the start is no page of the context any more.
+        const activePage = window.isClosed() ? undefined : window;
+        const adopted = await adoptContext(app.context(), {
+            name: 'electron',
+            tracing: tracing || undefined,
+            contextOptions,
+            onClose,
+            activePage,
+        });
         browserId = adopted.browserId;
         applications.set(browserId, app);
-        return { ...adopted, videoPath: recordVideo ? await window.video()?.path() : null };
+        return adopted;
     } catch (error) {
         await app.close().catch(() => app.process().kill());
         throw error;
@@ -77,13 +83,6 @@ async function firstWindowPage(app, first, timeout) {
     }
 }
 
-// Whether the active `page` is a window's own page of the application with the browser id `browserId`.
-async function robotframeworkElectronIsWindowPage(browserId, page) {
-    const application = applications.get(browserId);
-    if (!application || !page || page.context() !== application.context()) return false;
-    return isWindowPage(application, page);
-}
-
 // Runs the function text `script` in the main process of the application with
 // the browser id `browserId`, with the electron module, `arg`, and the
 // BrowserWindow of the active `page` if the page belongs to the application.
@@ -108,4 +107,3 @@ async function robotframeworkElectronEvaluate(browserId, script, arg, page) {
 exports.__esModule = true;
 exports.robotframeworkElectronLaunch = robotframeworkElectronLaunch;
 exports.robotframeworkElectronEvaluate = robotframeworkElectronEvaluate;
-exports.robotframeworkElectronIsWindowPage = robotframeworkElectronIsWindowPage;
