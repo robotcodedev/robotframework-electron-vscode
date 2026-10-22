@@ -16,6 +16,7 @@ Decisions so far:
 - Until the hook is released, the Browser library comes from a local clone at `~/develop/robot/robotframework-browser` (`../robotframework-browser` from this repository), used as an editable path dependency.
   - The hook was developed there on the branch `adopt-context-hook`, created from `main` at `2cf74ae6`, and merged into Browser's `main` in MarketSquare/robotframework-browser#5318 on 2026-10-11.
   - Its follow-up, the methods `adopted_context_options` and `register_adopted_context`, was developed on the branch `adopted-context-recording` and merged in MarketSquare/robotframework-browser#5326 on 2026-10-16. Since then the clone and CI use Browser's `main`.
+  - On 2026-10-22, before any release, MarketSquare/robotframework-browser#5372 replaced `register_adopted_context`: `call_js_keyword` registers an adopted context itself, from the report that `adoptContext` writes on the stream of the extension call. Since MarketSquare/robotframework-browser#5370, `adoptContext` also gives the context the library timeout and returns the video of its active page, and it takes the `activePage` to make active.
   - `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`.
   - How to prepare the clone is described in [AGENTS.md](../AGENTS.md).
 - Do not model the design on Browser PR #4695 ("Add Electron application support"). It is AI-generated, stalled since 2026-03 and has open maintainer remarks.
