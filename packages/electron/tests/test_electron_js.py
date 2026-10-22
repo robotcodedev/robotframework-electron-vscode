@@ -35,10 +35,7 @@ const { robotframeworkElectronLaunch } = require(process.argv[2]);
 const scenario = process.argv[3];
 const calls = [];
 const options = {};
-const context = {
-    setDefaultTimeout: (timeout) => calls.push(`setDefaultTimeout ${timeout}`),
-    newCDPSession: async (page) => cdpSession(page),
-};
+const context = { newCDPSession: async (page) => cdpSession(page) };
 const windowPage = fakePage('window', context);
 const viewPage = fakePage('view', context);
 const app = {
@@ -70,13 +67,14 @@ const playwright = {
 async function adoptContext(context, adoptOptions) {
     calls.push('adoptContext');
     options.adopt = adoptOptions.contextOptions;
+    options.activePage = adoptOptions.activePage?.name ?? null;
     if (scenario === 'adopt-fails' || scenario === 'close-fails') throw new Error('adopt failed');
-    return { browserId: 'browser', contextId: 'context', pageId: 'page' };
+    return { browserId: 'browser', contextId: 'context', pageId: 'page', videoPath: null };
 }
 const hook = scenario === 'no-hook' ? 'RESERVED' : adoptContext;
 const launchOptions = scenario === 'options' ? { colorScheme: 'dark', locale: 'de-DE', bypassCSP: true } : {};
 const recordVideo = scenario === 'view-first' || scenario === 'first-closed' ? {} : null;
-const launchArguments = ['/electron', [], {}, '/cwd', 1000, recordVideo, null, null, '/traces', launchOptions, 7000];
+const launchArguments = ['/electron', [], {}, '/cwd', 1000, recordVideo, null, null, '/traces', launchOptions];
 robotframeworkElectronLaunch(...launchArguments, playwright, hook)
     .then((result) => ({ result }), (error) => ({ error: error.message }))
     .then((outcome) => console.log(JSON.stringify({ ...outcome, calls, options })));
@@ -84,12 +82,10 @@ robotframeworkElectronLaunch(...launchArguments, playwright, hook)
 
 
 EVALUATE_HARNESS = """
-const { robotframeworkElectronLaunch, robotframeworkElectronEvaluate, robotframeworkElectronIsWindowPage } = require(
-    process.argv[2]
-);
+const { robotframeworkElectronLaunch, robotframeworkElectronEvaluate } = require(process.argv[2]);
 const scenario = process.argv[3];
 const calls = [];
-const context = { setDefaultTimeout: () => {}, newCDPSession: async (page) => cdpSession(page) };
+const context = { newCDPSession: async (page) => cdpSession(page) };
 const electron = { ...mainProcess, app: { getName: () => 'fixture' } };
 const windowPage = fakePage('window', context);
 const app = {
@@ -111,12 +107,9 @@ async function adoptContext(adoptedContext, options) {
 const page = scenario === 'other-page' ? { context: () => ({}) } : { context: () => context };
 const script = '(electron, arg, window) => [electron.app.getName(), arg, window && window.title]';
 (async () => {
-    const launchArguments = ['/electron', [], {}, '/cwd', 1000, null, null, null, '/traces', {}, 7000];
+    const launchArguments = ['/electron', [], {}, '/cwd', 1000, null, null, null, '/traces', {}];
     await robotframeworkElectronLaunch(...launchArguments, playwright, adoptContext);
     if (scenario === 'closed') await onClose();
-    if (scenario === 'is-window') return robotframeworkElectronIsWindowPage('browser=app', windowPage);
-    if (scenario === 'is-view') return robotframeworkElectronIsWindowPage('browser=app', fakePage('view', context));
-    if (scenario === 'is-other') return robotframeworkElectronIsWindowPage('browser=app', fakePage('window', {}));
     const browserId = scenario === 'unknown' ? 'browser=other' : 'browser=app';
     return robotframeworkElectronEvaluate(browserId, script, 42, page);
 })()
@@ -139,7 +132,7 @@ def test_returns_the_adopted_context(tmp_path):
     outcome = run(tmp_path, "success")
 
     assert outcome["result"] == {"browserId": "browser", "contextId": "context", "pageId": "page", "videoPath": None}
-    assert outcome["calls"] == ["launch", "firstWindow", "setDefaultTimeout 7000", "adoptContext"]
+    assert outcome["calls"] == ["launch", "firstWindow", "adoptContext"]
 
 
 def test_application_decides_the_color_scheme_by_default(tmp_path):
@@ -174,12 +167,8 @@ def test_starts_nothing_without_the_hook(tmp_path):
     ("scenario", "error", "calls"),
     [
         ("no-window", "no window", ["launch", "firstWindow", "close"]),
-        ("adopt-fails", "adopt failed", ["launch", "firstWindow", "setDefaultTimeout 7000", "adoptContext", "close"]),
-        (
-            "close-fails",
-            "adopt failed",
-            ["launch", "firstWindow", "setDefaultTimeout 7000", "adoptContext", "close", "kill"],
-        ),
+        ("adopt-fails", "adopt failed", ["launch", "firstWindow", "adoptContext", "close"]),
+        ("close-fails", "adopt failed", ["launch", "firstWindow", "adoptContext", "close", "kill"]),
     ],
 )
 def test_closes_the_application_when_the_start_fails(tmp_path, scenario, error, calls):
@@ -210,15 +199,8 @@ def test_evaluating_fails_for_a_browser_that_is_no_open_application(tmp_path, sc
     assert outcome["error"] == f"Browser '{browser_id}' is not an application started by 'Start Electron Application'."
 
 
-@pytest.mark.parametrize(("scenario", "video"), [("view-first", "window.webm"), ("first-closed", "closed.webm")])
-def test_takes_the_window_page_as_first_window(tmp_path, scenario, video):
+@pytest.mark.parametrize(("scenario", "active_page"), [("view-first", "window"), ("first-closed", None)])
+def test_makes_the_window_page_the_active_page(tmp_path, scenario, active_page):
     outcome = run(tmp_path, scenario)
 
-    assert outcome["result"]["videoPath"] == video
-
-
-@pytest.mark.parametrize(("scenario", "is_window"), [("is-window", True), ("is-view", False), ("is-other", False)])
-def test_tells_whether_a_page_is_a_window_page_of_the_application(tmp_path, scenario, is_window):
-    outcome = run(tmp_path, scenario, EVALUATE_HARNESS)
-
-    assert outcome["result"] is is_window
+    assert outcome["options"]["activePage"] == active_page

@@ -21,7 +21,7 @@ Background, research and the initial design ideas are in [dev-docs/background.md
 
 Until a Browser release contains our changes, `robotframework-browser` comes from a local clone at `../robotframework-browser` (editable path source in the root `pyproject.toml`).
 
-- The `adoptContext` hook (MarketSquare/robotframework-browser#5318) and the public methods `adopted_context_options` and `register_adopted_context` (MarketSquare/robotframework-browser#5326) are merged into Browser's `main`, but not released yet.
+- The `adoptContext` hook (MarketSquare/robotframework-browser#5318) and the public method `adopted_context_options` (MarketSquare/robotframework-browser#5326) are merged into Browser's `main`, but not released yet. Browser registers an adopted context itself, with trace groups and the video in the log (MarketSquare/robotframework-browser#5372), and `adoptContext` takes the `activePage` to make active.
 - The clone's `main` tracks `upstream/main`, and CI checks out `main` of `MarketSquare/robotframework-browser`.
 - The clone's `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`. Push to the fork over SSH (`git@github.com:d-biehl/robotframework-browser.git`); the HTTPS `origin` has no credentials.
 
