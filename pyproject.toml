@@ -1,7 +1,7 @@
 [project]
 name = "robotframework-electron-vscode"
 version = "0.1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = ["robotframework-electron", "robotframework-vscode"]
 
 [tool.uv.workspace]
@@ -55,7 +55,7 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 include = ["packages/**/*.py", "examples/**/*.py", "docs/scripts/**/*.py", "scripts/**/*.py"]
 
 [tool.ruff.lint]
@@ -86,7 +86,7 @@ convention = "google"
 "**/tests/**/*.py" = ["D"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 warn_unreachable = true
 # robotlibcore's `keyword` decorator has no type hints.

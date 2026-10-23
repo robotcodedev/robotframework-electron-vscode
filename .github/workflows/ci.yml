@@ -67,7 +67,7 @@ jobs:
           # The versions of .python-version and the lock file.
           - python: "3.13"
           # The lowest versions that the Browser library supports.
-          - python: "3.10"
+          - python: "3.11"
             sync: --upgrade-package robotframework==7.1.1
           # The newer Python versions.
           - python: "3.14"

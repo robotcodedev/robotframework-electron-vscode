@@ -175,7 +175,7 @@ Welcome to your first code contribution! Here's how to set up your development e
 #### Development Environment Setup
 
 1. **Prerequisites** (see each project's site for install instructions):
-   - [Python](https://www.python.org/) 3.10 or newer
+   - [Python](https://www.python.org/) 3.11 or newer
    - [uv](https://docs.astral.sh/uv/)
    - [Node.js](https://nodejs.org/) 22.12 or newer, for the Browser library, the documentation site, the helper extension of the VSCode library, and the VS Code and Electron builds of the tests
    - [Git](https://git-scm.com/)

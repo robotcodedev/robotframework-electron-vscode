@@ -86,7 +86,7 @@ We use **CVSS v4.0** (v3.1 also accepted) with the following guidelines:
 * **Older versions** are out of security support while the project is at version 0.x
 
 **Dependencies & Requirements:**
-* **Minimum requirements**: Python 3.10+ and the Browser library version declared by the packages
+* **Minimum requirements**: Python 3.11+ and the Browser library version declared by the packages
 * **Dependency security**: Python, Robot Framework, the Browser library, Playwright, Electron and VS Code have their own security policies and support lifecycles
 * **Out of scope**: Security issues in these dependencies should be reported to their respective projects
 * **Compatibility**: We may drop support for end-of-life Python, Robot Framework, Electron or VS Code versions without prior notice
