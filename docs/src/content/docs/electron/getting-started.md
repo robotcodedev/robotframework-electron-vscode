@@ -63,7 +63,8 @@ App From Source
 ## Windows and closing
 
 - `Start Electron Application` returns the application id and the details of the first window's page: `${app}    ${page} =    Start Electron Application    …`.
-- Windows that the app opens later can be selected with `Switch Page    NEW`.
+- `Switch Window    title=<title>` switches to a window that the app opens, once the window shows the title. `Get Window Titles` lists the titles of the windows.
+- `Set Window Size`, `Maximize Window`, `Minimize Window` and `Restore Window` size a window and change its state, and `Get Window Size` and `Get Window State` return them. Maximising and minimising need a window manager, see [CI and the Linux display](../../running/ci-and-display/#display-profiles).
 - `Close Electron Application` and Browser's automatic closing end the application.
 - Several applications can be open at once. `Switch Electron Application` switches between them.
 - The library hides Browser's keywords for browsers and contexts, such as `New Page` and `Close Browser`. [Browser keywords in applications](../browser-keywords/#compared-with-the-browser-library) compares the two libraries.
@@ -84,12 +85,13 @@ Click    text=Open report
 
 `showSaveDialog` and `showMessageBox` are replaced the same way. The replacement takes effect when the application calls the dialog through the module, as in `dialog.showOpenDialog(…)`, and lasts until the application ends.
 
-The function can also read the application's state or size the window of the active page:
+The function can also read the application's state:
 
 ```robotframework
 ${version} =    Evaluate In Main Process    ({ app }) => app.getVersion()
-Evaluate In Main Process    (electron, size, window) => window.setBounds(size)    arg=${{ {"width": 1280, "height": 720} }}
 ```
+
+Windows have keywords of their own for their size and state, see [windows and closing](#windows-and-closing).
 
 ## Launch options
 

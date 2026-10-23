@@ -11,13 +11,13 @@ VS Code is an Electron application, so everything in [Browser keywords in applic
 |---|---|---|
 | `Evaluate JavaScript`, `Wait For Function` | Works | They run in the workbench's page, not in the extension host. |
 | Copy and paste in the editor | Works | |
-| A second window: `Switch Page    NEW`, `Close Page` | Works | See `windows.robot` in the example. |
+| A second window: `Switch Window` with its title, `Close Page` | Works | See `windows.robot` in the example. |
 | Locator handlers for notifications | Works | See below. |
 | `Drag And Drop` in the explorer | Needs a setting | `explorer.confirmDragAndDrop: false`, otherwise VS Code asks for confirmation. |
 | File dialogs | Needs a setting | `files.simpleDialog.enable: true` makes VS Code use its own dialog instead of the native one. |
 | Native message boxes | Needs the main process | `Evaluate In Main Process` replaces `dialog.showMessageBox` before VS Code opens one. |
 | `Record Selector` | Needs an option | `bypass_csp=True` of `Start VS Code`. The workbench requires Trusted Types for scripts, and the recorder adds a script to the page. |
-| Maximised windows | Needs a window manager | See [CI and the Linux display](../../running/ci-and-display/). |
+| `Maximize Window`, `Minimize Window` | Needs a window manager | See [CI and the Linux display](../../running/ci-and-display/). `Set Window Size` works without one. |
 
 The example project uses many of these features. The following snippets show the others; they assume a VS Code started with `Start VS Code`.
 

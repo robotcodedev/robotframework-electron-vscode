@@ -14,10 +14,11 @@ Second Window
     ${_}    ${folder} =    Split Path    ${workspace}
     # A shortcut avoids the palette, where "New Window" also matches "New Window with Profile".
     Keyboard Key    press    ControlOrMeta+Shift+n
-    Switch Page    NEW
+    # The new window has no folder, so its title is VS Code's name, after the mark of the development host.
+    Switch Window    title=[Extension Development Host] Visual Studio Code
     Wait For Elements State    .monaco-workbench    visible
     Get Title    not contains    ${folder}
-    ${pages} =    Get Page Ids    ALL
-    Length Should Be    ${pages}    2
+    ${windows} =    Get Window Ids
+    Length Should Be    ${windows}    2
     Close Page
     Get Title    contains    ${folder}

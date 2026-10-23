@@ -27,7 +27,7 @@ The results come from Electron 44.7 and VS Code 1.141 under Xvfb, with Browser o
 | Context state | Works | Cookies, local and session storage, `Grant Permissions`, `Set Geolocation`, `Set Offline`, `Emulate Media`, `Set Viewport Size` and the clock keywords `Set Time`, `Pause At` and `Advance Clock`. `Get Viewport Size` returns `None` until `Set Viewport Size` emulates a size; the window keeps its own size. `Save Storage State` works only while every http and https origin that the application has visited is open in a window, and it leaves out the storage of `file://` pages. `Set Storage State` is hidden. |
 | Dialogs | Works | `alert` and `confirm` with `Handle Future Dialogs`, `Wait For Alert` and `Wait For Alerts`. Without a handler, Playwright dismisses them. Electron has no `prompt()`, see [Behaviour of Electron](#behaviour-of-electron). Both kinds of handler on the same page crash Browser's Node process, and so does a `beforeunload` handler, see [Known crashes](#known-crashes). Native dialogs need the main process. |
 | Downloads | Works | `Promise To Wait For Download` after a click, also with `wait_for_finished=False` and `Get Download State`, and `Download` from a page loaded from a URL. `Cancel Download` cancels a running download. The libraries tell Browser that the application accepts downloads, as Electron does. |
-| Pages and windows | Works | Windows that the application opens later: `Switch Page    NEW`. `<webview>`s and `WebContentsView`s are pages too, but select them by page id, see [Pages and windows](#pages-and-windows). A window that the application closes leaves `Get Page Ids`. `Close Page` closes windows and `WebContentsView`s, but waits forever on a `<webview>`. On the last window, it ends most applications, through their `window-all-closed` handler. |
+| Pages and windows | Works | Windows that the application opens later: `Switch Window` with their title. `<webview>`s and `WebContentsView`s are pages too, but select them by page id, see [Pages and windows](#pages-and-windows). A window that the application closes leaves `Get Page Ids`. `Close Page` closes windows and `WebContentsView`s, but waits forever on a `<webview>`. On the last window, it ends most applications, through their `window-all-closed` handler. |
 | Screenshots, recordings and coverage | Works | `Take Screenshot` of the window or an element; screenshots have the window's size. Videos, traces and HAR files come from `record_video`, `tracing` and `record_har` of `Start Electron Application`, see [Videos and slow motion](../videos/) and [Traces and HAR files](../traces/). `Start Coverage`, `Highlight Elements`, `Add Style Tag` and presenter mode work. Playwright has no `slowMo` for Electron; presenter mode slows a test down instead. |
 | Applications | Own keywords | `Switch Electron Application`, `Get Electron Application Ids` and `Get Electron Application Catalog` replace Browser's keywords for browsers and contexts, see [Compared with the Browser library](#compared-with-the-browser-library). |
 | Other keywords | Works | From the audit: locator handlers, WebAuthn credentials (`Create Credential` and the related keywords), `Register Keyword To Run On Failure`, `Show Keyword Banner` and `Set Strict Mode`. |
@@ -110,17 +110,33 @@ Find By Tag Name
 
 ## Pages and windows
 
-Every window of the application is a page, and so is every `<webview>` and every `WebContentsView`. `Switch Page    NEW` finds those that load after the start only by chance, so select them by page id. A keyword that switches to the page with a given title:
+Every window of the application is a page, and so is every `<webview>` and every `WebContentsView`. The window keywords know which pages are windows: `Get Window Ids` and `Get Window Titles` list only the windows, and `Switch Window` switches only to them. They take a window by the title that it shows, `title=Settings`, by a regular expression for that title in the form of Browser's `text=` selector, `title=/^Settings/i`, or by its id from `Get Window Ids`, which is valid while the application runs and unique only within it.
+
+Switch to a window that the application opens by its title. `Switch Window` waits until a window shows it:
+
+```robotframework
+Click    text=Settings
+${previous} =    Switch Window    title=Settings
+Click    text=Save
+Switch Window    ${previous}
+```
+
+`Switch Window    NEW` and `Switch Page    NEW` take the newest page if it is newer than the active page. That can be a `<webview>` or `WebContentsView` that loaded after the new window, which `Switch Window` refuses, or, after a switch back to an older window, a page that was open before. A title has neither problem. `Switch Window` finds the page of a window through the title of that page, so a window whose page has no title, or shares its title with another page, is switched to with its page id.
+
+`<webview>`s and `WebContentsView`s are selected with `Switch Page` and their page id, which `Get Electron Application Catalog` lists with their titles. A keyword that switches to the page with a given title:
 
 ```robotframework
 *** Keywords ***
 Switch To Page With Title
     [Arguments]    ${title}
-    ${ids} =    Get Page Ids    ALL    ACTIVE    ACTIVE
-    FOR    ${id}    IN    @{ids}
-        Switch Page    ${id}
-        ${page_title} =    Get Title
-        IF    $page_title == $title    RETURN
+    ${catalog} =    Get Electron Application Catalog
+    FOR    ${application}    IN    @{catalog}
+        FOR    ${page}    IN    @{application}[pages]
+            IF    $application["active"] and $page["title"] == $title
+                Switch Page    ${page}[id]
+                RETURN
+            END
+        END
     END
     Fail    No page with the title '${title}'.
 ```
@@ -138,7 +154,9 @@ Switch To Page With Title
 ## Behaviour of Electron
 
 - **Color scheme:** by default, the application decides its color scheme. `color_scheme` of `Start Electron Application` sets one, see [launch options](../getting-started/#launch-options).
-- **Window size:** a window has the size that the application gives it; there is no emulated viewport. `Set Viewport Size` emulates one inside the page. Maximising a window needs a window manager, see [CI and the Linux display](../../running/ci-and-display/); without one, [size the window from the main process](../getting-started/#the-main-process).
+- **Window size:** a window has the size that the application gives it; there is no emulated viewport, so `Get Viewport Size` returns `None`. `Set Window Size` sizes the window and `Get Window Size` returns its size, which its page, its screenshots and its video have. `Set Viewport Size` emulates a viewport inside the page.
+- **Maximising and minimising:** `Maximize Window`, `Minimize Window` and `Restore Window` need a window manager, such as Openbox, which the display profiles start, see [CI and the Linux display](../../running/ci-and-display/#display-profiles). On plain Xvfb without one, maximising and minimising fail after the timeout, while `Set Window Size` works. Some Wayland desktops, such as niri, cannot minimise windows.
+- **Minimised windows** draw nothing, so Browser keywords on their pages wait until their timeout. Call `Restore Window` before acting on such a window again.
 - **Locale and time zone:** they follow the system. `locale` and `timezone_id` set them for the windows; `--lang` in `args` and `TZ` in `env` set them for the main process.
 - **User data:** Electron keeps cookies, local storage and other data of an application in its user-data folder, on Linux `~/.config/<name>`, on Windows `%APPDATA%\<name>` and on macOS `~/Library/Application Support/<name>`, so they last from one run to the next. `args=--user-data-dir=<folder>` with a new, empty folder starts the application without them, unless it sets the folder itself with `app.setPath`.
 - **`prompt()`:** Electron does not implement it. A page's call fails with "prompt() is not supported.", so `prompt_input` of `Handle Future Dialogs` never applies.

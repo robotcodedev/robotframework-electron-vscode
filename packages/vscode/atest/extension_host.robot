@@ -135,9 +135,10 @@ Window Of The Active Page
     [Teardown]    Close VS Code    ${vscode}
 
 Window That Has Just Opened
+    [Documentation]    The guide on the extension host shows this way.
     ${vscode}    ${_} =    Start Test VS Code With Helper    ${TEST_WORKSPACE}
     Open Folder In New Window    ${SECOND_WORKSPACE}
-    Switch Page    NEW
+    Switch Window    NEW
     Folder Of The Active Pages Window Should Be    ${SECOND_WORKSPACE}
     [Teardown]    Close VS Code    ${vscode}
 

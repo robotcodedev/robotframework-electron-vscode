@@ -139,14 +139,14 @@ File Should Have Diagnostics
 
 ## Several windows
 
-Each workbench window has its own extension host. Without `workspace`, the keyword takes the one of the window that shows the active page. `Switch Page` changes the window, and the keyword waits until the new window's extension host answers:
+Each workbench window has its own extension host. Without `workspace`, the keyword takes the one of the window that shows the active page. `Switch Window` changes the window, and the keyword waits until the new window's extension host answers:
 
 ```robotframework
 Evaluate In Extension Host    (vscode, path) => {
 ...        void vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(path), { forceNewWindow: true });
 ...    }
 ...    arg=${EXECDIR}/tests/second-workspace
-Switch Page    NEW
+Switch Window    NEW
 ${folder} =    Evaluate In Extension Host    (vscode) => vscode.workspace.workspaceFolders[0].uri.fsPath
 ```
 

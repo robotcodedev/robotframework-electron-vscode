@@ -6,6 +6,12 @@
 </head>
 <body>
     <h1>Views</h1>
+    <button id="open">Open a window with a webview</button>
     <webview id="guest" src="guest.html" style="width: 400px; height: 150px"></webview>
+    <script>
+        document.getElementById('open').addEventListener('click', () => {
+            window.open('webview-window.html', '_blank');
+        });
+    </script>
 </body>
 </html>

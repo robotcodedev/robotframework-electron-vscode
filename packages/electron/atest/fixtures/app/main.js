@@ -1,7 +1,8 @@
 // Minimal Electron app for the acceptance tests of the Electron library.
 // Start with `--no-window` to get an app that never opens a window,
 // `--dark` to switch its theme to dark, `--page=<file>` to load another page,
-// and `--views` to load views.html, which has a <webview>, and to add a WebContentsView.
+// and `--views` to load views.html, which has a <webview> and opens a second window with
+// another one, and to add a WebContentsView.
 const { app, BrowserWindow, Menu, WebContentsView, dialog, ipcMain, nativeTheme } = require('electron');
 const path = require('node:path');
 
@@ -57,6 +58,11 @@ app.whenReady().then(() => {
         },
     });
     if (views) {
+        // The window that views.html opens shows a <webview> as well.
+        mainWindow.webContents.setWindowOpenHandler(() => ({
+            action: 'allow',
+            overrideBrowserWindowOptions: { webPreferences: { webviewTag: true } },
+        }));
         const view = new WebContentsView();
         mainWindow.contentView.addChildView(view);
         view.setBounds({ x: 0, y: 400, width: 400, height: 150 });

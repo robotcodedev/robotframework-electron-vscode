@@ -83,8 +83,10 @@ into a running instance.
 = The workbench =
 
 The workbench window is a page, and windows that VS Code opens later are pages
-too. The library has no keywords for the command palette, notifications or
-other parts of the workbench. Their DOM changes with VS Code releases and
+too. `Switch Window` switches between them by their titles, and the window
+keywords size and maximise them, see `Windows and pages`. The library has no
+keywords for the command palette, notifications or other parts of the
+workbench. Their DOM changes with VS Code releases and
 differs between forks, so these keywords and their locators belong to your
 project. The documentation site shows how to write them.
 
@@ -493,7 +495,7 @@ class VSCode(Electron):
 
         Each workbench window has an extension host of its own. Without
         ``workspace``, the keyword takes the one of the window that shows the
-        active page; `Switch Page` changes it. A window into which an editor
+        active page; `Switch Window` changes it. A window into which an editor
         was moved belongs to the window that the editor came from.
 
         The keyword waits up to the library's timeout for the extension host,

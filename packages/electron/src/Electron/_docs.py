@@ -33,11 +33,40 @@ def _comparison(start: str, close: str) -> str:
     return "\n        ".join(lines)
 
 
-def shared_sections(start: str, close: str) -> str:
-    """Return the sections that Browser keywords link to, for a library with the keywords ``start`` and ``close``.
+def _window_forms() -> str:
+    """Return the table of the forms in which the window keywords take a window."""
+    rows = [
+        ("``title=<title>``", "The window that shows this title, exactly as `Get Window Titles` returns it."),
+        (
+            "``title=/<pattern>/<flags>``",
+            (
+                "The window whose title matches this JavaScript regular expression, in the form of Browser's "
+                "``text=`` selector, for example ``title=/^Settings/i``."
+            ),
+        ),
+        (
+            "``window=<n>``",
+            (
+                "The window with this id from `Get Window Ids`. The bare number works as well, because Robot "
+                "Framework reads ``window=2`` as the named argument ``window`` with the value ``2``."
+            ),
+        ),
+        (
+            "none",
+            "The window that shows the active page, which for a ``<webview>`` or ``WebContentsView`` is around it.",
+        ),
+    ]
+    lines = ["| =Form= | =Window= |"]
+    lines += [f"| {form} | {window} |" for form, window in rows]
+    return "\n        ".join(lines)
 
-    Browser's keyword documentation links to these sections by name, so they keep Browser's names.
-    ``start`` and ``close`` are the keywords that start and end an application, as links.
+
+def shared_sections(start: str, close: str) -> str:
+    """Return the sections that both libraries share, for a library with the keywords ``start`` and ``close``.
+
+    Browser's keyword documentation links to most of these sections by name, so they keep Browser's names;
+    the window keywords link to "Windows and pages". ``start`` and ``close`` are the keywords that start and end
+    an application, as links.
     """
     return cleandoc(f"""
         = Browser, Context and Page =
@@ -50,7 +79,8 @@ def shared_sections(start: str, close: str) -> str:
           id that {start} returns is the application id.
         - Each window of the application is a page, and so is each
           ``<webview>`` and ``WebContentsView``. `Switch Page` and
-          `Get Page Ids` work on all of them. `Close Page` closes windows and
+          `Get Page Ids` work on all of them, `Get Window Ids` lists only the
+          windows, see `Windows and pages`. `Close Page` closes windows and
           the pages of a ``WebContentsView``. On the page of a ``<webview>``,
           it waits forever, so a test removes the ``<webview>`` element from
           its page instead.
@@ -65,6 +95,27 @@ def shared_sections(start: str, close: str) -> str:
         A test that needs a web browser as well imports the Browser library
         beside this one and calls the keywords that both libraries have with
         the library name, for example ``Browser.New Page``.
+
+        = Windows and pages =
+
+        Each window of an application is a page, and so is each
+        ``<webview>`` and ``WebContentsView`` that it shows. After {start},
+        the first window is the active page. `Switch Window` makes the page of
+        another window the active page, best by the window's title, because it
+        waits until a window shows it. `Get Electron Application Catalog`
+        lists all pages with their titles, and `Switch Page` selects any of
+        them, also a ``<webview>`` or ``WebContentsView``.
+
+        `Get Window Ids` and `Get Window Titles` list only the windows. The
+        keywords that act on a window take it in one of these forms:
+
+        {_window_forms()}
+
+        For a title or an expression, the keywords wait up to the library
+        timeout until exactly one window matches, so a test can name a window
+        that is still opening. Window ids are valid while the application runs
+        and unique only within it, so get them again after
+        `Switch Electron Application`.
 
         = Finding elements =
 
@@ -139,16 +190,24 @@ KEYWORD_NOTES = {
         """,
     "switch_page": """
         Each window of an application is a page, and so are the
-        ``<webview>`` and ``WebContentsView`` elements it shows. ``NEW`` finds
-        windows that the application opens later, but not reliably a
-        ``<webview>`` or ``WebContentsView`` that exists from the start. Select
-        those by their page id, which `Get Electron Application Catalog`
-        returns with their titles. ``browser`` takes an application id.
+        ``<webview>`` and ``WebContentsView`` elements it shows. ``NEW`` takes
+        the newest page if it is newer than the active page, which can be a
+        ``<webview>`` that loaded after a new window. `Switch Window` switches
+        to a window by its title instead. Select a ``<webview>`` or
+        ``WebContentsView`` by its page id, which
+        `Get Electron Application Catalog` returns with its title. ``browser``
+        takes an application id.
         """,
     "get_page_ids": """
         The ids are those of the windows of an application and of the
         ``<webview>`` and ``WebContentsView`` elements they show.
-        `Get Electron Application Catalog` returns them with their titles.
+        `Get Electron Application Catalog` returns them with their titles, and
+        `Get Window Ids` returns only the windows.
+        """,
+    "get_viewport_size": """
+        Returns ``None`` for the window of an application, which has no
+        emulated viewport. `Get Window Size` returns the size that the
+        window's page has.
         """,
     "save_storage_state": """
         Fails with ``Target.createTarget: Not supported`` when an http or https

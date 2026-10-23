@@ -84,11 +84,15 @@ Last Window Closed With Close Page
 
 *** Keywords ***
 Switch To Page With Title
+    [Documentation]    The keyword of the guide on Browser keywords.
     [Arguments]    ${title}
-    ${ids} =    Get Page Ids    ALL    ACTIVE    ACTIVE
-    FOR    ${id}    IN    @{ids}
-        Switch Page    ${id}
-        ${page_title} =    Get Title
-        IF    $page_title == $title    RETURN
+    ${catalog} =    Get Electron Application Catalog
+    FOR    ${application}    IN    @{catalog}
+        FOR    ${page}    IN    @{application}[pages]
+            IF    $application["active"] and $page["title"] == $title
+                Switch Page    ${page}[id]
+                RETURN
+            END
+        END
     END
     Fail    No page with the title '${title}'.

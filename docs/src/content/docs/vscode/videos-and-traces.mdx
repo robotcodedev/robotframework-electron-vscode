@@ -13,7 +13,7 @@ import tracingTest from '../../../../../examples/vscode-extension/tests/tracing.
 
 ## A full frame of VS Code
 
-VS Code does not fill the screen by itself; its window keeps its default size. With the setting `window.newWindowDimensions` set to `maximized` and a window manager, it fills the screen, and screenshots and videos show the whole screen size. The display profiles `xvfb` and `xephyr` start a window manager, see [CI and the Linux display](../../running/ci-and-display/).
+VS Code does not fill the screen by itself; its window keeps its default size. With the setting `window.newWindowDimensions` set to `maximized` and a window manager, it fills the screen, and screenshots and videos show the whole screen size. `Maximize Window` maximises a window during a test as well. The display profiles `xvfb` and `xephyr` start a window manager, see [CI and the Linux display](../../running/ci-and-display/).
 
 In a video, a window keeps its own size: a larger window is scaled down to fit, and a smaller one is shown at its own size with a grey margin. For a full frame, open VS Code maximised and record in the size of the screen.
 
@@ -27,11 +27,11 @@ The example project's `video.robot` does this. Its keyword reads the screen size
 
 Without a window manager, `Set Viewport Size    1920    1080` after `Start VS Code` makes the workbench fill the frame instead. It emulates the size inside the page and leaves the window as it is.
 
-The window itself can be sized from VS Code's main process as well; `window` is the window of the active page. Without a window manager, a window stays at least one pixel smaller than the screen, so give the window and the video a size below the screen size:
+`Set Window Size` sizes the window itself, also without a window manager. It sets the size of the window's page, which the video shows. Without a window manager, a window stays at least one pixel smaller than the screen, so give the window and the video a size below the screen size:
 
 ```robotframework
 Start VS Code    ${VSCODE_EXECUTABLE}    record_video={'size': {'width': 1600, 'height': 900}}
-Evaluate In Main Process    (electron, size, window) => window.setBounds(size)    arg=${{ {"x": 0, "y": 0, "width": 1600, "height": 900} }}
+Set Window Size    1600    900
 ```
 
 ## Traces of the example
