@@ -141,7 +141,7 @@ Switch To Page With Title
     Fail    No page with the title '${title}'.
 ```
 
-- **`>>>` and `<webview>`:** a `<webview>` is not an iframe, so `>>>` does not reach into it; it fails with "<iframe> was expected". Switch to the `<webview>`'s page instead.
+- **`>>>` and `<webview>`:** a `<webview>` is not an iframe, so `>>>` does not reach into it; it fails with `<iframe> was expected`. Switch to the `<webview>`'s page instead.
 - **Closing a `<webview>`:** `Close Page` waits forever on a `<webview>`'s page, because the `<webview>` element in its host page keeps it. Remove the element instead; its page then goes away:
 
   ```robotframework
