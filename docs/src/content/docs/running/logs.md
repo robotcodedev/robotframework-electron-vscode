@@ -13,7 +13,9 @@ Besides Robot Framework's own `log.html`, the output directory holds `playwright
 
 **The Electron binary behaves like Node.js.** Runs started from VS Code, for example from its terminal or test explorer, inherit `ELECTRON_RUN_AS_NODE=1`, which makes every Electron binary run as plain Node.js. `Start Electron Application` and `Start VS Code` remove that variable. If you pass `env` to `Start Electron Application` yourself, leave it out there.
 
-**An application cannot be started.** Playwright attaches to an Electron application through the Node.js inspector. Applications built with the Electron fuse `EnableNodeCliInspectArguments` switched off cannot be started.
+**`Process failed to launch!`.** The executable ended before the application answered. The call log in the error shows its output and exit code, for example `error while loading shared libraries` on a system without the packages that Electron needs, see [CI and the Linux display](../ci-and-display/#vs-code-and-electron-on-ci).
+
+**An application cannot be started.** Playwright attaches to an Electron application through the Node.js inspector. Applications built with the Electron fuse `EnableNodeCliInspectArguments` switched off cannot be started. `Start Electron Application` then fails with a timeout, and the call log in the error has no line `Debugger listening`.
 
 **Windows show up on the desktop although the tests run under `xvfb-run`.** On a Wayland desktop, see [CI and the Linux display](../ci-and-display/).
 

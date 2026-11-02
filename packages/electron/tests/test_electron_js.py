@@ -60,6 +60,13 @@ const playwright = {
         launch: async (launchOptions) => {
             calls.push('launch');
             options.launch = launchOptions;
+            if (scenario === 'launch-leaves-rejection') {
+                // As Playwright does when the application ends before its first line of output: a promise
+                // that rejects without a handler, and a moment later the rejection of the launch itself.
+                Promise.reject(new Error('left behind'));
+                await new Promise((resolve) => setImmediate(resolve));
+                throw new Error('launch failed');
+            }
             return app;
         },
     },
@@ -76,7 +83,10 @@ const recordVideo = scenario === 'view-first' || scenario === 'first-closed' ? {
 const launchArguments = ['/electron', [], {}, '/cwd', 1000, recordVideo, null, null, '/traces', launchOptions];
 robotframeworkElectronLaunch(...launchArguments, playwright, adoptContext)
     .then((result) => ({ result }), (error) => ({ error: error.message }))
-    .then((outcome) => console.log(JSON.stringify({ ...outcome, calls, options })));
+    .then((outcome) => {
+        const listeners = process.listenerCount('unhandledRejection');
+        console.log(JSON.stringify({ ...outcome, calls, options, listeners }));
+    });
 """
 
 
@@ -352,6 +362,20 @@ def test_closes_the_application_when_the_start_fails(tmp_path, scenario, error, 
 
     assert outcome["error"] == error
     assert outcome["calls"] == calls
+
+
+def test_fails_with_the_error_of_a_launch_that_leaves_a_rejection_behind(tmp_path):
+    outcome = run(tmp_path, "launch-leaves-rejection")
+
+    assert outcome["error"] == "launch failed"
+    assert outcome["calls"] == ["launch"]
+    assert outcome["listeners"] == 0
+
+
+def test_leaves_no_listener_for_rejections_after_a_start(tmp_path):
+    outcome = run(tmp_path, "success")
+
+    assert outcome["listeners"] == 0
 
 
 def test_evaluates_with_the_window_of_the_applications_page(tmp_path):

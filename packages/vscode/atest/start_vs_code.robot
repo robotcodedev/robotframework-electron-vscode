@@ -27,6 +27,14 @@ Executable Is Required
     ${ids} =    Get Electron Application Ids
     Should Be Empty    ${ids}
 
+VS Code Does Not Start
+    Start Test VS Code
+    # Python refuses Electron's arguments, prints its usage and ends at once.
+    Run Keyword And Expect Error    *Process failed to launch*usage:*
+    ...    Start VS Code    ${{ sys.executable }}
+    Get Element States    .monaco-workbench    contains    visible
+    Start Test VS Code
+
 Prepared Extensions Directory
     VAR    ${prepared}    ${OUTPUT_DIR}/prepared
     Remove Directory    ${prepared}    recursive=True

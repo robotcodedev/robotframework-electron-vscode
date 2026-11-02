@@ -12,7 +12,7 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
     const contextOptions = { acceptDownloads: true, colorScheme: null, ...launchOptions };
     if (recordVideo) contextOptions.recordVideo = recordVideo;
     if (recordHar) contextOptions.recordHar = recordHar;
-    const app = await playwright._electron.launch({
+    const app = await launchApplication(playwright, {
         executablePath,
         args,
         env,
@@ -42,6 +42,20 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
     } catch (error) {
         await app.close().catch(() => app.process().kill());
         throw error;
+    }
+}
+
+// Starts the application with Playwright. If it ends or the time runs out before Electron's first line
+// of output, Playwright leaves promises behind that reject without a handler, and these would end Browser's
+// whole Node process. The launch itself rejects with the same error, so the listener ignores them. It goes
+// away when Browser ships a Playwright that handles these promises.
+async function launchApplication(playwright, options) {
+    const ignore = () => {};
+    process.on('unhandledRejection', ignore);
+    try {
+        return await playwright._electron.launch(options);
+    } finally {
+        process.off('unhandledRejection', ignore);
     }
 }
 
