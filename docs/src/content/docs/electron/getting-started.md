@@ -10,14 +10,27 @@ sidebar:
 
 ## Installation
 
-The library brings the Browser library, and `rfbrowser init` completes its installation, as in any project with Browser:
+`robotframework-electron` needs Python 3.11 or later. It brings the Browser library, 21.0.0 or later, and with it Robot Framework, 7.1.1 or later.
+
+With Node.js, `rfbrowser init` completes the installation of the Browser library:
 
 ```sh
 pip install robotframework-electron
 rfbrowser init --skip-browsers
 ```
 
-An application brings its own Electron, so `--skip-browsers` leaves out the web browsers that Browser would download. Recording videos needs Playwright's ffmpeg, see [Videos and slow motion](../videos/#ffmpeg), and a test that opens a web browser beside an application needs that browser, for example from `rfbrowser init chromium`. Without Node.js, Browser's BrowserBatteries take the place of `rfbrowser init`: `pip install robotframework-electron "robotframework-browser[bb]"`.
+Without Node.js, Browser's BrowserBatteries take its place:
+
+```sh
+pip install robotframework-electron "robotframework-browser[bb]"
+```
+
+An application brings its own Electron, so this is all that testing an application needs. Two things need more:
+
+| For | With Node.js | Without Node.js |
+|---|---|---|
+| [Recording videos](../videos/#ffmpeg) | `rfbrowser init chromium-headless-shell` | `rfbrowser install --only-shell chromium` |
+| A visible web browser beside an application | `rfbrowser init chromium` | `rfbrowser install chromium` |
 
 ## First test
 

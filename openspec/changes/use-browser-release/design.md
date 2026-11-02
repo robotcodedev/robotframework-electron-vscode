@@ -99,8 +99,7 @@ The text for the section "VS Code and Electron on CI" of `running/ci-and-display
 
 ```md
 On a CI runner, `rfbrowser init --with-deps chromium-headless-shell` also installs the system
-packages of Chromium, which Electron needs too. On Ubuntu, the Chromium sandbox of Electron
-and VS Code also needs `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`.
+packages of Chromium, which Electron needs too.
 ```
 
 `--with-deps` has no effect together with `--skip-browsers`, according to Browser's code, which is why this line uses the headless shell. Playwright installs the same system packages for it as for `chromium`, because both are in the same dependency group of its registry.
@@ -118,6 +117,7 @@ The alternative, `ignore_missing_imports` as for `robot.*`, turns `Browser` into
 - **Test job:** `uv run rfbrowser init --with-deps chromium` replaces the build and `npx playwright install --with-deps chromium`. It runs before `uv run pytest`, because `test_loads_only_the_given_development_extensions` starts Browser's Node process.
 - **Lock file:** `uv sync ${{ matrix.sync || '--locked' }}`. The lock file no longer follows a moving clone, so a stale lock file now fails CI.
 - **Lowest versions:** the cell gets `--upgrade-package robotframework==7.1.1 --upgrade-package robotframework-browser==21.0.0`. While the lock file has Browser 21.0.0, the pin changes nothing; it takes effect when the lock file moves to a newer Browser. If the lower bound rises and the pin stays, the sync of the cell fails, so the two cannot drift apart that way.
+- **No setting for the Chromium sandbox:** the step `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0` goes away, and the guide does not name it. It came from a risk assumed in an earlier plan, not from a recorded failure. On Linux, Playwright starts Electron with `--no-sandbox` unless `chromiumSandbox` is set, and the libraries do not set it. With user namespaces blocked for the whole process tree by `bwrap --dev-bind / / --unshare-user --disable-userns`, Electron started directly aborts with Chromium's sandbox error, and the acceptance tests pass, 195/195.
 
 ### No job against Browser's `main`
 
@@ -141,6 +141,7 @@ The section "Browser Library Dependency" in `AGENTS.md` shrinks to the facts abo
 
 - [A new Browser major breaks the hook, and fresh installs get it before we have tested it] → An upgrade of the lock file shows it in development. A release with an upper bound fixes it for users.
 - [`rfbrowser init --with-deps` could not be tried locally, because it installs system packages with `sudo`] → It passes the option on to Playwright, as the step before did with `npx`. The first CI run checks it with `chromium`, the line in the guide with the headless shell is not run anywhere.
+- [Blocking user namespaces only imitates Ubuntu's AppArmor rule] → The first CI run checks it. If it fails, the step comes back, and the guide names it.
 - [Videos cost 278 MB for 5 MB of ffmpeg] → Accepted for the guide, because the command is simple and belongs to Browser's tools. An `rfbrowser` command for ffmpeg alone would remove this; whether to ask for one is the maintainer's decision.
 - [After an upgrade of Browser, the Node part in `.venv` is stale] → `uv run rfbrowser clean-node` and `uv run rfbrowser init chromium`, as Browser's own documentation says. `AGENTS.md` and `CONTRIBUTING.md` name it.
 

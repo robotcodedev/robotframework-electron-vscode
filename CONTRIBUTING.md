@@ -181,26 +181,13 @@ Welcome to your first code contribution! Here's how to set up your development e
    - [Git](https://git-scm.com/)
    - On Linux, for the display profiles: Xvfb (`xvfb` on Debian and Ubuntu, `xorg-server-xvfb` on Arch Linux), Xephyr (`xserver-xephyr` or `xorg-server-xephyr`) and the window manager Openbox (`openbox`)
 
-2. **Browser library:** the libraries need the `adoptContext` hook of the Browser library and its methods for adopted contexts, which are in Browser's `main` but not in a Browser release yet. Until they are, the workspace takes `robotframework-browser` from a clone of Browser's `main` next to this repository, `../robotframework-browser`. The clone needs its generated gRPC code and the built Node wrapper:
-
-   ```bash
-   git clone https://github.com/MarketSquare/robotframework-browser.git
-   cd robotframework-browser
-   uv venv .venv && uv pip install pip      # the invoke tasks call pip
-   source .venv/bin/activate
-   uv pip install -r Browser/dev-requirements.txt
-   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build
-   PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium   # Chromium and ffmpeg for some tests
-   ```
-
-   Do not install `robotframework-browser-batteries`: it brings its own Node process and would bypass the clone.
-
-3. **This repository:** clone it next to the Browser clone, install the workspace with the development tools, and prepare the VS Code and Electron builds of the acceptance tests:
+2. **This repository:** clone it, install the workspace with the development tools, complete the installation of the Browser library, and prepare the VS Code and Electron builds of the acceptance tests:
 
    ```bash
    git clone git@github.com:robotcodedev/robotframework-electron-vscode.git
    cd robotframework-electron-vscode
    uv sync
+   uv run rfbrowser init chromium   # with Chromium and Playwright's ffmpeg for some tests
    npm ci && npm run prepare-tests
    ```
 
@@ -345,22 +332,20 @@ git push --follow-tags
 
 **Common Issues:**
 
-1. **`inv build` in the Browser clone fails with `externally-managed-environment`:**
-   The clone's virtual environment has no pip, so the invoke tasks reach the system Python. This happens, for example, after `uv sync` in the clone, which removes pip:
+1. **Browser keywords fail after an upgrade of the Browser library:**
+   Its Node part in `.venv` is stale:
    ```bash
-   uv pip install --python .venv/bin/python pip
+   uv run rfbrowser clean-node
+   uv run rfbrowser init chromium
    ```
 
-2. **Browser keywords fail after switching branches in the Browser clone:**
-   Rebuild the Node wrapper and the generated gRPC code with `inv node-build` in the clone, also after changing its TypeScript or proto files.
+2. **Video or Chromium tests fail:**
+   Install Chromium and Playwright's ffmpeg: `uv run rfbrowser init chromium`.
 
-3. **Video or Chromium tests fail:**
-   Install Chromium and Playwright's ffmpeg in the clone: `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium`.
-
-4. **Windows open on the desktop, or tests behave differently on Wayland:**
+3. **Windows open on the desktop, or tests behave differently on Wayland:**
    Use the display profile `-p xvfb`.
 
-5. **VS Code does not fill the screen in screenshots and videos:**
+4. **VS Code does not fill the screen in screenshots and videos:**
    Install Openbox; without a window manager, VS Code cannot be maximised.
 
 ### Improving The Documentation

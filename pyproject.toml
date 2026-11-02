@@ -13,9 +13,6 @@ members = [
 [tool.uv.sources]
 robotframework-electron = { workspace = true }
 robotframework-vscode = { workspace = true }
-# Local clone of the Browser library with our hook, prepared with `inv deps && inv build`.
-# Switch to the PyPI release once the hook is published.
-robotframework-browser = { path = "../robotframework-browser", editable = true }
 
 [dependency-groups]
 dev = [
@@ -94,9 +91,7 @@ disallow_untyped_decorators = false
 # Both packages have test modules of the same name. Module names relative to the
 # repository root keep them apart, while the sources keep their import names.
 explicit_package_bases = true
-# The Browser clone is installed through an import hook, which mypy cannot follow,
-# so it is on the path until Browser is released with the adoptContext hook.
-mypy_path = ["packages/electron/src", "packages/vscode/src", "../robotframework-browser", "."]
+mypy_path = ["packages/electron/src", "packages/vscode/src", "."]
 files = [
     "packages/electron/src",
     "packages/vscode/src",
@@ -113,8 +108,10 @@ module = ["robot.*", "robotlibcore.*"]
 ignore_missing_imports = true
 
 # Browser's types, without reporting the errors of Browser's own code.
+# The wheel has no py.typed, so mypy has to be told to follow it.
 [[tool.mypy.overrides]]
 module = ["Browser", "Browser.*"]
+follow_untyped_imports = true
 follow_imports = "silent"
 ignore_errors = true
 

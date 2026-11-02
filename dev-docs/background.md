@@ -13,12 +13,11 @@ Decisions so far:
   - `robotframework-vscode` (`VSCode`): generic VS Code layer for any extension developer.
 - RobotCode-specific keywords and the RobotCode tests themselves stay in the RobotCode repository.
 - Electron support is **not** built into the Browser library. Upstream only gets one small, generic hook (see below).
-- Until the hook is released, the Browser library comes from a local clone at `~/develop/robot/robotframework-browser` (`../robotframework-browser` from this repository), used as an editable path dependency.
+- The hook was released in Browser 21.0.0 on 2026-11-01, and the Browser library comes from PyPI since then. Until then, it came from a local clone at `~/develop/robot/robotframework-browser` (`../robotframework-browser` from this repository), used as an editable path dependency.
   - The hook was developed there on the branch `adopt-context-hook`, created from `main` at `2cf74ae6`, and merged into Browser's `main` in MarketSquare/robotframework-browser#5318 on 2026-10-11.
-  - Its follow-up, the methods `adopted_context_options` and `register_adopted_context`, was developed on the branch `adopted-context-recording` and merged in MarketSquare/robotframework-browser#5326 on 2026-10-16. Since then the clone and CI use Browser's `main`.
+  - Its follow-up, the methods `adopted_context_options` and `register_adopted_context`, was developed on the branch `adopted-context-recording` and merged in MarketSquare/robotframework-browser#5326 on 2026-10-16. From then on, the clone and CI used Browser's `main`.
   - On 2026-10-22, before any release, MarketSquare/robotframework-browser#5372 replaced `register_adopted_context`: `call_js_keyword` registers an adopted context itself, from the report that `adoptContext` writes on the stream of the extension call. Since MarketSquare/robotframework-browser#5370, `adoptContext` also gives the context the library timeout and returns the video of its active page, and it takes the `activePage` to make active.
-  - `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`.
-  - How to prepare the clone is described in [AGENTS.md](../AGENTS.md).
+  - The clone's `origin` was the fork `d-biehl/robotframework-browser`, and `upstream` was `MarketSquare/robotframework-browser`. Pushes to the fork went over SSH (`git@github.com:d-biehl/robotframework-browser.git`), because the HTTPS `origin` had no credentials.
 - Do not model the design on Browser PR #4695 ("Add Electron application support"). It is AI-generated, stalled since 2026-03 and has open maintainer remarks.
 
 ## Where This Fits in RobotCode's Test Layers
@@ -138,5 +137,4 @@ Our library then owns the process. It can register as an RF listener and end app
 
 - Electron layer as a Browser plugin (`Library  Browser  plugins=…`) or as a standalone library. Leaning towards a plugin: it is the documented extension way and brings `self.library` and `initialize_js_extension`.
 - VS Code layer as a standalone library with its own namespace (`Library  VSCode`). Leaning towards yes.
-- CI for the end-to-end tests: not decided. If yes, the Browser clone must exist there at the same relative path, either cloned and prepared in the job or as a git submodule.
 - License.

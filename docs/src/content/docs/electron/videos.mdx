@@ -33,7 +33,7 @@ The log embeds the video, and the page details that the keyword returns contain 
 
 ## ffmpeg
 
-Playwright needs its own ffmpeg to record. It is installed together with Browser's browsers, and with Playwright's `install chromium`. If Browser was set up without browsers, install it alone with Playwright's `install ffmpeg` command. Without ffmpeg, the application's first window does not load, and the start fails after its timeout.
+Playwright needs its own ffmpeg to record. It comes with any browser that Browser installs, but not with `--skip-browsers`. The smallest browser is the headless shell, see [Installation](../getting-started/#installation). Without ffmpeg, `Start Electron Application` fails with `Video recording has not been started`.
 
 ## Slow motion
 

@@ -19,29 +19,11 @@ Background, research and the initial design ideas are in [dev-docs/background.md
 
 ## Browser Library Dependency
 
-Until a Browser release contains our changes, `robotframework-browser` comes from a local clone at `../robotframework-browser` (editable path source in the root `pyproject.toml`).
-
-- The `adoptContext` hook (MarketSquare/robotframework-browser#5318) and the public method `adopted_context_options` (MarketSquare/robotframework-browser#5326) are merged into Browser's `main`, but not released yet. Browser registers an adopted context itself, with trace groups and the video in the log (MarketSquare/robotframework-browser#5372), and `adoptContext` takes the `activePage` to make active.
-- The clone's `main` tracks `upstream/main`, and CI checks out `main` of `MarketSquare/robotframework-browser`.
-- The clone's `origin` is the fork `d-biehl/robotframework-browser`, and `upstream` is `MarketSquare/robotframework-browser`. Push to the fork over SSH (`git@github.com:d-biehl/robotframework-browser.git`); the HTTPS `origin` has no credentials.
-
-The clone needs its generated gRPC stubs and the built Node wrapper, which are not in git:
-
-```sh
-cd ../robotframework-browser
-uv venv .venv && uv pip install pip          # invoke tasks call pip; without it they hit the system Python
-source .venv/bin/activate
-uv pip install -r Browser/dev-requirements.txt
-PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build # runs deps, protobuf, node-build
-```
-
-The browser download is skipped there, but some acceptance tests need Chromium and the video tests need Playwright's ffmpeg: run `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` in the clone once, which installs both.
-
-After pulling `upstream/main` or switching branches in the clone, run `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build` there again, because its dependencies may have changed; when it reinstalls the Node packages, install Chromium again as above. After changing only its TypeScript or proto files, `inv node-build` is enough; it regenerates the gRPC code too. Do not install `robotframework-browser-batteries`: it brings its own gRPC server and would bypass the Node code of the clone.
+`robotframework-browser` comes from PyPI. `packages/electron/pyproject.toml` has the lowest version that the libraries run on, and `uv.lock` the version for development and CI. `uv run rfbrowser init chromium` completes its installation inside `.venv`, with Chromium and Playwright's ffmpeg for the tests that need them. After an upgrade of Browser, run `uv run rfbrowser clean-node` first and then that command again.
 
 ## Common Commands
 
-- `uv sync` — install the workspace into `.venv`, including the dev tools (pytest, RobotCode).
+- `uv sync`, then `uv run rfbrowser init chromium` — install the workspace into `.venv`, including the dev tools (pytest, RobotCode), and complete the installation of the Browser library. The acceptance tests and one unit test need the second command.
 - Always start RobotCode from the repository root with `-r .`. Each workspace package has its own `pyproject.toml`; without `-r`, RobotCode searches the project root upward from the given paths, stops at a package's `pyproject.toml` and ignores `robot.toml`.
 - `npm ci`, then `npm run prepare-tests` in the repository root — prepare the VS Code and Electron builds that the acceptance tests run against: VS Code 1.141.0 with `@vscode/test-electron` in `.cache/vscode`, and Electron 44.7.0 and 42.11.12 from npm, with their binaries cached in `.cache/electron`. `npm run prepare-tests -- insiders` adds the newest VS Code Insiders. `robot.toml` points `VSCODE_EXECUTABLE` and `ELECTRON_EXECUTABLE` to them with the paths of Linux x64; on other platforms, set the paths that the script prints under `[extend-variables]` in `.robot.toml`, because a `[variables]` table there replaces the one of `robot.toml`. It needs Node.js 22.12 or later.
 - `uv run robotcode -r . robot` — run the Robot Framework acceptance tests. Paths, output directory and profiles come from `robot.toml`; select a profile with `-p <name>` before the subcommand, and one test or suite with `-bl "<longname>"`. The display profiles choose where the windows open: `-p xvfb` hidden on a Full HD Xvfb screen, also on a Wayland desktop and without any desktop; `-p xephyr` in a separate Xephyr window; `-p local` or no display profile on the normal desktop. Combine them with other profiles, for example `-p xvfb -p vscode-insiders`. Agents use `-p xvfb`. The profiles need Xvfb, and Xephyr for `xephyr`; both start Openbox, if it is installed, so that windows can be maximised.

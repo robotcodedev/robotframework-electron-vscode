@@ -56,3 +56,5 @@ A window keeps the size that the application gives it, until a test calls `Set W
 ## VS Code and Electron on CI
 
 The libraries download nothing, so a step of the CI job prepares VS Code or Electron before the tests, in the paths that `robot.toml` names. For VS Code, `@vscode/test-electron` downloads a fixed version; for an Electron app, the npm package `electron` brings the binary on the first `require('electron')`. The getting-started pages for [VS Code](../../vscode/getting-started/#vs-code) and [Electron apps](../../electron/getting-started/#an-app-from-source) show both. To keep the downloads between CI runs, cache their folders: `.vscode-test`, the default of `@vscode/test-electron`, and Electron's cache folder, `~/.cache/electron` on Linux or the folder that `electron_config_cache` names.
+
+On a CI runner, `rfbrowser init --with-deps chromium-headless-shell` also installs the system packages of Chromium, which Electron needs too.

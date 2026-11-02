@@ -15,10 +15,11 @@ The libraries are in a pilot phase, at version 0.1.0, and not yet published on P
 
 ## Development
 
-The repository is a uv workspace with both libraries in `packages/`, the documentation site in `docs/`, and planned and archived changes in `openspec/`. `AGENTS.md` describes how to set up the Browser clone. Then, from the repository root:
+The repository is a uv workspace with both libraries in `packages/`, the documentation site in `docs/`, and planned and archived changes in `openspec/`. From the repository root:
 
 ```sh
 uv sync                                            # install the workspace with the dev tools
+uv run rfbrowser init chromium                     # complete the installation of the Browser library
 npm ci && npm run prepare-tests                    # VS Code and Electron for the acceptance tests
 uv run pytest                                      # unit tests
 uv run robotcode -r . robot                                  # acceptance tests on the desktop, configured in robot.toml
@@ -30,7 +31,7 @@ uv run robotcode -r . -p xvfb -p vscode-insiders robot       # against the newes
 
 - The display profiles need Xvfb (`xvfb` or `xorg-server-xvfb`) and, for `xephyr`, Xephyr (`xserver-xephyr` or `xorg-server-xephyr`); with Openbox (`openbox`) installed, windows can be maximised there.
 - The libraries download nothing. `npm ci` and `npm run prepare-tests`, with Node.js 22.12 or later, prepare the VS Code and Electron builds of the acceptance tests; `npm run prepare-tests -- insiders` adds the newest VS Code Insiders for `-p vscode-insiders`. [Running Tests](CONTRIBUTING.md#running-tests) in the contribution guide shows how to use local executables instead.
-- The test `Application And Web Browser` needs Chromium for Playwright in the Browser clone, and the video tests need Playwright's ffmpeg: `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium` there installs both.
+- `browser_beside.robot` needs Chromium, and the video tests need Playwright's ffmpeg: `uv run rfbrowser init chromium` installs both.
 - To run the VS Code tests against a fork, point `VSCODE_EXECUTABLE` at it, set `VSCODE_VERSION` to a name instead of a version number, as the profile `vscode-insiders` does, so that the version tests only check the version's form, and leave out the tests that check VS Code's own behaviour:
 
   ```sh

@@ -12,13 +12,14 @@ Browser 21.0.0 is released and contains everything the libraries need, so the cl
 - **Installation in the user guide:** `rfbrowser init --skip-browsers` stays the default, because testing an application needs no web browser.
   - The getting-started pages name the lowest versions, show the installation with Node.js and without it, and name the commands for recording videos and for a visible web browser beside an application.
   - The guide on videos says what brings ffmpeg, instead of a Playwright command that cannot be typed as it stands, and names the error without it, which is no longer a timeout.
-  - The guide on CI names the system packages and the setting for the Chromium sandbox on Ubuntu, which our own CI uses and the guide does not mention yet.
+  - The guide on CI names the system packages, which our own CI installs and the guide does not mention yet.
 - **Browser from PyPI:** the workspace takes `robotframework-browser` from PyPI, at the version in `uv.lock`, and `uv run rfbrowser init chromium` completes its installation with what the tests need. The path source and the clone on mypy's path go away, and mypy follows the wheel, which has no `py.typed`.
 - **CI:**
   - Checkout and build of Browser go away.
   - The test job runs `rfbrowser init`, and the lint job no longer needs Node.
   - `uv sync --locked` applies everywhere except in the cell with the lowest versions.
   - The repository moves to the root of the workspace of the job, because no clone lies next to it any more.
+  - The step that allows the Chromium sandbox on Ubuntu goes away, because Playwright starts Electron without the sandbox on Linux.
 - **No check for the hook:** the check for a missing `adoptContext` hook at the start of an application goes away, with its test. The libraries assume a Browser in a suitable version, which the new lower bound ensures.
 - **Developer documentation:** `AGENTS.md`, `CONTRIBUTING.md`, `README.md`, `dev-docs/background.md` and `.claude/settings.json` no longer describe the clone.
 

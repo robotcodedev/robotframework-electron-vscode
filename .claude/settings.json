@@ -1,9 +1,4 @@
 {
-  "permissions": {
-    "additionalDirectories": [
-      "../robotframework-browser"
-    ]
-  },
   "enabledPlugins": {
     "robotcode@robotframework-agent-plugins": true
   }

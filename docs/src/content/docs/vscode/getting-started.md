@@ -12,12 +12,27 @@ Everything in the [Electron section](../../electron/getting-started/) applies to
 
 ## Installation
 
+`robotframework-vscode` needs Python 3.11 or later. It brings `robotframework-electron` and the Browser library, 21.0.0 or later, and with it Robot Framework, 7.1.1 or later.
+
+With Node.js, `rfbrowser init` completes the installation of the Browser library:
+
 ```sh
 pip install robotframework-vscode
 rfbrowser init --skip-browsers
 ```
 
-The library brings `robotframework-electron` and the Browser library, and `rfbrowser init` completes the installation of the Browser library, as for [Electron applications](../../electron/getting-started/#installation).
+Without Node.js, Browser's BrowserBatteries take its place:
+
+```sh
+pip install robotframework-vscode "robotframework-browser[bb]"
+```
+
+VS Code brings its own Electron, so this is all that testing an extension needs. Two things need more:
+
+| For | With Node.js | Without Node.js |
+|---|---|---|
+| [Recording videos](../../electron/videos/#ffmpeg) | `rfbrowser init chromium-headless-shell` | `rfbrowser install --only-shell chromium` |
+| A visible web browser beside VS Code | `rfbrowser init chromium` | `rfbrowser install chromium` |
 
 ## VS Code
 

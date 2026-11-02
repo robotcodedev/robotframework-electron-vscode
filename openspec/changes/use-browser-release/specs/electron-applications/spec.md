@@ -46,11 +46,11 @@ The guide on videos SHALL say that recording needs Playwright's own ffmpeg, that
 - **THEN** the guide explains that ffmpeg is missing and points to the command that brings it
 
 ### Requirement: Guide on CI runners
-The guide on running tests on CI SHALL name the command that also installs the system packages which Electron needs, and the setting that the Chromium sandbox of Electron and VS Code needs on Ubuntu.
+The guide on running tests on CI SHALL name the command that also installs the system packages which Electron needs.
 
 #### Scenario: Setting up a CI job
 - **WHEN** someone sets up a CI job on an Ubuntu runner with the guide
-- **THEN** the guide names the installation with system packages and the `sysctl` setting for the sandbox
+- **THEN** the guide names the installation with system packages
 
 ## MODIFIED Requirements
 

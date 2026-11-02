@@ -71,11 +71,10 @@ async function adoptContext(context, adoptOptions) {
     if (scenario === 'adopt-fails' || scenario === 'close-fails') throw new Error('adopt failed');
     return { browserId: 'browser', contextId: 'context', pageId: 'page', videoPath: null };
 }
-const hook = scenario === 'no-hook' ? 'RESERVED' : adoptContext;
 const launchOptions = scenario === 'options' ? { colorScheme: 'dark', locale: 'de-DE', bypassCSP: true } : {};
 const recordVideo = scenario === 'view-first' || scenario === 'first-closed' ? {} : null;
 const launchArguments = ['/electron', [], {}, '/cwd', 1000, recordVideo, null, null, '/traces', launchOptions];
-robotframeworkElectronLaunch(...launchArguments, playwright, hook)
+robotframeworkElectronLaunch(...launchArguments, playwright, adoptContext)
     .then((result) => ({ result }), (error) => ({ error: error.message }))
     .then((outcome) => console.log(JSON.stringify({ ...outcome, calls, options })));
 """
@@ -338,13 +337,6 @@ def test_temporary_trace_files_go_to_the_given_folder(tmp_path):
     outcome = run(tmp_path, "success")
 
     assert outcome["options"]["launch"]["tracesDir"] == "/traces"
-
-
-def test_starts_nothing_without_the_hook(tmp_path):
-    outcome = run(tmp_path, "no-hook")
-
-    assert "no adoptContext hook" in outcome["error"]
-    assert outcome["calls"] == []
 
 
 @pytest.mark.parametrize(

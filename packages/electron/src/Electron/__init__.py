@@ -186,8 +186,9 @@ class Electron(Browser):
                 1280x720. A larger window is scaled down to fit, a smaller one
                 is shown at its own size with a grey margin. The log embeds the
                 video, and the file is complete once the application has
-                closed. Recording needs Playwright's ffmpeg, which is installed
-                with Browser's browsers.
+                closed. Recording needs Playwright's ffmpeg, which comes with
+                any browser that Browser installs, but not with
+                ``rfbrowser init --skip-browsers``.
           - ``record_har``: Records the network traffic of the application's
                 windows into a [http://www.softwareishard.com/blog/har-12-spec/|HAR]
                 file, as ``recordHar`` of the Browser library's ``New Context``: a dictionary with the

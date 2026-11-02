@@ -17,40 +17,14 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: robotframework-electron-vscode
     steps:
       - name: Check out the repository
         uses: actions/checkout@v7
-        with:
-          path: robotframework-electron-vscode
-
-      # mypy reads the Browser clone, and RobotCode's analysis imports the libraries,
-      # which import Browser, so the clone needs its generated code.
-      - name: Check out the Browser library with the adoptContext hook
-        uses: actions/checkout@v7
-        with:
-          repository: MarketSquare/robotframework-browser
-          ref: main
-          path: robotframework-browser
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
 
       - uses: astral-sh/setup-uv@v10.3.0
 
-      - name: Build the Browser library
-        working-directory: robotframework-browser
-        run: |
-          uv venv .venv
-          uv pip install --python .venv/bin/python pip -r Browser/dev-requirements.txt
-          . .venv/bin/activate
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build
-
       - name: Install the workspace
-        run: uv sync
+        run: uv sync --locked
 
       - name: Run the pre-commit checks
         run: uv run pre-commit run --all-files --show-diff-on-failure
@@ -66,33 +40,18 @@ jobs:
         include:
           # The versions of .python-version and the lock file.
           - python: "3.13"
-          # The lowest versions that the Browser library supports.
+          # The lowest versions that the libraries run on.
           - python: "3.11"
-            sync: --upgrade-package robotframework==7.1.1
+            sync: --upgrade-package robotframework==7.1.1 --upgrade-package robotframework-browser==21.0.0
           # The newer Python versions.
           - python: "3.14"
           - python: "3.15"
     # Takes precedence over .python-version for every uv command of the job.
     env:
       UV_PYTHON: ${{ matrix.python }}
-    defaults:
-      run:
-        working-directory: robotframework-electron-vscode
     steps:
       - name: Check out the repository
         uses: actions/checkout@v7
-        with:
-          path: robotframework-electron-vscode
-
-      # Until a Browser release contains the adoptContext hook and the methods for adopted
-      # contexts, the workspace takes robotframework-browser from a clone of Browser's main
-      # branch next to the repository.
-      - name: Check out the Browser library with the adoptContext hook
-        uses: actions/checkout@v7
-        with:
-          repository: MarketSquare/robotframework-browser
-          ref: main
-          path: robotframework-browser
 
       - uses: actions/setup-node@v7
         with:
@@ -103,24 +62,14 @@ jobs:
       - name: Install Xvfb and Openbox
         run: sudo apt-get update && sudo apt-get install -y xvfb openbox
 
-      # Ubuntu restricts unprivileged user namespaces, which the Chromium sandbox
-      # of Electron and VS Code needs.
-      - name: Allow the Chromium sandbox
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
-      - name: Build the Browser library
-        working-directory: robotframework-browser
-        run: |
-          uv venv .venv
-          uv pip install --python .venv/bin/python pip -r Browser/dev-requirements.txt
-          . .venv/bin/activate
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 inv build
-          PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install --with-deps chromium
-
-      # Not --locked: the lock file records the Browser clone's dependencies,
-      # which change with Browser's main. The lowest versions change it in the checkout only.
+      # The lowest versions change the lock file in the checkout only.
       - name: Install the workspace
-        run: uv sync ${{ matrix.sync }}
+        run: uv sync ${{ matrix.sync || '--locked' }}
+
+      # Chromium and Playwright's ffmpeg for the tests, and the system packages of
+      # Chromium, which Electron needs too.
+      - name: Complete the installation of the Browser library
+        run: uv run rfbrowser init --with-deps chromium
 
       # The build packs the helper extension's .vsix into the source tree, where
       # the acceptance tests install it, and checks the build in each cell.
@@ -153,10 +102,10 @@ jobs:
         with:
           name: test-results-python-${{ matrix.python }}
           path: |
-            robotframework-electron-vscode/results/
-            !robotframework-electron-vscode/results/**/*user-data/Cached*/**
-            !robotframework-electron-vscode/results/**/*user-data/*Cache/**
-            !robotframework-electron-vscode/results/**/*user-data/Dictionaries/**
+            results/
+            !results/**/*user-data/Cached*/**
+            !results/**/*user-data/*Cache/**
+            !results/**/*user-data/Dictionaries/**
           if-no-files-found: ignore
 
   build:
