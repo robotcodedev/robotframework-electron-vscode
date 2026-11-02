@@ -40,6 +40,10 @@ The `VSCode` library SHALL provide every keyword of the `Electron` library, and 
 - **WHEN** the workbench does not become ready within the time allowed
 - **THEN** the keyword fails with the error of the wait, even if closing the instance fails as well, and no VS Code process of the instance is running
 
+#### Scenario: VS Code does not start
+- **WHEN** the executable ends before VS Code has answered
+- **THEN** the keyword fails with an error that shows the output and the exit code of the executable, an application that was already open keeps working, and the next start works
+
 ### Requirement: Isolated instances
 Each instance SHALL use its own user-data and extensions directories, unless a test gives them, so that neither the user's own VS Code settings and extensions nor other instances affect it. Environment variables starting with `VSCODE_` SHALL be removed from the environment the instance sees.
 

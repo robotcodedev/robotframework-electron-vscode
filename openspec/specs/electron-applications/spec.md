@@ -135,7 +135,7 @@ An application SHALL end whenever Browser closes it: through `Close Electron App
 - **THEN** the application process ends
 
 ### Requirement: Failed start
-If the application cannot be started, opens no window within the time allowed, or cannot be taken over by the Browser library, `Start Electron Application` SHALL fail with an error that names the cause. It SHALL leave no application process running and SHALL add nothing to Browser's state.
+If the application cannot be started, opens no window within the time allowed, or cannot be taken over by the Browser library, `Start Electron Application` SHALL fail with an error that names the cause. It SHALL leave no application process running and SHALL add nothing to Browser's state. Applications and browsers that are already open SHALL keep working, and the next start SHALL work.
 
 #### Scenario: Wrong executable path
 - **WHEN** the executable path does not exist
@@ -148,6 +148,14 @@ If the application cannot be started, opens no window within the time allowed, o
 #### Scenario: Browser cannot take the application over
 - **WHEN** the Browser library cannot take over the started application
 - **THEN** the keyword fails with an error that names the cause, and afterwards no process of the application is running
+
+#### Scenario: Application ends during the start
+- **WHEN** the executable ends before the application has answered, for example because a system library is missing
+- **THEN** the keyword fails with an error that shows the output and the exit code of the executable, an application that was already open keeps working, and the next start works
+
+#### Scenario: Application does not answer in time
+- **WHEN** the time allowed runs out before the application has answered, for example because it was built with the Electron fuse `EnableNodeCliInspectArguments` switched off
+- **THEN** the keyword fails with a timeout error, afterwards no process of the application is running, an application that was already open keeps working, and the next start works
 
 ### Requirement: Video recording
 `Start Electron Application` SHALL record a video of the application's windows when it is given `record_video`. It SHALL store the video in Browser's video folder of the output directory unless `record_video` names a folder, return the video's path in the page details of its return value, and embed the video in the log, as Browser does for `New Context`.
