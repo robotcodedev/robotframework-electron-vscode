@@ -20,7 +20,7 @@ Each library's section SHALL have a reference page with the keyword documentatio
 
 #### Scenario: Reference in its section
 - **WHEN** the built site is opened
-- **THEN** the Electron section has the reference of `Electron`, and the VS Code section the reference of `VSCode`
+- **THEN** the Electron section has the reference of `Electron`, and the VS Code section the reference of `VSCode`, each with every keyword of its library, including those that come from the Browser library
 
 #### Scenario: Regenerate the reference
 - **WHEN** the reference script runs after a keyword's documentation has changed

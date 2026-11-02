@@ -9,7 +9,7 @@ See proposal.md for the motivation and the specs for the requirements. Today `do
 - `logs.md` has a section on the VS Code instance directories, and a troubleshooting item on VS Code's command palette;
 - `ci-and-display.mdx` explains in its section on the screen size how VS Code fills the screen.
 
-Pages include files from `examples/` with `?raw` imports and screenshots from `src/assets/`, both by relative paths. RobotCode 2.8.0, which brings `robotcode doc`, is not released yet.
+Pages include files from `examples/` with `?raw` imports and screenshots from `src/assets/`, both by relative paths. RobotCode 2.8.0 brings `robotcode doc`.
 
 ## Goals / Non-Goals
 
@@ -80,18 +80,23 @@ docs/src/content/docs/
 ### Keyword reference
 
 This decision moved here from `add-documentation-site`, with the reference pages now in the library sections:
-- **Script:** `docs/scripts/generate_reference.py` runs `uv run robotcode -r . doc …` once for each library. It writes the Markdown with Starlight frontmatter (title, description, `sidebar.order` and `sidebar.label`) to `electron/reference.md` and `vscode/reference.md`.
-- **Options:** the exact `robotcode doc` options are fixed once RobotCode 2.8.0 is released.
-- **Committed pages:** the pages are committed, because the workflow builds the site with Node.js only; generating them there would need Python and the libraries. AGENTS.md says when to regenerate them: after a keyword or its documentation changes.
+- **Script:** `docs/scripts/generate_reference.py` runs `robotcode -r . doc lib -o <file> Electron` and the same for `VSCode`, and is started with `uv run python` like `update_screenshots.py`. It writes `electron/reference.md` and `vscode/reference.md`.
+- **Whole output:** a page has the library's introduction, importing, every keyword and the data types. The introductions link to keywords and sections on the same page, so the script does not filter.
+- **Adjustments for the site:** the script
+  - adds the Starlight frontmatter (title, description, `sidebar.order` and `sidebar.label`);
+  - drops everything before `## Introduction`: Starlight shows the title, and the library version would go stale in a committed page;
+  - removes trailing whitespace, which the pre-commit hooks would remove anyway.
+- **Examples:** code blocks keep the backticks around keyword names that the docstrings have. Libdoc makes links of them; Markdown has no links in code blocks.
+- **Committed pages:** the pages are committed, because the workflow builds the site with Node.js only; generating them there would need Python and the libraries. `AGENTS.md` and `CONTRIBUTING.md` say when to regenerate them: after a keyword or its documentation changes, and after an upgrade of Browser or RobotCode.
 
 ## Risks / Trade-offs
 
 - **[Old URLs break for links outside the repository]** → The site is young and the libraries are not on PyPI yet. Redirects can follow if needed.
 - **[VS Code readers miss shared content that now lives in the Electron section]** → The VS Code getting-started page says that the Electron section applies to VS Code as well, and each VS Code page links to the Electron page of its topic.
-- **[The change stays open until RobotCode 2.8.0]** → The tasks of the structure do not depend on the reference. The structure can be published at once, and the change is archived after the reference tasks.
-- **[`robotcode doc` output needs adjusting for Starlight, for example its headings or links]** → The script owns the post-processing. The output is checked in the first build after 2.8.0.
+- **[Two large pages that are almost the same]** → 98 % of their lines are the same, each page is about 1.5 MB of HTML, 130 KB compressed, and search finds a Browser keyword twice. Accepted, because the pages are generated and nothing has to be kept in sync by hand.
+- **[The pages go stale]** → As with the screenshots, only the step in `AGENTS.md` and `CONTRIBUTING.md` guards against it; no check enforces it.
 
 ## Migration Plan
 
 1. Move and split the pages, change the sidebar and the links, build and check the links.
-2. After RobotCode 2.8.0: generate the reference pages, then archive the change.
+2. Upgrade RobotCode, generate the reference pages, then archive the change.

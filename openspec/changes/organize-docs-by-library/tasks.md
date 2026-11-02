@@ -36,11 +36,13 @@
   - `grep` finds no old page path in the repository outside `openspec/changes/archive/`, this change's artifacts, which map the old paths to the new ones, and `CHANGELOG.md`;
   - the scenarios of the delta specs hold in the built site, except those of the keyword reference, which 4.2 checks.
 
-## 4. Keyword reference (after RobotCode 2.8.0 is released)
+## 4. Keyword reference
 
-- [ ] 4.1 Upgrade RobotCode with `uv lock --upgrade-package robotcode && uv sync`. Verify that `uv run robotcode -r . doc keywords VSCode` works, and that `uv run pre-commit run --all-files` passes with the new version.
-- [ ] 4.2 Write `docs/scripts/generate_reference.py` as design.md describes. Generate `electron/reference.md` and `vscode/reference.md`, with the sidebar label "Keyword reference" and the last place in their section. Add the regeneration step to `AGENTS.md`. Verify that:
+- [ ] 4.1 Raise RobotCode in the root `pyproject.toml` to `robotcode[analyze,repl,runner]>=2.8.0`, and run `uv lock --upgrade-package robotcode && uv sync`. Verify that `uv run robotcode -r . doc lib Electron` works, and that `uv run pre-commit run --all-files` and `uv run robotcode -r . -p xvfb robot` pass with the new version.
+- [ ] 4.2 Write `docs/scripts/generate_reference.py` as design.md describes. Generate `electron/reference.md` and `vscode/reference.md`, with the sidebar label "Keyword reference" and the last place in their section. Link to the reference from each library's getting-started page. Add the regeneration step to `AGENTS.md` and `CONTRIBUTING.md`. Verify that:
   - the build shows the reference as the last page of each library's section;
+  - a check with an HTML parser finds no broken internal link or anchor in `docs/dist`;
+  - `uv run pre-commit run --all-files` leaves the generated pages unchanged;
   - after a changed docstring, regenerating changes the reference page; then revert the docstring.
 
 ## Workflow follow-up

@@ -17,7 +17,7 @@ The documentation site mixes both libraries:
   - the section "In VS Code" of the guide on Browser keywords;
   - "A full frame of VS Code" from the video guide, and the example from the trace guide;
   - the VS Code instance directories from the guide on logs.
-- **Keyword reference:** the empty reference group goes away. The reference moved here from the archived `add-documentation-site`. It gets one page per library, generated with `robotcode doc` from RobotCode 2.8.0, in that library's section.
+- **Keyword reference:** the empty reference group goes away. The reference moved here from the archived `add-documentation-site`. It gets one page per library, generated with `robotcode doc` from RobotCode 2.8.0, in that library's section. Each page has every keyword of its library, including those that come from the Browser library.
 - **URLs:** the URLs of the published site change; for example, `guides/extensions/` becomes `vscode/extensions/`. The links in the READMEs, the example's README and the pages follow. There are no redirects: the libraries are in a pilot phase and not yet on PyPI.
 
 ## Capabilities
@@ -41,6 +41,4 @@ None.
   - `index.mdx` links to the new pages.
 - **Configuration:** the sidebar in `docs/astro.config.mjs`.
 - **Links:** `packages/vscode/README.md` and `examples/vscode-extension/README.md` link to pages of the site; the other READMEs link to its start page only.
-- **Keyword reference:**
-  - after RobotCode 2.8.0, the new script `docs/scripts/generate_reference.py`, a RobotCode upgrade in `uv.lock`, and the regeneration step in `AGENTS.md`;
-  - RobotCode 2.8.0 is not released yet; on 2026-10-13, PyPI has 2.7.0. The tasks of the reference wait for it, and the change stays open until then. The new structure does not wait.
+- **Keyword reference:** the new script `docs/scripts/generate_reference.py`, the upgrade to RobotCode 2.8.0 in `pyproject.toml` and `uv.lock`, and the regeneration step in `AGENTS.md` and `CONTRIBUTING.md`.
