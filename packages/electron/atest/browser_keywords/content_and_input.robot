@@ -133,7 +133,9 @@ Console And Page Errors
     Evaluate JavaScript    ${None}    () => console.log('Hello from the window')
     Get Console Log    validate    any(message["text"] == "Hello from the window" for message in value)
     Evaluate JavaScript    ${None}    () => { setTimeout(() => { throw new Error('Error from the window'); }); }
-    Get Page Errors    validate    any("Error from the window" in error["message"] for error in value)
+    # The window throws after the call has returned, and Get Page Errors does not wait for the error.
+    Wait Until Keyword Succeeds    10s    100ms
+    ...    Get Page Errors    validate    any("Error from the window" in error["message"] for error in value)
 
 Coverage
     Start Coverage    path=${OUTPUT_DIR}/coverage
