@@ -38,12 +38,18 @@
 
 ## 4. Keyword reference
 
-- [ ] 4.1 Raise RobotCode in the root `pyproject.toml` to `robotcode[analyze,repl,runner]>=2.8.0`, and run `uv lock --upgrade-package robotcode && uv sync`. Verify that `uv run robotcode -r . doc lib Electron` works, and that `uv run pre-commit run --all-files` and `uv run robotcode -r . -p xvfb robot` pass with the new version.
-- [ ] 4.2 Write `docs/scripts/generate_reference.py` as design.md describes. Generate `electron/reference.md` and `vscode/reference.md`, with the sidebar label "Keyword reference" and the last place in their section. Link to the reference from each library's getting-started page. Add the regeneration step to `AGENTS.md` and `CONTRIBUTING.md`. Verify that:
+- [x] 4.1 Raise RobotCode in the root `pyproject.toml` to `robotcode[analyze,repl,runner]>=2.8.0`, and run `uv lock --upgrade-package robotcode && uv sync`. Verify that `uv run robotcode -r . doc lib Electron` works, and that `uv run pre-commit run --all-files` and `uv run robotcode -r . -p xvfb robot` pass with the new version.
+- [x] 4.2 Write `docs/scripts/generate_reference.py` as design.md describes. Generate `electron/reference.md` and `vscode/reference.md`, with the sidebar label "Keyword reference" and the last place in their section. Link to the reference from each library's getting-started page. Add the regeneration step to `AGENTS.md` and `CONTRIBUTING.md`. Verify that:
   - the build shows the reference as the last page of each library's section;
   - a check with an HTML parser finds no broken internal link or anchor in `docs/dist`;
   - `uv run pre-commit run --all-files` leaves the generated pages unchanged;
   - after a changed docstring, regenerating changes the reference page; then revert the docstring.
+- [x] 4.3 Add the pre-commit hook `keyword-reference` as design.md describes, and describe it in `AGENTS.md`, `CONTRIBUTING.md` and the script's docstring. Verify with real commits in a throwaway clone that:
+  - a commit with a changed docstring fails and changes only the pages of the libraries that have the keyword, and after `git add` of the pages it passes;
+  - the hook undoes a hand edit of a generated page;
+  - the hook is skipped for a commit that changes only another page;
+  - `uv run pre-commit run --all-files` fails on stale pages that were committed with `--no-verify`;
+  - the hook runs for a change of `uv.lock`.
 
 ## Workflow follow-up
 

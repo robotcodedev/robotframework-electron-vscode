@@ -41,4 +41,4 @@ None.
   - `index.mdx` links to the new pages.
 - **Configuration:** the sidebar in `docs/astro.config.mjs`.
 - **Links:** `packages/vscode/README.md` and `examples/vscode-extension/README.md` link to pages of the site; the other READMEs link to its start page only.
-- **Keyword reference:** the new script `docs/scripts/generate_reference.py`, the upgrade to RobotCode 2.8.0 in `pyproject.toml` and `uv.lock`, and the regeneration step in `AGENTS.md` and `CONTRIBUTING.md`.
+- **Keyword reference:** the new script `docs/scripts/generate_reference.py`, the pre-commit hook `keyword-reference`, the upgrade to RobotCode 2.8.0 in `pyproject.toml` and `uv.lock`, and the regeneration step in `AGENTS.md` and `CONTRIBUTING.md`.

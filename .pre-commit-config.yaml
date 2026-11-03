@@ -72,3 +72,11 @@ repos:
         language: system
         pass_filenames: false
         files: ^examples/vscode-extension/
+
+      - id: keyword-reference
+        name: keyword reference
+        # Like a formatter: fails when it changes the pages, so that they are committed with the change.
+        entry: uv run python docs/scripts/generate_reference.py
+        language: system
+        pass_filenames: false
+        files: ^packages/[^/]+/src/.*\.py$|^docs/scripts/generate_reference\.py$|^docs/src/content/docs/[^/]+/reference\.md$|^uv\.lock$

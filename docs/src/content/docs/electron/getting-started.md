@@ -124,3 +124,4 @@ Start Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=
 - [Traces and HAR files](../traces/) and [Videos and slow motion](../videos/) for recording what a test did.
 - [CI and the Linux display](../../running/ci-and-display/) for running without a desktop.
 - [Logs and troubleshooting](../../running/logs/) if an app does not start.
+- [Keyword reference](../reference/) for every keyword of the library, including those that come from the Browser library.

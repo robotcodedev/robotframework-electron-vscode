@@ -87,14 +87,16 @@ This decision moved here from `add-documentation-site`, with the reference pages
   - drops everything before `## Introduction`: Starlight shows the title, and the library version would go stale in a committed page;
   - removes trailing whitespace, which the pre-commit hooks would remove anyway.
 - **Examples:** code blocks keep the backticks around keyword names that the docstrings have. Libdoc makes links of them; Markdown has no links in code blocks.
-- **Committed pages:** the pages are committed, because the workflow builds the site with Node.js only; generating them there would need Python and the libraries. `AGENTS.md` and `CONTRIBUTING.md` say when to regenerate them: after a keyword or its documentation changes, and after an upgrade of Browser or RobotCode.
+- **Committed pages:** the pages are committed, because the workflow builds the site with Node.js only; generating them there would need Python and the libraries. `AGENTS.md` and `CONTRIBUTING.md` describe the script and the hook.
+- **Hook:** the pre-commit hook `keyword-reference` runs the script when a commit touches the sources of the libraries, `uv.lock`, the script or a reference page, which covers a changed keyword or docstring and an upgrade of Browser or RobotCode. Like a formatter, it fails when the pages change, so that they are committed with the change. The lint job runs all hooks on every push, so stale pages fail there at the latest.
 
 ## Risks / Trade-offs
 
 - **[Old URLs break for links outside the repository]** → The site is young and the libraries are not on PyPI yet. Redirects can follow if needed.
 - **[VS Code readers miss shared content that now lives in the Electron section]** → The VS Code getting-started page says that the Electron section applies to VS Code as well, and each VS Code page links to the Electron page of its topic.
 - **[Two large pages that are almost the same]** → 98 % of their lines are the same, each page is about 1.5 MB of HTML, 130 KB compressed, and search finds a Browser keyword twice. Accepted, because the pages are generated and nothing has to be kept in sync by hand.
-- **[The pages go stale]** → As with the screenshots, only the step in `AGENTS.md` and `CONTRIBUTING.md` guards against it; no check enforces it.
+- **[The hook makes a commit fail once]** → `git add` and a second commit are enough, as with a formatter. Without the hooks installed, stale pages fail the lint job, and the tests then do not start; `ruff format` behaves the same way.
+- **[Another platform writes other pages]** → The hook would then fail there. The output is byte-identical on Python 3.11, 3.13, 3.14 and 3.15 on Linux; Windows and macOS have not been tried.
 
 ## Migration Plan
 

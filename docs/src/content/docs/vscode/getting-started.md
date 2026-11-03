@@ -99,3 +99,4 @@ The example project in the repository goes further, with its own keywords for th
 - [CI and the Linux display](../../running/ci-and-display/) for running without a desktop.
 - [VS Code versions and profiles](../versions/) for running the tests against several VS Code builds.
 - [Instances, logs and troubleshooting](../instances/) for VS Code's logs, the instance directories and the cleanup of earlier runs.
+- [Keyword reference](../reference/) for every keyword of the library, including those that come from `Electron` and the Browser library.
