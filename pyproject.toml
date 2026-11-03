@@ -21,7 +21,7 @@ dev = [
     "mypy>=2.4.0",
     "pre-commit>=4.6.2",
     "pytest>=8",
-    "robotcode[analyze,repl,runner]>=2.7.0",
+    "robotcode[analyze,repl,runner]>=2.8.0",
     "ruff>=0.17.0",
 ]
 
