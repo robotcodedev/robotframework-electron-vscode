@@ -150,20 +150,22 @@ Maximise
 
 Minimise And Restore
     Start Fixture App
-    ${before} =    Get Window Size
+    # Right after the start, a window's content size can still include the application's menu bar.
+    Set Window Size    1024    700
     Minimize Window
     Get Window State    ==    minimized
     Restore Window
     Get Window State    ==    normal
-    Get Window Size    ALL    ==    ${before}
+    Get Window Size    ALL    ==    {'width': 1024, 'height': 700}
 
 Restore A Maximised Window
     Start Fixture App
-    ${before} =    Get Window Size
+    # Right after the start, a window's content size can still include the application's menu bar.
+    Set Window Size    1024    700
     Maximize Window
     Restore Window
     Get Window State    ==    normal
-    Get Window Size    ALL    ==    ${before}
+    Get Window Size    ALL    ==    {'width': 1024, 'height': 700}
 
 Restore A Window That Was Maximised Before It Was Minimised
     Start Fixture App
