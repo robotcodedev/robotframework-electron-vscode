@@ -38,6 +38,12 @@ const options = {};
 const context = { newCDPSession: async (page) => cdpSession(page) };
 const windowPage = fakePage('window', context);
 const viewPage = fakePage('view', context);
+for (const page of [windowPage, viewPage]) {
+    page.reload = async () => {
+        calls.push(`reload ${page.name}`);
+        if (scenario === 'reload-fails') throw new Error('net::ERR_ABORTED');
+    };
+}
 const app = {
     firstWindow: async () => {
         calls.push('firstWindow');
@@ -78,7 +84,8 @@ async function adoptContext(context, adoptOptions) {
     if (scenario === 'adopt-fails' || scenario === 'close-fails') throw new Error('adopt failed');
     return { browserId: 'browser', contextId: 'context', pageId: 'page', videoPath: null };
 }
-const launchOptions = scenario === 'options' ? { colorScheme: 'dark', locale: 'de-DE', bypassCSP: true } : {};
+const bypass = scenario === 'options' || scenario === 'reload-fails';
+const launchOptions = bypass ? { colorScheme: 'dark', locale: 'de-DE', bypassCSP: true } : {};
 const recordVideo = scenario === 'view-first' || scenario === 'first-closed' ? {} : null;
 const launchArguments = ['/electron', [], {}, '/cwd', 1000, recordVideo, null, null, '/traces', launchOptions];
 robotframeworkElectronLaunch(...launchArguments, playwright, adoptContext)
@@ -341,6 +348,25 @@ def test_launch_options_reach_playwright_and_browser(tmp_path):
     expected = {"acceptDownloads": True, "colorScheme": "dark", "locale": "de-DE", "bypassCSP": True}
     assert {key: outcome["options"]["launch"][key] for key in expected} == expected
     assert outcome["options"]["adopt"] == expected
+
+
+def test_bypassing_the_policy_loads_the_open_pages_again_before_adopting_them(tmp_path):
+    outcome = run(tmp_path, "options")
+
+    assert outcome["calls"] == ["launch", "firstWindow", "reload view", "reload window", "adoptContext"]
+
+
+def test_a_start_without_the_bypass_loads_no_page_again(tmp_path):
+    outcome = run(tmp_path, "success")
+
+    assert outcome["calls"] == ["launch", "firstWindow", "adoptContext"]
+
+
+def test_a_page_that_fails_to_load_again_does_not_fail_the_start(tmp_path):
+    outcome = run(tmp_path, "reload-fails")
+
+    assert outcome["result"]["browserId"] == "browser"
+    assert outcome["calls"] == ["launch", "firstWindow", "reload view", "reload window", "adoptContext"]
 
 
 def test_temporary_trace_files_go_to_the_given_folder(tmp_path):

@@ -39,6 +39,19 @@ Script Added To A Page With A Strict Policy
     Evaluate JavaScript    ${None}    ${ADD_SCRIPT}
     Get Text    id=result    ==    Script ran
 
+Bypassed Policy With Views
+    [Documentation]    The fixture's views page has a <webview> and a WebContentsView, which load again as well.
+    Start Fixture App    --views    bypass_csp=True
+    Get Page Ids    ALL    ACTIVE    ACTIVE    validate    len(value) == 3
+    ${windows} =    Get Window Ids
+    Length Should Be    ${windows}    1
+
+Bypassed Policy With A Window That Closes During The Start
+    [Documentation]    The fixture's first window closes when it loads again and leaves another window behind.
+    Start Fixture App    --close-on-reload    bypass_csp=True
+    Switch Window    title=Second Window
+    Get Title    ==    Second Window
+
 Policy Enforced By Default
     Start Fixture App    --page\=csp.html
     Run Keyword And Expect Error    *TrustedScript*    Evaluate JavaScript    ${None}    ${ADD_SCRIPT}

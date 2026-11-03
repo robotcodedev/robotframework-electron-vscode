@@ -23,6 +23,7 @@ async function robotframeworkElectronLaunch(executablePath, args, env, cwd, time
     });
     try {
         const window = await firstWindowPage(app, await app.firstWindow({ timeout }), timeout);
+        if (launchOptions.bypassCSP) await reloadPages(app, timeout);
         let browserId;
         const onClose = async () => {
             applications.delete(browserId);
@@ -57,6 +58,14 @@ async function launchApplication(playwright, options) {
     } finally {
         process.off('unhandledRejection', ignore);
     }
+}
+
+// Loads the open pages again. Playwright holds an application back until it has attached only if it
+// starts it without an executable path, so a first page can read its Content Security Policy before
+// the bypass reaches it. Windows that open later get the bypass in time. A failed reload does not
+// matter: what replaces the page, such as the new <webview> of a window that loads again, has the bypass.
+async function reloadPages(app, timeout) {
+    await Promise.allSettled(app.windows().map((page) => page.reload({ timeout, waitUntil: 'domcontentloaded' })));
 }
 
 // The id of the BrowserWindow whose own contents `page` shows, or null for a WebContentsView

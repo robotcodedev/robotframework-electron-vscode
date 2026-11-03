@@ -227,11 +227,19 @@ The library's own keywords SHALL document every argument, their return value and
 - **THEN** its page reports the language `pt-BR` and the time zone `Asia/Tokyo`, and formats numbers as in Brazilian Portuguese
 
 ### Requirement: Bypass the Content Security Policy
-`Start Electron Application` SHALL start the application with the Content Security Policy of its pages bypassed, including Trusted Types, when `bypass_csp` is true. By default, the policy SHALL be enforced.
+`Start Electron Application` SHALL start the application with the Content Security Policy of its pages bypassed, including Trusted Types, when `bypass_csp` is true, also for a page that read its policy before the bypass reached it. For this, it SHALL load the pages that are open after the start once more. By default, the policy SHALL be enforced.
 
 #### Scenario: Script added to a page with a strict policy
 - **WHEN** a test starts an application whose page requires Trusted Types for scripts, with `bypass_csp=True`, and adds a script element with inline code through `Evaluate JavaScript`
 - **THEN** the script runs
+
+#### Scenario: Window opened right at the start
+- **WHEN** an application opens that page as soon as it is ready, before the library has attached, and a test starts it with `bypass_csp=True`
+- **THEN** the script runs in every start, because the page has loaded once more
+
+#### Scenario: Window that closes during the start
+- **WHEN** a window closes while it loads once more, and another window stays open
+- **THEN** the start succeeds and the test can switch to the other window
 
 #### Scenario: Policy enforced by default
 - **WHEN** the same test starts the application without `bypass_csp`

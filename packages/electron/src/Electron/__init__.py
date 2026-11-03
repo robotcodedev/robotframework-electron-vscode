@@ -220,9 +220,11 @@ class Electron(Browser):
                 windows, including Trusted Types, as ``bypassCSP`` of the
                 Browser library's ``New Context``. Features that add scripts to a page need it in
                 applications with a strict policy, for example `Record Selector`
-                in VS Code. It also applies to webviews and frames, so that
-                policy problems of the application go unnoticed. Switch it on
-                only where a feature needs it.
+                in VS Code. An application can load its first window before
+                the option takes effect, so the keyword loads the windows that
+                are open once more. It also applies to webviews and frames, so
+                that policy problems of the application go unnoticed. Switch it
+                on only where a feature needs it.
 
         *Returns:*
           A tuple of the application id and the page details of the first

@@ -1,8 +1,9 @@
 // Minimal Electron app for the acceptance tests of the Electron library.
 // Start with `--no-window` to get an app that never opens a window,
 // `--dark` to switch its theme to dark, `--page=<file>` to load another page,
-// and `--views` to load views.html, which has a <webview> and opens a second window with
-// another one, and to add a WebContentsView.
+// `--views` to load views.html, which has a <webview> and opens a second window with
+// another one, and to add a WebContentsView, and `--close-on-reload` to get a first window that
+// closes when it loads a second time and leaves another window behind.
 const { app, BrowserWindow, Menu, WebContentsView, dialog, ipcMain, nativeTheme } = require('electron');
 const path = require('node:path');
 
@@ -48,6 +49,15 @@ app.whenReady().then(() => {
         height: 600,
         webPreferences: { preload: path.join(__dirname, 'preload.js'), webviewTag: views },
     });
+    if (process.argv.includes('--close-on-reload')) {
+        let loads = 0;
+        mainWindow.webContents.on('did-start-navigation', ({ isMainFrame, isSameDocument }) => {
+            if (isMainFrame && !isSameDocument && ++loads === 2) {
+                new BrowserWindow({ width: 800, height: 600 }).loadFile(path.join(__dirname, 'second.html'));
+                mainWindow.destroy();
+            }
+        });
+    }
     mainWindow.loadFile(path.join(__dirname, page), {
         query: {
             args: JSON.stringify(process.argv.slice(2)),
