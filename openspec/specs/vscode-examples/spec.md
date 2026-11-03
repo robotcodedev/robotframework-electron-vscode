@@ -133,18 +133,18 @@ The example's tests SHALL take screenshots at their important steps. A script SH
 - **THEN** the site's screenshots show the workbench as the example's tests see it now
 
 ### Requirement: Guide on Browser features
-The guide on Browser keywords in applications SHALL have a section on VS Code. It SHALL list the Browser features that need a setting in VS Code, and those that work differently in VS Code than in other Electron applications.
+The VS Code section of the documentation site SHALL have a page on Browser keywords in VS Code. It SHALL list the Browser features that need a setting in VS Code, and those that work differently in VS Code than in other Electron applications, and link to the guide on Browser keywords in applications for everything else.
 
 #### Scenario: A feature that does not work
-- **WHEN** someone looks up `Save Page As PDF` in the guide
-- **THEN** the guide says that it does not work with VS Code and why
+- **WHEN** someone looks up `Save Page As PDF` for VS Code
+- **THEN** the page on Browser keywords in VS Code leads to the guide on Browser keywords in applications, which says that it does not work and why
 
 #### Scenario: A feature that needs a setting
 - **WHEN** someone looks up `Drag And Drop` in the explorer
-- **THEN** the section on VS Code names the setting `explorer.confirmDragAndDrop`
+- **THEN** the page on Browser keywords in VS Code names the setting `explorer.confirmDragAndDrop`
 
 ### Requirement: Video of a test
-The example SHALL have a test that records a video of VS Code while it demonstrates the extension, and one that records a video while it creates a Python script and runs it with the Python extension, both with the video's size taken from the screen size of the display profiles. A third test SHALL record the Python script without presenter mode, creating the file in the explorer. The video guide SHALL include these tests from the example.
+The example SHALL have a test that records a video of VS Code while it demonstrates the extension, and one that records a video while it creates a Python script and runs it with the Python extension, both with the video's size taken from the screen size of the display profiles. A third test SHALL record the Python script without presenter mode, creating the file in the explorer. The page on videos and traces in the VS Code section SHALL include these tests from the example.
 
 #### Scenario: Video of the demonstration
 - **WHEN** the example's video test runs with `-p xvfb`
@@ -164,10 +164,10 @@ The example SHALL have a test that records a video of VS Code while it demonstra
 
 #### Scenario: Guide on videos
 - **WHEN** the documentation site is built
-- **THEN** the guide on videos shows the example's `video.robot` from `examples/vscode-extension`
+- **THEN** the page on videos and traces in the VS Code section shows the example's `video.robot` from `examples/vscode-extension`
 
 ### Requirement: Traces of tests
-The example SHALL have a suite that records a Playwright trace of a test and a HAR file of a webview's network traffic. A guide on traces and HAR files SHALL include this suite from the example and explain how to open a trace.
+The example SHALL have a suite that records a Playwright trace of a test and a HAR file of a webview's network traffic. The page on videos and traces in the VS Code section SHALL include this suite from the example, and the guide on traces and HAR files SHALL explain how to open a trace.
 
 #### Scenario: Traces of the example
 - **WHEN** the example's tracing suite runs with `-p xvfb`
@@ -175,7 +175,7 @@ The example SHALL have a suite that records a Playwright trace of a test and a H
 
 #### Scenario: Guide on traces
 - **WHEN** the documentation site is built
-- **THEN** the guide on traces and HAR files shows the example's `tracing.robot` from `examples/vscode-extension`
+- **THEN** the page on videos and traces in the VS Code section shows the example's `tracing.robot` from `examples/vscode-extension`
 
 ### Requirement: VS Code for the example
 The example SHALL download the VS Code that it runs against with `@vscode/test-electron`, through an npm script in its `package.json`, into a folder of its own that git ignores. Its `robot.toml` SHALL point the variable `VSCODE_EXECUTABLE` to that VS Code, and a personal `.robot.toml` SHALL be able to point it to another one.
