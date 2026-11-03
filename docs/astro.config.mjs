@@ -18,6 +18,7 @@ export default defineConfig({
 		starlight({
 			title: 'Robot Framework Electron & VS Code',
 			routeMiddleware: './src/routeData.ts',
+			customCss: ['./src/styles/custom.css'],
 			expressiveCode: {
 				shiki: { langs: [{ ...robotframework, name: 'robotframework', aliases: ['robot'] }] },
 			},

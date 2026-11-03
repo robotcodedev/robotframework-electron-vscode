@@ -1,0 +1,54 @@
+/* Starlight's 45rem leave most of a large screen empty. It narrows the content again on smaller screens. */
+:root {
+	--sl-content-width: 75rem;
+}
+
+/* A table without column titles, as `robotcode doc` writes them, needs no header row. */
+.sl-markdown-content thead:not(:has(th:not(:empty))) {
+	display: none;
+}
+
+/* The argument tables of the keyword reference have the columns name, type, "=", default and documentation. */
+.sl-heading-wrapper:has(> h4[id^='arguments']) + table td:first-child code {
+	white-space: nowrap;
+}
+
+/*
+ * Below the full width of the content, these columns get too narrow. As in Libdoc, the documentation then goes
+ * into a line of its own under the name, the type and the default.
+ */
+@media (max-width: 118rem) {
+	.sl-heading-wrapper:has(> h4[id^='arguments']) + table {
+		tbody {
+			display: block;
+		}
+
+		tr {
+			display: flex;
+			flex-wrap: wrap;
+			column-gap: 0.4rem;
+			margin: 0;
+			padding: 0.5rem 0;
+			border-top: 1px solid var(--sl-color-hairline);
+		}
+
+		tr:first-child {
+			border-top: none;
+		}
+
+		td {
+			margin: 0;
+			padding: 0;
+			border: none;
+		}
+
+		td:empty {
+			display: none;
+		}
+
+		td:nth-child(5) {
+			flex-basis: 100%;
+			padding: 0.15rem 0 0 1rem;
+		}
+	}
+}
