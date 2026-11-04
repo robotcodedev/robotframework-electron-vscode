@@ -7,7 +7,7 @@ sidebar:
 
 Forks of VS Code, such as VSCodium, start like VS Code, from the fork's executable:
 
-```robotframework
+```robotframework-repl
 Start VS Code    /opt/vscodium/codium    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
 ```
 

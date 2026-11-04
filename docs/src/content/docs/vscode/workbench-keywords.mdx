@@ -113,17 +113,21 @@ The [RobotCode](https://robotcode.io) REPL runs keywords one by one against a VS
 robotcode repl
 ```
 
-Then open VS Code with the project's own keyword and look at the part you need. An aria snapshot lists the roles and names of a part, `Highlight Elements` shows on screen what a selector finds, and `Get Element Count` tells whether it is unique. Assign return values to variables to see them:
+Then open VS Code with the project's own keyword and look at the part you need. An aria snapshot lists the roles and names of a part, `Highlight Elements` shows on screen what a selector finds, and `Get Element Count` tells whether it is unique. Assign return values to variables to see them. At the prompt, enter the lines one by one, without the section headers and the test's name:
 
 ```robotframework
+*** Settings ***
 Resource    tests/resources/vscode.resource
 Resource    tests/resources/command_palette.resource
-Start Example VS Code
-${snapshot} =    Get Aria Snapshot    .activitybar
-Highlight Elements    .activitybar .action-item    duration=3s
-${count} =    Get Element Count    .activitybar .action-item
-Run Command    Robot Example: Pick
-${rows} =    Get Element Count    .quick-input-list .monaco-list-row
+
+*** Test Cases ***
+Find Locators
+    Start Example VS Code
+    ${snapshot} =    Get Aria Snapshot    .activitybar
+    Highlight Elements    .activitybar .action-item    duration=3s
+    ${count} =    Get Element Count    .activitybar .action-item
+    Run Command    Robot Example: Pick
+    ${rows} =    Get Element Count    .quick-input-list .monaco-list-row
 ```
 
 The aria snapshot of the activity bar, for example, starts like this:

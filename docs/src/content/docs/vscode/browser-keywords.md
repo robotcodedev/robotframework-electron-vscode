@@ -23,33 +23,33 @@ The example project uses many of these features. The following snippets show the
 
 An aria snapshot of a part of the workbench lists its roles and names:
 
-```robotframework
+```robotframework-repl
 ${snapshot} =    Get Aria Snapshot    .activitybar
 ```
 
 The workbench's console messages and page errors:
 
-```robotframework
+```robotframework-repl
 ${messages} =    Get Console Log
 ${errors} =    Get Page Errors
 ```
 
 A locator handler closes notifications before every Browser action. The close button of a notification is shown only when the notification is in focus, so the handler first clicks the message and then the button:
 
-```robotframework
+```robotframework-repl
 Add Locator Handler Custom    .notifications-toasts .notification-toast
 ...    ${{ [{"action": "click", "selector": ".notifications-toasts .notification-list-item-message"}, {"action": "click", "selector": ".notifications-toasts .notification-toast .codicon-notifications-clear"}] }}
 ```
 
 Moving a file into a folder in the explorer, with `explorer.confirmDragAndDrop` set to `false` in the settings of `Start VS Code`:
 
-```robotframework
+```robotframework-repl
 Drag And Drop    .explorer-folders-view >> text="notes.txt"    .explorer-folders-view >> text="archive"
 ```
 
 JavaScript coverage of the workbench while a command runs:
 
-```robotframework
+```robotframework-repl
 Start Coverage
 Run Command    Robot Example: Say Hello
 ${report} =    Stop Coverage

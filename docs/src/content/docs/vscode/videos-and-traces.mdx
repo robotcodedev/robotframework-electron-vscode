@@ -29,7 +29,7 @@ Without a window manager, `Set Viewport Size    1920    1080` after `Start VS Co
 
 `Set Window Size` sizes the window itself, also without a window manager. It sets the size of the window's page, which the video shows. Without a window manager, a window stays at least one pixel smaller than the screen, so give the window and the video a size below the screen size:
 
-```robotframework
+```robotframework-repl
 Start VS Code    ${VSCODE_EXECUTABLE}    record_video={'size': {'width': 1600, 'height': 900}}
 Set Window Size    1600    900
 ```

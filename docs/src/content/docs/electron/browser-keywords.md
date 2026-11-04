@@ -114,7 +114,7 @@ Every window of the application is a page, and so is every `<webview>` and every
 
 Switch to a window that the application opens by its title. `Switch Window` waits until a window shows it:
 
-```robotframework
+```robotframework-repl
 Click    text=Settings
 ${previous} =    Switch Window    title=Settings
 Click    text=Save
@@ -144,7 +144,7 @@ Switch To Page With Title
 - **`>>>` and `<webview>`:** a `<webview>` is not an iframe, so `>>>` does not reach into it; it fails with `<iframe> was expected`. Switch to the `<webview>`'s page instead.
 - **Closing a `<webview>`:** `Close Page` waits forever on a `<webview>`'s page, because the `<webview>` element in its host page keeps it. Remove the element instead; its page then goes away:
 
-  ```robotframework
+  ```robotframework-repl
   Evaluate JavaScript    id=guest    (element) => element.remove()
   ```
 
@@ -166,7 +166,7 @@ Switch To Page With Title
 
 Keyboard keywords send keys to the page. The accelerators of the application's menu and `before-input-event` handlers in the main process do not see them, so a shortcut that only the menu handles does nothing. Click the menu item in the main process instead. `getMenuItemById` finds items that have an `id` in the application's menu template:
 
-```robotframework
+```robotframework-repl
 Evaluate In Main Process    ({ Menu }) => Menu.getApplicationMenu().getMenuItemById('open-file').click()
 ```
 
@@ -176,7 +176,7 @@ Two problems end Browser's Node process, and with it every later test of the run
 
 - **A `beforeunload` handler.** In Electron, a `beforeunload` handler that returns a value cancels leaving or closing the page without asking; Electron recommends this to keep a window open. Playwright still sees a dialog, fails to dismiss it, and Browser's Node process exits. `Go To` to another page, `Close Page    runBeforeUnload=True`, `Close Electron Application` and Browser's automatic closing are affected. Remove the handler before such a step:
 
-  ```robotframework
+  ```robotframework-repl
   Evaluate JavaScript    ${None}    () => { window.onbeforeunload = null; }
   Close Electron Application
   ```

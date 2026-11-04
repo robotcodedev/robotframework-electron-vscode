@@ -39,7 +39,7 @@ Playwright needs its own ffmpeg to record. It comes with any browser that Browse
 
 Playwright's `slowMo` is not available for Electron applications, because Playwright has no such option when it launches them. Browser's presenter mode serves instead. Before every keyword that takes a selector, it scrolls to the element, highlights it and waits for the given duration:
 
-```robotframework
+```robotframework-repl
 Set Presenter Mode    {'duration': '1s', 'color': 'red'}
 Click    id=change
 Set Presenter Mode    False

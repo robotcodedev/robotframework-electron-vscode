@@ -88,7 +88,7 @@ Browser keywords reach the windows, but not the application's main process. `Eva
 
 Native dialogs, such as file dialogs and message boxes, are outside the page, so no Browser keyword can click them. Replace them before the application opens them:
 
-```robotframework
+```robotframework-repl
 Evaluate In Main Process    ({ dialog }, path) => {
 ...        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] });
 ...    }
@@ -100,7 +100,7 @@ Click    text=Open report
 
 The function can also read the application's state:
 
-```robotframework
+```robotframework-repl
 ${version} =    Evaluate In Main Process    ({ app }) => app.getVersion()
 ```
 
@@ -110,7 +110,7 @@ Windows have keywords of their own for their size and state, see [windows and cl
 
 `Start Electron Application` takes some of the options that the Browser library's `New Context` has for a web browser. They apply from the start, so another value means starting the application again.
 
-```robotframework
+```robotframework-repl
 Start Electron Application    /opt/my-app/my-app    color_scheme=dark    locale=pt-BR    timezone_id=Asia/Tokyo
 ```
 

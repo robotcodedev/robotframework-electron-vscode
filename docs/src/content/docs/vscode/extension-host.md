@@ -74,14 +74,14 @@ The helper has the version of the library. After an update of the library, insta
 
 The function gets the `vscode` module and `arg`, a value from the test. The keyword waits for a promise that the function returns, and returns its result:
 
-```robotframework
+```robotframework-repl
 ${version} =    Evaluate In Extension Host    (vscode) => vscode.version
 ${text} =    Evaluate In Extension Host    (vscode) => vscode.window.activeTextEditor?.document.getText()
 ```
 
 Further arguments continue the function, so that it can span several lines:
 
-```robotframework
+```robotframework-repl
 ${lines} =    Evaluate In Extension Host    async (vscode, path) => {
 ...        const document = await vscode.workspace.openTextDocument(path);
 ...        await vscode.window.showTextDocument(document);
@@ -96,14 +96,14 @@ ${lines} =    Evaluate In Extension Host    async (vscode, path) => {
 
 `executeCommand` runs a command by its id. Its promise settles when the command has finished:
 
-```robotframework
+```robotframework-repl
 Evaluate In Extension Host    (vscode) => vscode.commands.executeCommand('robotTest.sayHello')
 Wait For Elements State    .notifications-toasts .notification-list-item-message >> text="Hello Robot"    visible
 ```
 
 A command that opens a quick pick or an input box finishes only once it is answered, so the keyword would wait until its timeout. Start such a command with `void`, and answer it through the workbench. The keyword then returns before the quick pick shows, so wait for it before typing:
 
-```robotframework
+```robotframework-repl
 Evaluate In Extension Host    (vscode) => { void vscode.commands.executeCommand('workbench.action.quickOpen'); }
 Wait For Elements State    .quick-input-widget    visible
 Keyboard Input    type    example.py
@@ -115,7 +115,7 @@ Keyboard Key    press    Enter
 
 `activate` of an extension returns once the extension is active, so a test can wait for it before it uses the extension's commands. `activate` returns the extension's API, which is no JSON, so the function returns nothing:
 
-```robotframework
+```robotframework-repl
 Evaluate In Extension Host    async (vscode) => {
 ...        await vscode.extensions.getExtension('ms-python.python').activate();
 ...    }
@@ -141,7 +141,7 @@ File Should Have Diagnostics
 
 Each workbench window has its own extension host. Without `workspace`, the keyword takes the one of the window that shows the active page. `Switch Window` changes the window, and the keyword waits until the new window's extension host answers:
 
-```robotframework
+```robotframework-repl
 Evaluate In Extension Host    (vscode, path) => {
 ...        void vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(path), { forceNewWindow: true });
 ...    }
@@ -152,7 +152,7 @@ ${folder} =    Evaluate In Extension Host    (vscode) => vscode.workspace.worksp
 
 `workspace` selects a window by the folder or the `.code-workspace` file that it has open, without switching pages:
 
-```robotframework
+```robotframework-repl
 ${name} =    Evaluate In Extension Host    (vscode) => vscode.workspace.name    workspace=${EXECDIR}/tests/second-workspace
 ```
 

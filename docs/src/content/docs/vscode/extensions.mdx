@@ -21,7 +21,7 @@ Every VS Code that `Start VS Code` starts has its own extensions directory, unle
 
 The extension under test is loaded from its folder, without being installed. Several folders are possible as well:
 
-```robotframework
+```robotframework-repl
 Start VS Code    ${VSCODE_EXECUTABLE}    ${EXECDIR}/tests/workspace    extension_development_path=${EXECDIR}
 ```
 
@@ -29,7 +29,7 @@ Start VS Code    ${VSCODE_EXECUTABLE}    ${EXECDIR}/tests/workspace    extension
 
 `Execute VS Code CLI Command` with `executable` installs Marketplace extensions or `.vsix` files into a directory of their own, and `Start VS Code` starts with a copy of it through `extensions_dir`:
 
-```robotframework
+```robotframework-repl
 Execute VS Code CLI Command    --install-extension    ms-python.python
 ...    executable=${VSCODE_EXECUTABLE}    extensions_dir=${CACHE}/extensions    user_data_dir=${CACHE}/user-data
 Copy Directory    ${CACHE}/extensions    ${OUTPUT_DIR}/extensions/${TEST NAME}
@@ -48,13 +48,13 @@ Start VS Code    ${VSCODE_EXECUTABLE}    extensions_dir=${OUTPUT_DIR}/extensions
 
 Installing while VS Code runs is useful to test how your extension reacts when another one arrives. Without `executable`, `Execute VS Code CLI Command` installs into the directories of the active instance:
 
-```robotframework
+```robotframework-repl
 Execute VS Code CLI Command    --install-extension    ms-python.python
 ```
 
 When the script returns, the extension is on disk, but VS Code has not necessarily taken it in yet. Its extension host knows: once `vscode.extensions.getExtension` finds the extension there, the window has it. [`Evaluate In Extension Host`](../extension-host/) asks it, with the library's helper extension, which the example loads next to its own extension. `Wait Until Keyword Succeeds` repeats the question:
 
-```robotframework
+```robotframework-repl
 ${known} =    Evaluate In Extension Host    (vscode, id) => vscode.extensions.getExtension(id) !== undefined
 ...    arg=ms-python.python
 ```
@@ -74,7 +74,7 @@ The example's keyword `Install Into Running VS Code` does all of this, see [the 
 
 The same keyword lists, uninstalls and updates the extensions of the active instance, or, with `executable` and the directories, of a prepared directory:
 
-```robotframework
+```robotframework-repl
 ${list} =    Execute VS Code CLI Command    --list-extensions    --show-versions
 Execute VS Code CLI Command    --uninstall-extension    ms-python.python
 Execute VS Code CLI Command    --update-extensions
@@ -86,7 +86,7 @@ A running VS Code notices an uninstalled extension the same way as an installed 
 
 Command-line arguments of VS Code switch extensions off for one instance. This also works for VS Code's built-in extensions:
 
-```robotframework
+```robotframework-repl
 Start VS Code    ${VSCODE_EXECUTABLE}    args=${{ ["--disable-extension", "vscode.git"] }}
 Start VS Code    ${VSCODE_EXECUTABLE}    args=${{ ["--disable-extensions"] }}
 ```
@@ -97,7 +97,7 @@ Start VS Code    ${VSCODE_EXECUTABLE}    args=${{ ["--disable-extensions"] }}
 
 The recommendations in a workspace's `.vscode/extensions.json` are only suggestions. VS Code does not install them. To test with them, read them and pass them on:
 
-```robotframework
+```robotframework-repl
 ${json} =    Get File    ${EXECDIR}/tests/workspace/.vscode/extensions.json
 ${recommended} =    Evaluate    json.loads($json)["recommendations"]    modules=json
 VAR    @{install}
